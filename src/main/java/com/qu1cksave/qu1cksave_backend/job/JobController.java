@@ -1,9 +1,21 @@
 package com.qu1cksave.qu1cksave_backend.job;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/jobs")
 public class JobController {
+    // https://stackoverflow.com/questions/63259116/what-is-the-difference-between-using-autowired-annotation-and-private-final
+    // - The above is regarding service and repos, but the same idea may apply
+    // - Seems like I should use private final
+    // https://stackoverflow.com/questions/54118790/how-do-i-properly-inject-many-services-into-spring-mvc-controller
+    // - Here, the poster injected multiple services into a controller
+    private final JobService jobService;
+
+    public JobController(@Autowired JobService jobService) {
+        this.jobService = jobService;
+    }
+
     // TODO: Is having /jobs and a separate /jobs/me (getUserJobs) better?
     // - For example, what if I have an admin role that can access all jobs?
     //   (Though, that is ethically wrong due to privacy reasons)
@@ -19,28 +31,11 @@ public class JobController {
 
     @GetMapping()
     public Job[] getJobs() {
-        return new Job[1];
+        return jobService.getJobs();
     }
 
     @GetMapping("/{id}")
     public Job getJob(@PathVariable String id) {
-        return new Job(
-            " id",
-            "memberId",
-            "title",
-            "companyName",
-            "jobDescription",
-            "notes",
-            "isRemote",
-            1,
-            100,
-            "country",
-            "usState",
-            "city",
-            "dateSaved",
-            "jobStatus",
-            new String[1],
-            "foundFrom"
-        );
+        return jobService.getJob();
     }
 }

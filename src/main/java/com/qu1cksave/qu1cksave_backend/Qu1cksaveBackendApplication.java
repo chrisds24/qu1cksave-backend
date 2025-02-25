@@ -5,7 +5,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class Qu1cksaveBackendApplication {
-
+    // TODO: Where do I put custom @Configuration?
+	// - I might need one to specify the DataSource
+	// - https://www.marcobehler.com/guides/spring-framework
 	public static void main(String[] args) {
 		SpringApplication.run(Qu1cksaveBackendApplication.class, args);
 	}

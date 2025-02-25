@@ -20,4 +20,25 @@ public class JobService {
         // return jobRepository.getJobs(userId); // Use something like this instead
         return new Job[1];
     }
+
+    public Job getJob() {
+        return new Job(
+            " id",
+            "memberId",
+            "title",
+            "companyName",
+            "jobDescription",
+            "notes",
+            "isRemote",
+            1,
+            100,
+            "country",
+            "usState",
+            "city",
+            "dateSaved",
+            "jobStatus",
+            new String[1],
+            "foundFrom"
+        );
+    }
 }
