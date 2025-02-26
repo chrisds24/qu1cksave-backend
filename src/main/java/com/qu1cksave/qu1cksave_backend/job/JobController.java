@@ -7,9 +7,7 @@ import org.springframework.web.bind.annotation.*;
 public class JobController {
     // https://stackoverflow.com/questions/63259116/what-is-the-difference-between-using-autowired-annotation-and-private-final
     // - The above is regarding service and repos, but the same idea may apply
-    // - Seems like I should use private final
-    // https://stackoverflow.com/questions/54118790/how-do-i-properly-inject-many-services-into-spring-mvc-controller
-    // - Here, the poster injected multiple services into a controller
+    // - TODO: What's the advantage of using private final?
     private final JobService jobService;
 
     public JobController(@Autowired JobService jobService) {
@@ -28,6 +26,9 @@ public class JobController {
 //    ) {
 //        // code here
 //    }
+
+    // TODO: For everything below, need to get id of user from the JWT in the
+    //   Auth header. I remember it's passed as a parameter in Spring Security
 
     @GetMapping()
     public Job[] getJobs() {

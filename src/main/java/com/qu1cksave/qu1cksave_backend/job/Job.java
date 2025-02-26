@@ -1,5 +1,7 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
+// TODO: Later, I need to use an Entity from Hibernate
+//   Do I also need a separate DAO?
 public record Job(
     String id,
     String memberId,
