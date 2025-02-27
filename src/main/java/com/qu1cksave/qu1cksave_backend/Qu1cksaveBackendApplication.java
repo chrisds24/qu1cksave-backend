@@ -8,5 +8,7 @@ public class Qu1cksaveBackendApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(Qu1cksaveBackendApplication.class, args);
 	}
-
 }
+
+// docker-compose up -d		Run the postgres docker container (in a different terminal)
+// docker-compose down		To remove the docker-container
