@@ -9,6 +9,13 @@ import java.util.UUID;
 @Entity
 @Table(name = "job")
 public class Job {
+    // TODO:
+    //  Create Member, Resume, and CoverLetter entities
+    //  What is the appropriate association I should use?
+    //    https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#associations
+    //  Specify optional and required types
+    //  Need to create a data source
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
@@ -55,10 +62,15 @@ public class Job {
     @Column(name = "date_saved")
     private String dateSaved;
 
-    // TODO: Make these embeddable objects
     // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#embeddable-objects
-//    private YearMonthDate dateApplied;
-//    private YearMonthDate datePosted;
+    // - Need an embeddable type
+    // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#mapping-embeddables
+    // - Map to jsonb
+    @JdbcTypeCode(SqlTypes.JSON)
+    private YearMonthDate dateApplied;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private YearMonthDate datePosted;
 
     @Column(name = "job_status")
     private String jobStatus;
@@ -73,6 +85,8 @@ public class Job {
 
     @Column(name = "found_from")
     private String foundFrom;
+
+    // Constructors
 
     protected Job() {}
 
@@ -94,8 +108,8 @@ public class Job {
         String usState,
         String city,
         String dateSaved,
-//    YearMonthDate dateApplied,
-//    YearMonthDate datePosted,
+        YearMonthDate dateApplied,
+        YearMonthDate datePosted,
         String jobStatus,
         String[] links,
         String foundFrom
@@ -117,8 +131,8 @@ public class Job {
         this.usState = usState;
         this.city = city;
         this.dateSaved = dateSaved;
-//        this.dateApplied = dateApplied;
-//        this.datePosted = datePosted;
+        this.dateApplied = dateApplied;
+        this.datePosted = datePosted;
         this.jobStatus = jobStatus;
         this.links = links;
         this.foundFrom = foundFrom;
@@ -138,25 +152,29 @@ public class Job {
     public String getUsState() { return usState; }
     public String getCity() { return city; }
     public String getDateSaved() { return dateSaved; }
+    public YearMonthDate getDateApplied() { return dateApplied; }
+    public YearMonthDate getDatePosted() { return datePosted; }
     public String getJobStatus() { return jobStatus; }
     public String[] getLinks() { return links; }
     public String getFoundFrom() { return foundFrom; }
 
     // Setters
-    public UUID setId(UUID id) { this.id = id; }
-    public UUID setMemberId(UUID memberId) { this.memberId = memberId; }
-    public String setTitle(String title) { this.title = title; }
-    public String setCompanyName(String companyName) { this.companyName = companyName; }
-    public String setJobDescription(String jobDescription) { this.jobDescription = jobDescription; }
-    public String setNotes(String notes) { this.notes = notes; }
-    public String setIsRemote(String isRemote) { this.isRemote = isRemote; }
-    public int setSalaryMin(int salaryMin) { this.salaryMin = salaryMin; }
-    public int setSalaryMax(int salaryMax) { this.salaryMax = salaryMax; }
-    public String setCountry(String country) { this.country = country; }
-    public String setUsState(String usState) { this.usState = usState; }
-    public String setCity(String city) { this.city = city; }
-    public String setDateSaved(String dateSaved) { this.dateSaved = dateSaved; }
-    public String setJobStatus(String jobStatus) { this.jobStatus = jobStatus; }
-    public String[] setLinks(String[] links) { this.links = links; }
-    public String setFoundFrom(String foundFrom) { this.foundFrom = foundFrom; }
+    public void setId(UUID id) { this.id = id; }
+    public void setMemberId(UUID memberId) { this.memberId = memberId; }
+    public void setTitle(String title) { this.title = title; }
+    public void setCompanyName(String companyName) { this.companyName = companyName; }
+    public void setJobDescription(String jobDescription) { this.jobDescription = jobDescription; }
+    public void setNotes(String notes) { this.notes = notes; }
+    public void setIsRemote(String isRemote) { this.isRemote = isRemote; }
+    public void setSalaryMin(int salaryMin) { this.salaryMin = salaryMin; }
+    public void setSalaryMax(int salaryMax) { this.salaryMax = salaryMax; }
+    public void setCountry(String country) { this.country = country; }
+    public void setUsState(String usState) { this.usState = usState; }
+    public void setCity(String city) { this.city = city; }
+    public void setDateSaved(String dateSaved) { this.dateSaved = dateSaved; }
+    public void setDateApplied(YearMonthDate dateApplied) { this.dateApplied = dateApplied; }
+    public void setDatePosted(YearMonthDate datePosted) { this.datePosted = datePosted; }
+    public void setJobStatus(String jobStatus) { this.jobStatus = jobStatus; }
+    public void setLinks(String[] links) { this.links = links; }
+    public void setFoundFrom(String foundFrom) { this.foundFrom = foundFrom; }
 }
