@@ -1,6 +1,11 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -28,7 +33,6 @@ public class Job {
 //    private String coverLetterId;
 //    private CoverLetter coverLetter;
 
-    @Column(name = "title")
     private String title;
 
     @Column(name = "company_name")
@@ -37,7 +41,6 @@ public class Job {
     @Column(name = "job_description")
     private String jobDescription;
 
-    @Column(name = "notes")
     private String notes;
 
     @Column(name = "is_remote")
@@ -49,13 +52,11 @@ public class Job {
     @Column(name = "salary_max")
     private int salaryMax;
 
-    @Column(name = "country")
     private String country;
 
     @Column(name = "us_state")
     private String usState;
 
-    @Column(name = "city")
     private String city;
 
     // Stored as timestamptz in the database
@@ -66,9 +67,11 @@ public class Job {
     // - Need an embeddable type
     // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#mapping-embeddables
     // - Map to jsonb
+    @Column(name = "date_applied")
     @JdbcTypeCode(SqlTypes.JSON)
     private YearMonthDate dateApplied;
 
+    @Column(name = "date_posted")
     @JdbcTypeCode(SqlTypes.JSON)
     private YearMonthDate datePosted;
 
@@ -79,7 +82,6 @@ public class Job {
     // - This is about mapping embeddable types to JSONB. So not sure if it
     //   works here
     // - Also mentions somewhere that JSON arrays aren't supported
-    @Column(name = "links")
     @JdbcTypeCode(SqlTypes.JSON)
     private String[] links;
 

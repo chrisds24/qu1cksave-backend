@@ -9,7 +9,7 @@ public class YearMonthDate {
     private int month;
     private int date;
 
-    public YearMonthDate() {}
+    protected YearMonthDate() {}
 
     public YearMonthDate(
         int year,
