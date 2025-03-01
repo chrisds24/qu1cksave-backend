@@ -12,6 +12,11 @@ import java.util.UUID;
 @Entity
 @Table(name = "resume")
 public class Resume {
+    // TODO: There's something about how a PostgreSQL query fills empty columns
+    //  as null due to LEFT JOIN, so each field should be its actual type or
+    //  null (Ex. id: string | null    in TypeScript)
+    //  - This is a note from my old Node/Express version of the backend
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;

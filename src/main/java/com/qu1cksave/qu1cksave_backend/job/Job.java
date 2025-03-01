@@ -15,10 +15,9 @@ import java.util.UUID;
 @Table(name = "job")
 public class Job {
     // TODO:
-    //  Create Member, Resume, and CoverLetter entities
+    //  Specify optional and required types
     //  What is the appropriate association I should use?
     //    https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#associations
-    //  Specify optional and required types
     //  Need to create a data source
 
     @Id
