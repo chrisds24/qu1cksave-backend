@@ -25,6 +25,7 @@ public class Job {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
+    // TODO: Edit this to include associations
     @Column(name = "member_id")
     private UUID memberId;
 
