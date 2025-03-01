@@ -1,30 +1,162 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
-// TODO: Later, I need to use an Entity from Hibernate
-//   Do I also need a separate DAO?
-public record Job(
-    String id,
-    String memberId,
+import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.util.UUID;
+
+@Entity
+@Table(name = "job")
+public class Job {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+
+    @Column(name = "member_id")
+    private UUID memberId;
+
+//    private String resumeId;
+//    private Resume resume;
+//    private String coverLetterId;
+//    private CoverLetter coverLetter;
+
+    @Column(name = "title")
+    private String title;
+
+    @Column(name = "company_name")
+    private String companyName;
+
+    @Column(name = "job_description")
+    private String jobDescription;
+
+    @Column(name = "notes")
+    private String notes;
+
+    @Column(name = "is_remote")
+    private String isRemote;
+
+    @Column(name = "salary_min")
+    private int salaryMin;
+
+    @Column(name = "salary_max")
+    private int salaryMax;
+
+    @Column(name = "country")
+    private String country;
+
+    @Column(name = "us_state")
+    private String usState;
+
+    @Column(name = "city")
+    private String city;
+
+    // Stored as timestamptz in the database
+    @Column(name = "date_saved")
+    private String dateSaved;
+
+    // TODO: Make these embeddable objects
+    // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#embeddable-objects
+//    private YearMonthDate dateApplied;
+//    private YearMonthDate datePosted;
+
+    @Column(name = "job_status")
+    private String jobStatus;
+
+    // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#mapping-embeddables
+    // - This is about mapping embeddable types to JSONB. So not sure if it
+    //   works here
+    // - Also mentions somewhere that JSON arrays aren't supported
+    @Column(name = "links")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private String[] links;
+
+    @Column(name = "found_from")
+    private String foundFrom;
+
+    protected Job() {}
+
+    public Job(
+        UUID id,
+        UUID memberId,
 //    String resumeId,
 //    Resume resume,
 //    String coverLetterId,
 //    CoverLetter coverLetter,
-    String title,
-    String companyName,
-    String jobDescription,
-    String notes,
-    String isRemote,
-    int salaryMin,
-    int salaryMax,
-    String country,
-    String usState,
-    String city,
-    // Stored as timestamptz in the database
-    String dateSaved,
+        String title,
+        String companyName,
+        String jobDescription,
+        String notes,
+        String isRemote,
+        int salaryMin,
+        int salaryMax,
+        String country,
+        String usState,
+        String city,
+        String dateSaved,
 //    YearMonthDate dateApplied,
 //    YearMonthDate datePosted,
-    String jobStatus,
-    String[] links,
-    String foundFrom
-) {
+        String jobStatus,
+        String[] links,
+        String foundFrom
+    ) {
+        this.id = id;
+        this.memberId = memberId;
+//        this.resumeId = resumeId;
+//        this.resume = resume;
+//        this.coverLetterId = coverLetterId;
+//        this.coverLetter = coverLetter;
+        this.title = title;
+        this.companyName = companyName;
+        this.jobDescription = jobDescription;
+        this.notes = notes;
+        this.isRemote = isRemote;
+        this.salaryMin = salaryMin;
+        this.salaryMax = salaryMax;
+        this.country = country;
+        this.usState = usState;
+        this.city = city;
+        this.dateSaved = dateSaved;
+//        this.dateApplied = dateApplied;
+//        this.datePosted = datePosted;
+        this.jobStatus = jobStatus;
+        this.links = links;
+        this.foundFrom = foundFrom;
+    }
+
+    // Getters
+    public UUID getId() { return id; }
+    public UUID getMemberId() { return memberId; }
+    public String getTitle() { return title; }
+    public String getCompanyName() { return companyName; }
+    public String getJobDescription() { return jobDescription; }
+    public String getNotes() { return notes; }
+    public String getIsRemote() { return isRemote; }
+    public int getSalaryMin() { return salaryMin; }
+    public int getSalaryMax() { return salaryMax; }
+    public String getCountry() { return country; }
+    public String getUsState() { return usState; }
+    public String getCity() { return city; }
+    public String getDateSaved() { return dateSaved; }
+    public String getJobStatus() { return jobStatus; }
+    public String[] getLinks() { return links; }
+    public String getFoundFrom() { return foundFrom; }
+
+    // Setters
+    public UUID setId(UUID id) { this.id = id; }
+    public UUID setMemberId(UUID memberId) { this.memberId = memberId; }
+    public String setTitle(String title) { this.title = title; }
+    public String setCompanyName(String companyName) { this.companyName = companyName; }
+    public String setJobDescription(String jobDescription) { this.jobDescription = jobDescription; }
+    public String setNotes(String notes) { this.notes = notes; }
+    public String setIsRemote(String isRemote) { this.isRemote = isRemote; }
+    public int setSalaryMin(int salaryMin) { this.salaryMin = salaryMin; }
+    public int setSalaryMax(int salaryMax) { this.salaryMax = salaryMax; }
+    public String setCountry(String country) { this.country = country; }
+    public String setUsState(String usState) { this.usState = usState; }
+    public String setCity(String city) { this.city = city; }
+    public String setDateSaved(String dateSaved) { this.dateSaved = dateSaved; }
+    public String setJobStatus(String jobStatus) { this.jobStatus = jobStatus; }
+    public String[] setLinks(String[] links) { this.links = links; }
+    public String setFoundFrom(String foundFrom) { this.foundFrom = foundFrom; }
 }
