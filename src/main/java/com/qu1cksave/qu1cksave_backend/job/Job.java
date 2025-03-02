@@ -18,24 +18,37 @@ public class Job {
     //  Specify optional and required types
     //  What is the appropriate association I should use?
     //    https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#associations
+    //  If when querying and only the id of the other table (Ex. resumeId) is
+    //    in the current table, but not the object itself (Ex. resume), how
+    //    should I annotate that column (if it should even be a column of the
+    //    entity.
+    //    - Note that this is a different case as with byteArrayAsArray for
+    //      Resume and CoverLetter, since that isn't even included in any table
+    //    - This issue is regarding (Note 1) in Resume.java
     //  Need to create a data source
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(nullable = false)
     private UUID id;
 
     // TODO: Edit this to include associations
-    @Column(name = "member_id")
+    @Column(name = "member_id", nullable = false)
     private UUID memberId;
 
+    // All of these are nullable + need to deal with association
 //    private String resumeId;
-//    private Resume resume;
+//    private Resume resume; // NOT a column of the table
 //    private String coverLetterId;
-//    private CoverLetter coverLetter;
+//    private CoverLetter coverLetter; // NOT a column of the table
 
+    // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#regular-column-mappings
+    // - Has info on @Column annotation members, such as nullable
+    // - default value for nullable is true
+    @Column(nullable = false)
     private String title;
 
-    @Column(name = "company_name")
+    @Column(name = "company_name", nullable = false)
     private String companyName;
 
     @Column(name = "job_description")
@@ -43,7 +56,7 @@ public class Job {
 
     private String notes;
 
-    @Column(name = "is_remote")
+    @Column(name = "is_remote", nullable = false)
     private String isRemote;
 
     @Column(name = "salary_min")
@@ -60,7 +73,7 @@ public class Job {
     private String city;
 
     // Stored as timestamptz in the database
-    @Column(name = "date_saved")
+    @Column(name = "date_saved", nullable = false)
     private String dateSaved;
 
     // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#embeddable-objects
@@ -75,13 +88,16 @@ public class Job {
     @JdbcTypeCode(SqlTypes.JSON)
     private YearMonthDate datePosted;
 
-    @Column(name = "job_status")
+    @Column(name = "job_status", nullable = false)
     private String jobStatus;
 
     // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#mapping-embeddables
     // - This is about mapping embeddable types to JSONB. So not sure if it
     //   works here
     // - Also mentions somewhere that JSON arrays aren't supported
+    // https://hibernate.org/orm/quickly/
+    // - If you have a field or property that maps to a single column, but its
+    //   type isn’t one of the basic types build in to Hibernate, you can use an AttributeConverter
     @JdbcTypeCode(SqlTypes.JSON)
     private String[] links;
 

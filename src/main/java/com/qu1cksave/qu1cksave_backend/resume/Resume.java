@@ -12,23 +12,35 @@ import java.util.UUID;
 @Entity
 @Table(name = "resume")
 public class Resume {
-    // TODO: There's something about how a PostgreSQL query fills empty columns
-    //  as null due to LEFT JOIN, so each field should be its actual type or
-    //  null (Ex. id: string | null    in TypeScript)
+    // TODO (Note 1): There's something about how a PostgreSQL query fills
+    //  empty columns as null due to LEFT JOIN, so each field should be its
+    //  actual type or null (Ex. id: string | null    in TypeScript)
     //  - This is a note from my old Node/Express version of the backend
+    //  - This happens when getting a job (in my case, getAllJobs) and the job
+    //    doesn't have an associated resume
+    //  HOWEVER, the columns in the table itself have NOT NULL (can't be null)
+    //
+    // NOTE: I may not need to worry about this depending on how Hibernate
+    //   fetches Jobs joined with Resume, such as if it just leaves the Resume
+    //   column for that job as null instead of including a Resume with null
+    //   columns
+    //
+    // NOTE: The Resume/CoverLetter controllers are simply for getting the
+    //   Resume/CoverLetter when downloading them.
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(nullable = false)
     private UUID id;
 
     // TODO: Edit this to include associations
-    @Column(name = "member_id")
+    @Column(name = "member_id", nullable = false)
     private UUID memberId;
 
-    @Column(name = "file_name")
+    @Column(name = "file_name", nullable = false)
     private String fileName;
 
-    @Column(name = "mime_type")
+    @Column(name = "mime_type", nullable = false)
     private String mimeType;
 
     // TODO: Need another Resume-type class that has the equivalent of

@@ -10,16 +10,17 @@ import java.util.UUID;
 public class CoverLetter {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(nullable = false)
     private UUID id;
 
     // TODO: Edit this to include associations
-    @Column(name = "member_id")
+    @Column(name = "member_id", nullable = false)
     private UUID memberId;
 
-    @Column(name = "file_name")
+    @Column(name = "file_name", nullable = false)
     private String fileName;
 
-    @Column(name = "mime_type")
+    @Column(name = "mime_type", nullable = false)
     private String mimeType;
 
     // TODO: Need another CoverLetter-type class that has the equivalent of
