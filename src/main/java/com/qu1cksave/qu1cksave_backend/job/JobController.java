@@ -2,6 +2,9 @@ package com.qu1cksave.qu1cksave_backend.job;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/jobs")
 public class JobController {
@@ -31,12 +34,12 @@ public class JobController {
     //   Auth header. I remember it's passed as a parameter in Spring Security
 
     @GetMapping()
-    public Job[] getJobs() {
+    public List<Job> getJobs() {
         return jobService.getJobs();
     }
 
     @GetMapping("/{id}")
-    public Job getJob(@PathVariable String id) {
-        return jobService.getJob();
+    public Job getJob(@PathVariable UUID id) {
+        return jobService.getJob(id);
     }
 }

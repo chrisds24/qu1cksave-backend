@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -22,13 +23,13 @@ public class JobService {
     //   -- I'll need a HibernateTransactionManager
 //    @Transactional
 //    public Job[] getJobs(String userId) {
-    public Job[] getJobs() {
-        // return jobRepository.getJobs(userId); // Use something like this instead
-        return new Job[1];
+    public List<Job> getJobs() {
+        return jobRepository.findAll();
     }
 
-    public Job getJob() {
-        // TODO: Fix this later
+    public Job getJob(UUID id) {
+//        return jobRepository.findByUuid(id);
+        // Test return value
         return new Job(
             UUID.fromString("1c27e3ee-0307-4e0d-ac0f-dadfcc420ce3"),
             UUID.fromString("1c27e3ee-0307-4e0d-ac0f-dadfcc420ce3"),
@@ -57,3 +58,8 @@ public class JobService {
 // - https://stackoverflow.com/questions/62119161/adding-environment-variables-to-springs-application-properties
 //   -- Input "export POSTGRES_HOST=myvalue" in terminal to set environment variables
 //   -- Setting it in Intellij doesn't seem to work
+//
+//POSTGRES_HOST=localhost
+//POSTGRES_USER=postgres
+//POSTGRES_PASSWORD=postgres
+//POSTGRES_DB=dev                   The docker-compose.yml uses this
