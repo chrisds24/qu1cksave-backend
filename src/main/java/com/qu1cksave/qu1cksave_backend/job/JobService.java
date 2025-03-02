@@ -16,19 +16,10 @@ public class JobService {
     public JobService(@Autowired JobRepository jobRepository) {
         this.jobRepository = jobRepository;
     }
-    private final String postgresHost;
-    // TODO: Remove later
-    private final String fakeDataSource;
-
-    // https://unix.stackexchange.com/questions/56444/how-do-i-set-an-environment-variable-on-the-command-line-and-have-it-appear-in-c
-    // https://stackoverflow.com/questions/62119161/adding-environment-variables-to-springs-application-properties
-    // Input "export POSTGRES_HOST=myvalue" in terminal to set environment variables
-    // - Setting it in Intellij doesn't seem to work
-
 
     // TODO: Change to use the userId and @Transactional
     // - Note: https://www.marcobehler.com/guides/spring-transaction-management-transactional-in-depth
-    //   -- I'll need a HIbernateTransactionManager
+    //   -- I'll need a HibernateTransactionManager
 //    @Transactional
 //    public Job[] getJobs(String userId) {
     public Job[] getJobs() {
@@ -60,3 +51,9 @@ public class JobService {
         );
     }
 }
+
+// Setting environment variables:
+// - https://unix.stackexchange.com/questions/56444/how-do-i-set-an-environment-variable-on-the-command-line-and-have-it-appear-in-c
+// - https://stackoverflow.com/questions/62119161/adding-environment-variables-to-springs-application-properties
+//   -- Input "export POSTGRES_HOST=myvalue" in terminal to set environment variables
+//   -- Setting it in Intellij doesn't seem to work
