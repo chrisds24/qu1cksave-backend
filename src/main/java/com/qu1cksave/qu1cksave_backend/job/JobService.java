@@ -5,13 +5,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class JobService {
-//    private JobRepository jobRepository;
-//
-//    public JobService(@Autowired JobRepository jobRepository) {
-//        this.jobRepository = jobRepository;
-//    }
+    private JobRepository jobRepository;
+
+    // If I need property value, Ex:
+    //   @Value("${postgres.host}") String postgresHost
+    public JobService(@Autowired JobRepository jobRepository) {
+        this.jobRepository = jobRepository;
+    }
     private final String postgresHost;
     // TODO: Remove later
     private final String fakeDataSource;
@@ -20,17 +24,11 @@ public class JobService {
     // https://stackoverflow.com/questions/62119161/adding-environment-variables-to-springs-application-properties
     // Input "export POSTGRES_HOST=myvalue" in terminal to set environment variables
     // - Setting it in Intellij doesn't seem to work
-    public JobService(
-        @Value("${postgres.host}") String postgresHost,
-        @Autowired String fakeDataSource
-    ) {
-        this.postgresHost = postgresHost;
-        this.fakeDataSource = fakeDataSource;
-    }
+
 
     // TODO: Change to use the userId and @Transactional
     // - Note: https://www.marcobehler.com/guides/spring-transaction-management-transactional-in-depth
-    //   -- I might need a PlatformTransactionManager
+    //   -- I'll need a HIbernateTransactionManager
 //    @Transactional
 //    public Job[] getJobs(String userId) {
     public Job[] getJobs() {
@@ -41,8 +39,8 @@ public class JobService {
     public Job getJob() {
         // TODO: Fix this later
         return new Job(
-            postgresHost,
-            fakeDataSource,
+            UUID.fromString("1c27e3ee-0307-4e0d-ac0f-dadfcc420ce3"),
+            UUID.fromString("1c27e3ee-0307-4e0d-ac0f-dadfcc420ce3"),
             "title",
             "companyName",
             "jobDescription",
@@ -54,6 +52,8 @@ public class JobService {
             "usState",
             "city",
             "dateSaved",
+            new YearMonthDate(2025,3, 2),
+            new YearMonthDate(2025, 3, 2),
             "jobStatus",
             new String[1],
             "foundFrom"

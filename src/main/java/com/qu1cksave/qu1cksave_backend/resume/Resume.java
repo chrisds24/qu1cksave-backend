@@ -33,7 +33,6 @@ public class Resume {
     @Column(nullable = false)
     private UUID id;
 
-    // TODO: Edit this to include associations
     @Column(name = "member_id", nullable = false)
     private UUID memberId;
 

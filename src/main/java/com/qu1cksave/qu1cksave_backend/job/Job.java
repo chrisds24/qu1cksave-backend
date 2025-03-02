@@ -21,10 +21,18 @@ public class Job {
     //  If when querying and only the id of the other table (Ex. resumeId) is
     //    in the current table, but not the object itself (Ex. resume), how
     //    should I annotate that column (if it should even be a column of the
-    //    entity.
+    //    entity)
     //    - Note that this is a different case as with byteArrayAsArray for
     //      Resume and CoverLetter, since that isn't even included in any table
     //    - This issue is regarding (Note 1) in Resume.java
+    //  UPDATE:
+    //    - I won't need associations since the tables don't really
+    //      store entities from another table, only the id
+    //    - I'l probably need custom queries (try HQL? If not, use actual SQL)
+    //    - Could also be useful: https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#join-fetch
+    //    - There are also Native Queries: https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#native-queries
+    //    - https://hibernate.org/orm/quickly/ (Quick list of useful things)
+    //    - https://spring.io/guides/gs/accessing-data-jpa (Tutorial)
     //  Need to create a data source
 
     @Id
@@ -32,14 +40,19 @@ public class Job {
     @Column(nullable = false)
     private UUID id;
 
-    // TODO: Edit this to include associations
+    // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#associations
+    // - ManyToOne associations are eagerly fetched by default (unlike
+    //   OneToMany and ManyToMany, which is not what I want for my use case
+    // - Though, a Job does not have a Member column so this isn't a problem
     @Column(name = "member_id", nullable = false)
     private UUID memberId;
 
-    // All of these are nullable + need to deal with association
-//    private String resumeId;
+    @Column(name = "resume_id")
+    private String resumeId;
 //    private Resume resume; // NOT a column of the table
-//    private String coverLetterId;
+
+    @Column(name = "cover_letter_id")
+    private String coverLetterId;
 //    private CoverLetter coverLetter; // NOT a column of the table
 
     // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#regular-column-mappings
