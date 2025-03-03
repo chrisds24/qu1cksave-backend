@@ -25,6 +25,12 @@ public class Qu1cksaveBackendApplication {
 // 		docker-compose up -d
 // 4.) ./gradlew bootRun
 
+// Setting environment variables:
+// - https://unix.stackexchange.com/questions/56444/how-do-i-set-an-environment-variable-on-the-command-line-and-have-it-appear-in-c
+// - https://stackoverflow.com/questions/62119161/adding-environment-variables-to-springs-application-properties
+//   -- Input "export POSTGRES_HOST=myvalue" in terminal to set environment variables
+//   -- Setting it in Intellij doesn't seem to work
+
 // USEFUL NOTES:
 // https://www.marcobehler.com/guides/java-databases
 // 1.) Spring takes care of configuring SessionFactory for Hibernate, so no
@@ -131,45 +137,40 @@ public class Qu1cksaveBackendApplication {
 // - Disabling table creation
 
 
-// Setting environment variables:
-// - https://unix.stackexchange.com/questions/56444/how-do-i-set-an-environment-variable-on-the-command-line-and-have-it-appear-in-c
-// - https://stackoverflow.com/questions/62119161/adding-environment-variables-to-springs-application-properties
-//   -- Input "export POSTGRES_HOST=myvalue" in terminal to set environment variables
-//   -- Setting it in Intellij doesn't seem to work
-//
-//POSTGRES_HOST=localhost
-//POSTGRES_USER=postgres
-//POSTGRES_PASSWORD=postgres
-//POSTGRES_DB=dev                   The docker-compose.yml uses this
-//
 // ERROR 1: Factory method 'dataSource' threw exception with message: URL must start with 'jdbc'
 //   SOLUTION:    POSTGRES_HOST=jdbc:postgresql://localhost:5432/dev
-
 // ERROR 2: Factory method 'dataSource' threw exception with message: Failed to load driver class org.postgresql.Driver in either of HikariConfig class loader or Thread context classloader
-// https://stackoverflow.com/questions/66910657/spring-jpa-postgres-cannot-load-driver-class-org-postgresql-driver
-// - Invalidate caches in Intellij (File>Invalidate Caches/Restart)
-// https://stackoverflow.com/questions/73554099/cannot-load-driver-class-org-postgresql-driver
-// - Add PostgreSQL dependency to Gradle
-// - https://stackoverflow.com/questions/63222401/how-to-connect-postgresql-in-gradle-project
-//   -- How to add dependency to Gradle
-// - https://stackoverflow.com/questions/67984274/springboot-cannot-load-driver-class-org-postgresql-driver
-//   -- Use postgresql 42.2.23 ???
+//   https://stackoverflow.com/questions/66910657/spring-jpa-postgres-cannot-load-driver-class-org-postgresql-driver
+// 	 - Invalidate caches in Intellij (File>Invalidate Caches/Restart)
+// 	 https://stackoverflow.com/questions/73554099/cannot-load-driver-class-org-postgresql-driver
+// 	 - SOLUTION: Add PostgreSQL dependency to Gradle
+// 	   -- https://stackoverflow.com/questions/63222401/how-to-connect-postgresql-in-gradle-project
+//        + How to add dependency to Gradle
+//     -- https://stackoverflow.com/questions/67984274/springboot-cannot-load-driver-class-org-postgresql-driver
+//        + Use postgresql 42.2.23 ???
+//        + UPDATE: Postgres allows us to not include version numbers, which I
+//			did.
 //	ERROR 3:
 //	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
 //	Database driver: undefined/unknown
-//		- TODO: What's causing this issue?
-//		https://stackoverflow.com/questions/58632697/spring-boot-postgresql-driver-cannot-be-located-in-classpath
-//		- To set postgresql driver
-//		- spring.datasource.driver-class-name=org.postgresql.Driver
-//		- DOESN'T fix the problem
-//		https://www.reddit.com/r/SpringBoot/comments/1h7v33r/i_am_getting_this_error/
-//		https://stackoverflow.com/questions/79304244/spring-boot-database-driver-unknown-undefined-error-while-connecting-to-mysq
-//		- I get the same error as these people
-// POSTGRES_HOST=jdbc:postgresql://localhost:5432/dev?useSSL=false		DOESN'T FIX
-// Maybe the version of the postgresql dependency is the problem?
-// - I removed the dependency version
-// 	 -- It was implementation("org.postgresql:postgresql:42.7.2")
-//   -- Now its implementation("org.postgresql:postgresql")
-// https://stackoverflow.com/questions/79246915/problems-with-hibernate-startup-logging-after-adding-jpa-with-database-in-spring
-// - Says that there is no issue
+//	TODO: What's causing this issue?
+//	https://stackoverflow.com/questions/58632697/spring-boot-postgresql-driver-cannot-be-located-in-classpath
+//	- To set postgresql driver
+//	- spring.datasource.driver-class-name=org.postgresql.Driver
+//	- DOESN'T FIX
+//	https://www.reddit.com/r/SpringBoot/comments/1h7v33r/i_am_getting_this_error/
+//	https://stackoverflow.com/questions/79304244/spring-boot-database-driver-unknown-undefined-error-while-connecting-to-mysq
+//	- I get the same error as these people
+//  Add useSSL:    POSTGRES_HOST=jdbc:postgresql://localhost:5432/dev?useSSL=false
+//  - DOESN'T FIX
+//  Maybe the version of the postgresql dependency is the problem?
+//  - I removed the dependency version
+// 	   -- It was implementation("org.postgresql:postgresql:42.7.2")
+//     -- Now its implementation("org.postgresql:postgresql")
+//     -- DOESN'T FIX
+//  https://stackoverflow.com/questions/79246915/problems-with-hibernate-startup-logging-after-adding-jpa-with-database-in-spring
+// 	- Says that there is no issue
+//  - Maybe something else is the problem?
+//  - TODO: Maybe it's String[] links in Job and String[] roles in User due to
+//    JSON arrays not being supported?
 
