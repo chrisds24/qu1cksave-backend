@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Component
 public class JobService {
-    private JobRepository jobRepository;
+    private final JobRepository jobRepository;
 
     // If I need property value, Ex:
     //   @Value("${postgres.host}") String postgresHost
@@ -52,14 +52,3 @@ public class JobService {
         );
     }
 }
-
-// Setting environment variables:
-// - https://unix.stackexchange.com/questions/56444/how-do-i-set-an-environment-variable-on-the-command-line-and-have-it-appear-in-c
-// - https://stackoverflow.com/questions/62119161/adding-environment-variables-to-springs-application-properties
-//   -- Input "export POSTGRES_HOST=myvalue" in terminal to set environment variables
-//   -- Setting it in Intellij doesn't seem to work
-//
-//POSTGRES_HOST=localhost
-//POSTGRES_USER=postgres
-//POSTGRES_PASSWORD=postgres
-//POSTGRES_DB=dev                   The docker-compose.yml uses this

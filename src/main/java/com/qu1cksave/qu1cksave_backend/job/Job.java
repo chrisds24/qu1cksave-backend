@@ -169,6 +169,8 @@ public class Job {
         this.foundFrom = foundFrom;
     }
 
+    // NOTE: I heard I can use Lombok to generate getters and setters
+
     // Getters
     public UUID getId() { return id; }
     public UUID getMemberId() { return memberId; }
