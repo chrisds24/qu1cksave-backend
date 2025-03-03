@@ -22,10 +22,6 @@ public class CoverLetter {
     @Column(name = "mime_type", nullable = false)
     private String mimeType;
 
-    // TODO: Need another CoverLetter-type class that has the equivalent of
-    //  bytearray_as_array?: number[] (TypeScript) in Java, which is part of
-    //  the CoverLetter that will be returned when its downloaded.
-
     // Constructors
 
     protected CoverLetter() {}

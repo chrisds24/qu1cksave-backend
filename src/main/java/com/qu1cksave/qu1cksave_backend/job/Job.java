@@ -15,25 +15,21 @@ import java.util.UUID;
 @Table(name = "job")
 public class Job {
     // TODO:
-    //  Specify optional and required types
-    //  What is the appropriate association I should use?
-    //    https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#associations
     //  If when querying and only the id of the other table (Ex. resumeId) is
     //    in the current table, but not the object itself (Ex. resume), how
     //    should I annotate that column (if it should even be a column of the
     //    entity)
     //    - Note that this is a different case as with byteArrayAsArray for
-    //      Resume and CoverLetter, since that isn't even included in any table
+    //      Resume and CoverLetter, since that byteArrayAsArray isn't obtained
+    //      from any table. So I can just create a separate object that has it.
     //    - This issue is regarding (Note 1) in Resume.java
+    //    - Search "Hibernate entity field not column of a table"
     //  UPDATE:
     //    - I won't need associations since the tables don't really
     //      store entities from another table, only the id
     //    - I'l probably need custom queries (try HQL? If not, use actual SQL)
     //    - Could also be useful: https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#join-fetch
     //    - There are also Native Queries: https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#native-queries
-    //    - https://hibernate.org/orm/quickly/ (Quick list of useful things)
-    //    - https://spring.io/guides/gs/accessing-data-jpa (Tutorial)
-    //  Need to create a data source
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -111,6 +107,7 @@ public class Job {
     // https://hibernate.org/orm/quickly/
     // - If you have a field or property that maps to a single column, but its
     //   type isn’t one of the basic types build in to Hibernate, you can use an AttributeConverter
+    // TODO: Keep this one in mind in case it causes errors
     @JdbcTypeCode(SqlTypes.JSON)
     private String[] links;
 
@@ -169,7 +166,7 @@ public class Job {
         this.foundFrom = foundFrom;
     }
 
-    // NOTE: I heard I can use Lombok to generate getters and setters
+    // TODO: I heard I can use Lombok to generate getters and setters
 
     // Getters
     public UUID getId() { return id; }

@@ -19,12 +19,11 @@ public class Resume {
     //  - This happens when getting a job (in my case, getAllJobs) and the job
     //    doesn't have an associated resume
     //  HOWEVER, the columns in the table itself have NOT NULL (can't be null)
-    //
-    // NOTE: I may not need to worry about this depending on how Hibernate
-    //   fetches Jobs joined with Resume, such as if it just leaves the Resume
-    //   column for that job as null instead of including a Resume with null
-    //   columns
-    //
+    //  I may not need to worry about this depending on how Hibernate
+    //    fetches Jobs joined with Resume, such as if it just leaves the Resume
+    //    column for that job as null instead of including a Resume with null
+    //    columns
+
     // NOTE: The Resume/CoverLetter controllers are simply for getting the
     //   Resume/CoverLetter when downloading them.
 
@@ -43,8 +42,9 @@ public class Resume {
     private String mimeType;
 
     // TODO: Need another Resume-type class that has the equivalent of
-    //  bytearray_as_array?: number[] (TypeScript) in Java, which is part of
-    //  the Resume that will be returned when its downloaded.
+    //   bytearray_as_array?: number[] (TypeScript) in Java, which is part of
+    //   the Resume that will be returned when its downloaded.
+    //   - Or maybe there's a way to do this through annotations?
 
     // Constructors
 

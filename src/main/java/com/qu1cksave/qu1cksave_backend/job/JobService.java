@@ -12,7 +12,7 @@ import java.util.UUID;
 public class JobService {
     private final JobRepository jobRepository;
 
-    // If I need property value, Ex:
+    // If I need a property value, Ex:
     //   @Value("${postgres.host}") String postgresHost
     public JobService(@Autowired JobRepository jobRepository) {
         this.jobRepository = jobRepository;
@@ -20,9 +20,11 @@ public class JobService {
 
     // TODO: Change to use the userId and @Transactional
     // - Note: https://www.marcobehler.com/guides/spring-transaction-management-transactional-in-depth
-    //   -- I'll need a HibernateTransactionManager
+    //   -- I'll need a JpaTransactionManager
+    // https://stackoverflow.com/questions/10394857/how-to-use-transactional-with-spring-data
+    // - Talks about @Transactional(readOnly = true) for select queries
 //    @Transactional
-//    public Job[] getJobs(String userId) {
+//    public Job[] getJobs(String userId) { // USE THIS LATER
     public List<Job> getJobs() {
         return jobRepository.findAll();
     }

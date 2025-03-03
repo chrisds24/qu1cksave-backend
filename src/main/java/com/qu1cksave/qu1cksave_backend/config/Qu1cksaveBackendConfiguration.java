@@ -10,22 +10,22 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 public class Qu1cksaveBackendConfiguration {
     // https://stackoverflow.com/questions/67970207/using-hibernate-sessionfactory-with-the-jpa-entitymanager-together
     // - Link has code to get a HibernateTransactionManager
-    // ERROR 1: Parameter 0 of constructor in
-    //   com.qu1cksave.qu1cksave_backend.job.JobService required a bean named
-    //   'entityManagerFactory' that could not be found.
-    // - Maybe I should use JpaTransactionManager from https://www.marcobehler.com/guides/spring-transaction-management-transactional-in-depth
-    //   -- SOLUTION
-    // - https://stackoverflow.com/questions/48416927/spring-boot-required-a-bean-named-entitymanagerfactory-that-could-not-be-foun
-    //   -- Something about how the factory you use has to be named
-    //      entityManagerFactory
-    //      + Can do @Bean(name = "entityManagerFactory")
-    // ERROR 2:  Factory method 'dataSource' threw exception with message: URL
-    //   must start with 'jdbc'
-    // - Just change the url in the environment
+    // ERROR 1 (SOLVED)
+    //   Parameter 0 of constructor in com.qu1cksave.qu1cksave_backend.job.JobService required a bean named 'entityManagerFactory' that could not be found.
+    //   - Maybe I should use JpaTransactionManager from https://www.marcobehler.com/guides/spring-transaction-management-transactional-in-depth
+    //     -- This is the SOLUTION
+    //   - https://stackoverflow.com/questions/48416927/spring-boot-required-a-bean-named-entitymanagerfactory-that-could-not-be-foun
+    //     -- Something about how the factory you use has to be named
+    //        entityManagerFactory
+    //        + Can do @Bean(name = "entityManagerFactory")
+    // ERROR 2 (SOLVED)
+    //   Factory method 'dataSource' threw exception with message: URL must start with 'jdbc'
+    //   - SOLUTION: Just change the url in the environment
+    // TODO: What's the proper way to configure a JpaTransactionManager?
     @Bean
     public JpaTransactionManager transactionManager(
         @Autowired EntityManagerFactory entityManagerFactory
-        ) {
+    ) {
         return new JpaTransactionManager(entityManagerFactory);
     }
 }

@@ -10,25 +10,31 @@ public class Qu1cksaveBackendApplication {
 	}
 }
 
-// docker-compose up -d		Run the postgres docker container (in a different terminal)
-// docker-compose down		To remove the docker-container
+// When running the app:
+// 1.) Might need to do File > Invalidate Caches
+// 2.) Set environment variables
+//		 export POSTGRES_HOST=jdbc:postgresql://localhost:5432/dev
+//       - (OLD: Node version) POSTGRES_HOST=localhost
+//       - Can add ?useSSL=false at end if needed (self explanatory)
+//		 export POSTGRES_USER=postgres
+//		 export POSTGRES_PASSWORD=postgres
+//		 export POSTGRES_DB=dev
+//		 - The docker-compose.yml uses this
+// 3.) Run postgres docker container
+//		docker-compose down		(If you want to reset. Then compose up again)
+// 		docker-compose up -d
+// 4.) ./gradlew bootRun
 
-// TODO:
+// USEFUL NOTES:
 // https://www.marcobehler.com/guides/java-databases
 // 1.) Spring takes care of configuring SessionFactory for Hibernate, so no
 //     need to write code for it.
+//     - UPDATE: I can unwrap an entityManager (autowired) to get it
 // 2.) Spring Data understands @Entity, @Column, @Table, etc. and automatically
 //     generates repositories. (Gives basic CRUD operations)
 // 3.) Can write custom repositories by extending JpaRepository
 //     (Ex. public interface UserRepository extends JpaRepository ...)
-//     - Need to do this since I have different steps for a transaction
-//     - Ex. Creating a job
-//       -- Add Resume to resume table. Returns a Resume
-//       -- Use that Resume's id as the Job's resume_id
-//       -- Add the Job to the job table.
-//       -- Add the file to S3.
-//       -- Return the Job with the Resume attached.
-//     - At any point, I'll need to rollback whenever a step fails
+//     - I need to create the repository even if I'm not making custom queries
 // 4.) Can write custom JPA queries just from the method name
 //     - I'll also need this since I like to search for jobs (such as when
 //       editing or deleting) using both the Job's id and its member_id
@@ -36,21 +42,33 @@ public class Qu1cksaveBackendApplication {
 // Note: Extending CrudRepository is for Spring Data JDBC
 //
 // https://www.marcobehler.com/guides/spring-transaction-management-transactional-in-depth
-// 1.) Seems like I put @Transactional on the service file, which calls the
+// 1.) Put @Transactional on the service file, which calls the
 //     DAO or repository
+//     - Need to do this since I have different steps for a transaction
+//     - Ex. Creating a job
+//       -- Add Resume to resume table. Returns a Resume
+//       -- Use that Resume's id as the Job's resume_id
+//       -- Add the Job to the job table.
+//       -- Add the file to S3.
+//       -- Return the Job with the Resume attached.
+//     - So at any point, I'll need to rollback whenever a step fails
 // 2.) Need to specify a transaction manager in my Spring configuration
 //     (Ex. PlatformTransactionManager, which is defined as a bean in a
 //     configuration file.)
 //     - Need to create a database-specific or connection-pool specific
 //       data source. Have your data source bean return this
 //     - The returned transaction manager will take this as an argument
+//     - UPDATE (not from this tutorial)
+//       -- Different transaction managers take different parameters
+//       -- Ex. JpaTransactionManager takes an EntityManagerFactory
+//              HibernateTransactionManager takes a SessionFactory
+//
 // 3.) Spring Boot automatically sets the @EnableTransactionManagement
 //     annotation and creates a PlatformTransactionManager for you - with its
 //     JDBC auto-configurations
-//     - Regarding the Hibernate integration below, I may not be able to
+//     - Regarding the Hibernate integration below, I won't be able to
 //       utilize this automatic creation of a Transaction Manager since I'll
-//       need to use HibernateTransactionManager. Unless...there's a way to
-//       do this with just configs.
+//       need to use JpaTransactionManager.
 // 4.) There's code here to integrate Hibernate with @Transactional
 // 5.) Instead of using a DataSourcePlatformTransactionManager in your Spring
 //     configuration, you will be using a HibernateTransactionManager (if using

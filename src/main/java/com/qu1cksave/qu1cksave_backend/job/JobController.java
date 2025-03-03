@@ -10,7 +10,6 @@ import java.util.UUID;
 public class JobController {
     // https://stackoverflow.com/questions/63259116/what-is-the-difference-between-using-autowired-annotation-and-private-final
     // - The above is regarding service and repos, but the same idea may apply
-    // - TODO: What's the advantage of using private final?
     private final JobService jobService;
 
     public JobController(@Autowired JobService jobService) {
@@ -24,11 +23,7 @@ public class JobController {
     //     to filter those jobs (which is why I'm not using it here to filter
     //     the current user's jobs).
 //    @GetMapping("/me")
-//    public Job[] getUserJobs(
-//        // Need to get id of user from the JWT in the Auth header here
-//    ) {
-//        // code here
-//    }
+//    public Job[] getUserJobs(...) { ... }
 
     // TODO: For everything below, need to get id of user from the JWT in the
     //   Auth header. I remember it's passed as a parameter in Spring Security
