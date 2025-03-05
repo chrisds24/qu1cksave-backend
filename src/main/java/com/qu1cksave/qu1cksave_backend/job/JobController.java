@@ -29,12 +29,12 @@ public class JobController {
     //   Auth header. I remember it's passed as a parameter in Spring Security
 
     @GetMapping()
-    public List<Job> getJobs() {
+    public List<JobDto> getJobs() {
         return jobService.getJobs();
     }
 
     @GetMapping("/{id}")
-    public Job getJob(@PathVariable UUID id) {
+    public JobDto getJob(@PathVariable UUID id) {
         return jobService.getJob(id);
     }
 }

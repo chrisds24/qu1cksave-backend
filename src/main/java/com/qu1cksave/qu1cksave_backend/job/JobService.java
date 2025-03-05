@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class JobService {
@@ -25,14 +26,15 @@ public class JobService {
     // - Talks about @Transactional(readOnly = true) for select queries
 //    @Transactional
 //    public Job[] getJobs(String userId) { // USE THIS LATER
-    public List<Job> getJobs() {
-        return jobRepository.findAll();
+    public List<JobDto> getJobs() {
+        return jobRepository.findAll().stream().map(JobMapper::toDto).collect(Collectors.toList());
     }
 
-    public Job getJob(UUID id) {
-//        return jobRepository.findByUuid(id);
+    public JobDto getJob(UUID id) {
         // Test return value
-        return new Job(
+        return JobMapper.toDto(new Job(
+            UUID.fromString("1c27e3ee-0307-4e0d-ac0f-dadfcc420ce3"),
+            UUID.fromString("1c27e3ee-0307-4e0d-ac0f-dadfcc420ce3"),
             UUID.fromString("1c27e3ee-0307-4e0d-ac0f-dadfcc420ce3"),
             UUID.fromString("1c27e3ee-0307-4e0d-ac0f-dadfcc420ce3"),
             "title",
@@ -51,6 +53,6 @@ public class JobService {
             "jobStatus",
             new String[1],
             "foundFrom"
-        );
+        ));
     }
 }

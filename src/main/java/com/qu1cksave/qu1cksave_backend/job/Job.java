@@ -71,6 +71,7 @@ public class Job {
     // - https://stackoverflow.com/questions/4008418/hibernate-add-a-property-in-my-class-that-is-not-mapped-to-a-db-table
     // - https://stackoverflow.com/questions/52942906/can-a-jpa-entity-have-a-field-not-mapped-to-a-db-column
     // - https://stackoverflow.com/questions/4662582/make-hibernate-ignore-instance-variables-that-are-not-mapped
+    // - TODO: Can also search "hibernate entity less fields than dto"
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

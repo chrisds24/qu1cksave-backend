@@ -4,6 +4,10 @@ import java.util.UUID;
 
 public class JobMapper {
     public static JobDto toDto(Job entity) {
+        // TODO: Search about:
+        //   - "nullable fields DTO"
+        //   - "multiple constructors DTO"
+        //      -- Or instead: "optional parameters constructor"
         return new JobDto(
             entity.getId(),
             entity.getMemberId(),
