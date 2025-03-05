@@ -1,12 +1,15 @@
-package com.qu1cksave.qu1cksave_backend.config;
+package com.qu1cksave.qu1cksave_backend;
 
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
+@EnableJpaRepositories
 public class Qu1cksaveBackendConfiguration {
     // https://stackoverflow.com/questions/67970207/using-hibernate-sessionfactory-with-the-jpa-entitymanager-together
     // - Link has code to get a HibernateTransactionManager
@@ -22,11 +25,19 @@ public class Qu1cksaveBackendConfiguration {
     //   Factory method 'dataSource' threw exception with message: URL must start with 'jdbc'
     //   - SOLUTION: Just change the url in the environment
     // TODO: What's the proper way to configure a JpaTransactionManager?
+//    @Bean
+//    public JpaTransactionManager transactionManager(
+//        @Autowired EntityManagerFactory entityManagerFactory
+//    ) {
+//        return new JpaTransactionManager(entityManagerFactory);
+//    }
+    // https://docs.spring.io/spring-data/jpa/reference/repositories/create-instances.html
+    // - Source for the transaction manager code below
     @Bean
-    public JpaTransactionManager transactionManager(
-        @Autowired EntityManagerFactory entityManagerFactory
-    ) {
-        return new JpaTransactionManager(entityManagerFactory);
+    public PlatformTransactionManager transactionManager(@Autowired EntityManagerFactory entityManagerFactory) {
+        JpaTransactionManager txManager = new JpaTransactionManager();
+        txManager.setEntityManagerFactory(entityManagerFactory);
+        return txManager;
     }
 }
 

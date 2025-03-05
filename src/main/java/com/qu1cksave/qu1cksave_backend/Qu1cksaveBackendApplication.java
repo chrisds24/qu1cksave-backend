@@ -24,6 +24,11 @@ public class Qu1cksaveBackendApplication {
 //		docker-compose down		(If you want to reset. Then compose up again)
 // 		docker-compose up -d
 // 4.) ./gradlew bootRun
+// 5.) Go to http://localhost:8080/jobs
+
+// No active profile set, falling back to 1 default profile: "default"
+// - https://stackoverflow.com/questions/68171743/eclipse-no-active-profile-set-falling-back-to-default-profiles-default
+//   - So we can set dev, prod, etc. environments
 
 // Setting environment variables:
 // - https://unix.stackexchange.com/questions/56444/how-do-i-set-an-environment-variable-on-the-command-line-and-have-it-appear-in-c

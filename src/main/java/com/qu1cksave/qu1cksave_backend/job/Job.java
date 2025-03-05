@@ -31,6 +31,47 @@ public class Job {
     //    - Could also be useful: https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#join-fetch
     //    - There are also Native Queries: https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#native-queries
 
+    // IMPORTANT:
+    // https://stackoverflow.com/questions/69850710/dto-dao-and-entity-is-entity-needed-best-pratice-with-those-3
+    // - The entity is supposed to be a representation of a table,
+    //   so I shouldn't include things that wouldn't be in it here
+    // - I could use a JobDto to be a representation of a Job that could have
+    //   Resumes/CoverLetters
+    // https://www.reddit.com/r/SpringBoot/comments/zlphkn/difference_between_dto_and_entity_and_dao/
+    // - but if you are working with Entities inside the service you need to map
+    //   the (live) Entity to a DTO which you return to the caller (e.g.
+    //   controller)
+    // - so those are simple Mappings from one Class to the other Class (e.g.
+    //   MapStruct helps so you don't have to manually write the mapping code)
+    // - ME: I remember reading somewhere that DAOs and Repositories are used
+    //   interchangeably
+    // https://www.reddit.com/r/learnprogramming/comments/12sbyfp/if_an_entity_and_a_response_object_dto_have/
+    // - Why use a DTO?
+    //   -- What happens down the line if you change the database schema and
+    //      the Entity has more fields, or needs to change the type of one of
+    //      the fields? That change could end up breaking the frontend.Example:
+    //      + You get rid of a database column because it's possible to fetch
+    //        that from a different table with a JOIN. Now the entity has less
+    //        information than the DTO
+    //        (THIS IS MY USE CASE)
+    // https://stackoverflow.com/questions/43882484/why-not-hierarchy-from-entity-to-create-dto#:~:text=Usually%2C%20a%20DTO%20will%20be,to%20access%20all%20that%20state.
+    // - Don't extend an Entity to get a DTO from it
+    // https://www.baeldung.com/java-entity-vs-dto
+    // - There can be a separate ObjectCreationDto and ObjectResponseDto
+    //   -- Ex. UserCreationDto (without id) and UserResponseDto (now has id)
+    // - We can manually create a Mapper class (Ex. UserMapper), or even
+    //   better, use MapStruct
+    // - return userRepository.findAll().stream().map(UserMapper::toDto).collect(Collectors.toList());
+    //   -- TODO: Why use stream and collect?
+    // TODO: https://www.baeldung.com/mapstruct
+    // - Though, I heard a few times that MapStruct is deprecated
+    // TODO: Search "hibernate entity field not in table site:stackoverflow.com"
+    // - https://www.baeldung.com/jpa-hibernate-associations
+    // - https://stackoverflow.com/questions/63473073/hibernate-have-a-field-that-is-not-peristed-but-can-be-pulled-from-db
+    // - https://stackoverflow.com/questions/4008418/hibernate-add-a-property-in-my-class-that-is-not-mapped-to-a-db-table
+    // - https://stackoverflow.com/questions/52942906/can-a-jpa-entity-have-a-field-not-mapped-to-a-db-column
+    // - https://stackoverflow.com/questions/4662582/make-hibernate-ignore-instance-variables-that-are-not-mapped
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false)
@@ -68,11 +109,13 @@ public class Job {
     @Column(name = "is_remote", nullable = false)
     private String isRemote;
 
+    // https://stackoverflow.com/questions/3154582/why-do-i-get-a-null-value-was-assigned-to-a-property-of-primitive-type-setter-o
+    // - Need to use object type (Ex. Integer instead of int)
     @Column(name = "salary_min")
-    private int salaryMin;
+    private Integer salaryMin;
 
     @Column(name = "salary_max")
-    private int salaryMax;
+    private Integer salaryMax;
 
     private String country;
 
