@@ -85,11 +85,11 @@ public class Job {
     private UUID memberId;
 
     @Column(name = "resume_id")
-    private String resumeId;
+    private UUID resumeId;
 //    private Resume resume; // NOT a column of the table
 
     @Column(name = "cover_letter_id")
-    private String coverLetterId;
+    private UUID coverLetterId;
 //    private CoverLetter coverLetter; // NOT a column of the table
 
     // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#regular-column-mappings
@@ -151,6 +151,7 @@ public class Job {
     // - If you have a field or property that maps to a single column, but its
     //   type isn’t one of the basic types build in to Hibernate, you can use an AttributeConverter
     // TODO: Keep this one in mind in case it causes errors
+    //   - Also, should this be String[] or List<String> ???
     @JdbcTypeCode(SqlTypes.JSON)
     private String[] links;
 
@@ -164,17 +165,17 @@ public class Job {
     public Job(
         UUID id,
         UUID memberId,
-//    String resumeId,
+        UUID resumeId,
 //    Resume resume,
-//    String coverLetterId,
+        UUID coverLetterId,
 //    CoverLetter coverLetter,
         String title,
         String companyName,
         String jobDescription,
         String notes,
         String isRemote,
-        int salaryMin,
-        int salaryMax,
+        Integer salaryMin,
+        Integer salaryMax,
         String country,
         String usState,
         String city,
@@ -187,9 +188,9 @@ public class Job {
     ) {
         this.id = id;
         this.memberId = memberId;
-//        this.resumeId = resumeId;
+        this.resumeId = resumeId;
 //        this.resume = resume;
-//        this.coverLetterId = coverLetterId;
+        this.coverLetterId = coverLetterId;
 //        this.coverLetter = coverLetter;
         this.title = title;
         this.companyName = companyName;
@@ -214,13 +215,15 @@ public class Job {
     // Getters
     public UUID getId() { return id; }
     public UUID getMemberId() { return memberId; }
+    public UUID getResumeId() { return resumeId; }
+    public UUID getCoverLetterId() { return coverLetterId; }
     public String getTitle() { return title; }
     public String getCompanyName() { return companyName; }
     public String getJobDescription() { return jobDescription; }
     public String getNotes() { return notes; }
     public String getIsRemote() { return isRemote; }
-    public int getSalaryMin() { return salaryMin; }
-    public int getSalaryMax() { return salaryMax; }
+    public Integer getSalaryMin() { return salaryMin; }
+    public Integer getSalaryMax() { return salaryMax; }
     public String getCountry() { return country; }
     public String getUsState() { return usState; }
     public String getCity() { return city; }
@@ -234,13 +237,15 @@ public class Job {
     // Setters
     public void setId(UUID id) { this.id = id; }
     public void setMemberId(UUID memberId) { this.memberId = memberId; }
+    public void setCoverLetterId(UUID coverLetterId) { this.coverLetterId = coverLetterId; }
+    public void setResumeId(UUID resumeId) { this.resumeId = resumeId; }
     public void setTitle(String title) { this.title = title; }
     public void setCompanyName(String companyName) { this.companyName = companyName; }
     public void setJobDescription(String jobDescription) { this.jobDescription = jobDescription; }
     public void setNotes(String notes) { this.notes = notes; }
     public void setIsRemote(String isRemote) { this.isRemote = isRemote; }
-    public void setSalaryMin(int salaryMin) { this.salaryMin = salaryMin; }
-    public void setSalaryMax(int salaryMax) { this.salaryMax = salaryMax; }
+    public void setSalaryMin(Integer salaryMin) { this.salaryMin = salaryMin; }
+    public void setSalaryMax(Integer salaryMax) { this.salaryMax = salaryMax; }
     public void setCountry(String country) { this.country = country; }
     public void setUsState(String usState) { this.usState = usState; }
     public void setCity(String city) { this.city = city; }
