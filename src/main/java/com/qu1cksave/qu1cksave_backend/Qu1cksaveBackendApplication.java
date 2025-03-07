@@ -26,7 +26,7 @@ public class Qu1cksaveBackendApplication {
 // 4.) ./gradlew bootRun
 // 5.) Go to http://localhost:8080/jobs
 
-// No active profile set, falling back to 1 default profile: "default"
+// In terminal log: No active profile set, falling back to 1 default profile: "default"
 // - https://stackoverflow.com/questions/68171743/eclipse-no-active-profile-set-falling-back-to-default-profiles-default
 //   - So we can set dev, prod, etc. environments
 
@@ -155,10 +155,10 @@ public class Qu1cksaveBackendApplication {
 //        + Use postgresql 42.2.23 ???
 //        + UPDATE: Postgres allows us to not include version numbers, which I
 //			did.
-//	ERROR 3:
+//	ERROR 3 (SOLVED):
 //	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
 //	Database driver: undefined/unknown
-//	TODO: What's causing this issue?
+//	What's causing this the log above?
 //	https://stackoverflow.com/questions/58632697/spring-boot-postgresql-driver-cannot-be-located-in-classpath
 //	- To set postgresql driver
 //	- spring.datasource.driver-class-name=org.postgresql.Driver
@@ -174,8 +174,4 @@ public class Qu1cksaveBackendApplication {
 //     -- Now its implementation("org.postgresql:postgresql")
 //     -- DOESN'T FIX
 //  https://stackoverflow.com/questions/79246915/problems-with-hibernate-startup-logging-after-adding-jpa-with-database-in-spring
-// 	- Says that there is no issue
-//  - Maybe something else is the problem?
-//  - TODO: Maybe it's String[] links in Job and String[] roles in User due to
-//    JSON arrays not being supported?
-
+// 	- SOLUTION: Says that there is no issue

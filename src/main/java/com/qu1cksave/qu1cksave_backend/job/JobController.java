@@ -30,11 +30,18 @@ public class JobController {
 
     @GetMapping()
     public List<JobDto> getJobs() {
-        return jobService.getJobs();
+        // TODO: Replace mollyMemberId with user id obtained from auth header
+        UUID mollyMemberId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
+//        UUID unknownMemberId = UUID.fromString("abab3d55-4eee-4a2e-8c64-e1fe386b76f8");
+        return jobService.getJobs(mollyMemberId);
+//        return jobService.getJobs(unknownMemberId);
     }
 
     @GetMapping("/{id}")
     public JobDto getJob(@PathVariable UUID id) {
-        return jobService.getJob(id);
+        UUID mollyMemberId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
+//        UUID unknownMemberId = UUID.fromString("abab3d55-4eee-4a2e-8c64-e1fe386b76f8");
+        return jobService.getJob(id, mollyMemberId);
+//        return jobService.getJob(id, unknownMemberId);
     }
 }

@@ -23,20 +23,26 @@ public class JobDto {
     // - https://stackoverflow.com/questions/23454952/uses-for-optional
     //   -- Keep seeing that Optional is bad practice for fields
     // - https://www.baeldung.com/java-optional
+    // TODO: https://stackoverflow.com/questions/1281952/what-is-the-easiest-way-to-ignore-a-jpa-field-during-persistence
+    //  - You can also use JsonInclude.Include.NON_NULL and hide fields in JSON
+    //    during deserialization
+    //  - @JsonInclude(JsonInclude.Include.NON_NULL)
+    //  - ME: I can use this if I want to not return null fields as part of the
+    //    JSON response
 
     private final UUID id; // NOT NULLABLE
     private final UUID memberId; // NOT NULLABLE
     private final UUID resumeId;
-//    private final Resume resume;
+    private final Resume resume;
     private final UUID coverLetterId;
-//    private final CoverLetter coverLetter;
+    private final CoverLetter coverLetter;
     private final String title; // NOT NULLABLE
     private final String companyName; // NOT NULLABLE
     private final String jobDescription;
     private final String notes;
     private final String isRemote; // NOT NULLABLE
-    private final Integer salaryMin; // TODO: Should I use int?
-    private final Integer salaryMax; // TODO: Should I use int?
+    private final Integer salaryMin;
+    private final Integer salaryMax;
     private final String country;
     private final String usState;
     private final String city;
@@ -52,9 +58,9 @@ public class JobDto {
         UUID id,
         UUID memberId,
         UUID resumeId,
-//        Resume resume,
+        Resume resume,
         UUID coverLetterId,
-//        CoverLetter coverLetter,
+        CoverLetter coverLetter,
         String title,
         String companyName,
         String jobDescription,
@@ -75,9 +81,9 @@ public class JobDto {
         this.id = id;
         this.memberId = memberId;
         this.resumeId = resumeId;
-//        this.resume = resume;
+        this.resume = resume;
         this.coverLetterId = coverLetterId;
-//        this.coverLetter = coverLetter;
+        this.coverLetter = coverLetter;
         this.title = title;
         this.companyName = companyName;
         this.jobDescription = jobDescription;
@@ -100,9 +106,9 @@ public class JobDto {
     public UUID getId() { return id; }
     public UUID getMemberId() { return memberId; }
     public UUID getResumeId() { return resumeId; }
-//    public Resume getResume() { return resume; }
+    public Resume getResume() { return resume; }
     public UUID getCoverLetterId() { return coverLetterId; }
-//    public CoverLetter getCoverLetter() { return coverLetter; }
+    public CoverLetter getCoverLetter() { return coverLetter; }
     public String getTitle() { return title; }
     public String getCompanyName() { return companyName; }
     public String getJobDescription() { return jobDescription; }

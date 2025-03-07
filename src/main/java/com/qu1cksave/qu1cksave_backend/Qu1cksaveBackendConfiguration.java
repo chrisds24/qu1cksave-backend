@@ -24,13 +24,7 @@ public class Qu1cksaveBackendConfiguration {
     // ERROR 2 (SOLVED)
     //   Factory method 'dataSource' threw exception with message: URL must start with 'jdbc'
     //   - SOLUTION: Just change the url in the environment
-    // TODO: What's the proper way to configure a JpaTransactionManager?
-//    @Bean
-//    public JpaTransactionManager transactionManager(
-//        @Autowired EntityManagerFactory entityManagerFactory
-//    ) {
-//        return new JpaTransactionManager(entityManagerFactory);
-//    }
+    //
     // https://docs.spring.io/spring-data/jpa/reference/repositories/create-instances.html
     // - Source for the transaction manager code below
     @Bean
