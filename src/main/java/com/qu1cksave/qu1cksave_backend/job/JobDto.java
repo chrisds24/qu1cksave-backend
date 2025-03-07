@@ -6,29 +6,46 @@ import com.qu1cksave.qu1cksave_backend.resume.Resume;
 import java.util.UUID;
 
 public class JobDto {
-    // TODO: Make these final
-    private UUID id; // Not nullable
-    private UUID memberId; // Not nullable
-    private UUID resumeId;
-//    private Resume resume;
-    private UUID coverLetterId;
-//    private CoverLetter coverLetter;
-    private String title; // Not nullable
-    private String companyName; // Not nullable
-    private String jobDescription;
-    private String notes;
-    private String isRemote; // Not nullable
-    private int salaryMin; // Integer in entity
-    private int salaryMax; // Integer in entity
-    private String country;
-    private String usState;
-    private String city;
-    private String dateSaved; // Not nullable
-    private YearMonthDate dateApplied;
-    private YearMonthDate datePosted;
-    private String jobStatus; // Not nullable
-    private String[] links;
-    private String foundFrom;
+    // TODO: How to specify NOT nullable?
+    // TODO: Search for:
+    // - multiple constructors DTO
+    // - required/nullable parameters constructor DTO
+    // How to specify nullable?
+    // - Optional could work to specify nullable...But there's a better way
+    // - https://stackoverflow.com/questions/70065782/how-to-make-a-field-optional
+    //   -- In Java, all (non-primitive) types are nullable, hence can be
+    //      seen optional. So you could just assign it null and call it a day
+    // https://stackoverflow.com/questions/7504064/does-java-allow-nullable-types
+    // - No, in java primitives cannot have null value, if you want this
+    //   feature, you might want to use Boolean instead.
+    // https://stackoverflow.com/questions/58182553/notnull-annotation-is-not-working-in-spring-boot-application
+    // Optional:
+    // - https://stackoverflow.com/questions/23454952/uses-for-optional
+    //   -- Keep seeing that Optional is bad practice for fields
+    // - https://www.baeldung.com/java-optional
+
+    private final UUID id; // NOT NULLABLE
+    private final UUID memberId; // NOT NULLABLE
+    private final UUID resumeId;
+//    private final Resume resume;
+    private final UUID coverLetterId;
+//    private final CoverLetter coverLetter;
+    private final String title; // NOT NULLABLE
+    private final String companyName; // NOT NULLABLE
+    private final String jobDescription;
+    private final String notes;
+    private final String isRemote; // NOT NULLABLE
+    private final Integer salaryMin; // TODO: Should I use int?
+    private final Integer salaryMax; // TODO: Should I use int?
+    private final String country;
+    private final String usState;
+    private final String city;
+    private final String dateSaved; // NOT NULLABLE
+    private final YearMonthDate dateApplied;
+    private final YearMonthDate datePosted;
+    private final String jobStatus; // NOT NULLABLE
+    private final String[] links;
+    private final String foundFrom;
 
     // Constructor
     public JobDto(
@@ -43,8 +60,8 @@ public class JobDto {
         String jobDescription,
         String notes,
         String isRemote,
-        int salaryMin,
-        int salaryMax,
+        Integer salaryMin,
+        Integer salaryMax,
         String country,
         String usState,
         String city,
@@ -91,8 +108,8 @@ public class JobDto {
     public String getJobDescription() { return jobDescription; }
     public String getNotes() { return notes; }
     public String getIsRemote() { return isRemote; }
-    public int getSalaryMin() { return salaryMin; }
-    public int getSalaryMax() { return salaryMax; }
+    public Integer getSalaryMin() { return salaryMin; }
+    public Integer getSalaryMax() { return salaryMax; }
     public String getCountry() { return country; }
     public String getUsState() { return usState; }
     public String getCity() { return city; }

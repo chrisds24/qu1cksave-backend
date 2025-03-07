@@ -12,6 +12,10 @@ import java.util.stream.Collectors;
 @Component
 public class JobService {
     private final JobRepository jobRepository;
+    // When I autowire this, it says:
+    //   Could not autowire. No beans of 'JobMapper' type found.
+    // Since I obviously haven't declared JobMapper as a bean.
+//    private final JobMapper jobMapper;
 
     // If I need a property value, Ex:
     //   @Value("${postgres.host}") String postgresHost

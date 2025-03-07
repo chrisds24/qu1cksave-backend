@@ -62,9 +62,10 @@ public class Job {
     // - We can manually create a Mapper class (Ex. UserMapper), or even
     //   better, use MapStruct
     // - return userRepository.findAll().stream().map(UserMapper::toDto).collect(Collectors.toList());
-    //   -- TODO: Why use stream and collect?
-    // TODO: https://www.baeldung.com/mapstruct
-    // - Though, I heard a few times that MapStruct is deprecated
+    //   -- TODO: Why use stream and collect again?
+    // https://www.baeldung.com/mapstruct
+    // - Though, I heard a few times that MapStruct is deprecated.
+    // - I just created a manual mapper
     // TODO: Search "hibernate entity field not in table site:stackoverflow.com"
     // - https://www.baeldung.com/jpa-hibernate-associations
     // - https://stackoverflow.com/questions/63473073/hibernate-have-a-field-that-is-not-peristed-but-can-be-pulled-from-db
