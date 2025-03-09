@@ -1,5 +1,8 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
+import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterMapper;
+import com.qu1cksave.qu1cksave_backend.resume.ResumeMapper;
+
 // Note:
 // https://www.baeldung.com/java-entity-vs-dto
 // - This link doesn't have the mapper as a Spring Bean (@Component)
@@ -21,9 +24,9 @@ public class JobMapper {
             entity.getId(),
             entity.getMemberId(),
             entity.getResumeId(),
-            entity.getResume(),
+            ResumeMapper.toDto(entity.getResume()),
             entity.getCoverLetterId(),
-            entity.getCoverLetter(),
+            CoverLetterMapper.toDto(entity.getCoverLetter()),
             entity.getTitle(),
             entity.getCompanyName(),
             entity.getJobDescription(),
@@ -48,9 +51,9 @@ public class JobMapper {
             dto.getId(),
             dto.getMemberId(),
             dto.getResumeId(),
-            dto.getResume(),
+            ResumeMapper.toEntity(dto.getResume()),
             dto.getCoverLetterId(),
-            dto.getCoverLetter(),
+            CoverLetterMapper.toEntity(dto.getCoverLetter()),
             dto.getTitle(),
             dto.getCompanyName(),
             dto.getJobDescription(),

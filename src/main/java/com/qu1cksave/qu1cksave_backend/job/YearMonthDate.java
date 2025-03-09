@@ -5,16 +5,16 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public class YearMonthDate {
 
-    private int year;
-    private int month;
-    private int date;
+    private Integer year;
+    private Integer month;
+    private Integer date;
 
     protected YearMonthDate() {}
 
     public YearMonthDate(
-        int year,
-        int month,
-        int date
+        Integer year,
+        Integer month,
+        Integer date
     ) {
         this.year = year;
         this.month = month;
@@ -22,12 +22,12 @@ public class YearMonthDate {
     }
 
     // Getters
-    public int getYear() { return year; }
-    public int getMonth() { return month; }
-    public int getDate() { return date; }
+    public Integer getYear() { return year; }
+    public Integer getMonth() { return month; }
+    public Integer getDate() { return date; }
 
     // Setters
-    public void setYear(int year) { this.year = year; }
-    public void setMonth(int month) { this.month = month; }
-    public void setDate(int date) { this.date = date; }
+    public void setYear(Integer year) { this.year = year; }
+    public void setMonth(Integer month) { this.month = month; }
+    public void setDate(Integer date) { this.date = date; }
 }

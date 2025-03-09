@@ -1,7 +1,8 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetter;
-import com.qu1cksave.qu1cksave_backend.resume.Resume;
+import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterDto;
+import com.qu1cksave.qu1cksave_backend.resume.ResumeDto;
 
 import java.util.UUID;
 
@@ -33,9 +34,9 @@ public class JobDto {
     private final UUID id; // NOT NULLABLE
     private final UUID memberId; // NOT NULLABLE
     private final UUID resumeId;
-    private final Resume resume;
+    private final ResumeDto resume;
     private final UUID coverLetterId;
-    private final CoverLetter coverLetter;
+    private final CoverLetterDto coverLetter;
     private final String title; // NOT NULLABLE
     private final String companyName; // NOT NULLABLE
     private final String jobDescription;
@@ -58,9 +59,9 @@ public class JobDto {
         UUID id,
         UUID memberId,
         UUID resumeId,
-        Resume resume,
+        ResumeDto resume,
         UUID coverLetterId,
-        CoverLetter coverLetter,
+        CoverLetterDto coverLetter,
         String title,
         String companyName,
         String jobDescription,
@@ -106,9 +107,9 @@ public class JobDto {
     public UUID getId() { return id; }
     public UUID getMemberId() { return memberId; }
     public UUID getResumeId() { return resumeId; }
-    public Resume getResume() { return resume; }
+    public ResumeDto getResume() { return resume; }
     public UUID getCoverLetterId() { return coverLetterId; }
-    public CoverLetter getCoverLetter() { return coverLetter; }
+    public CoverLetterDto getCoverLetter() { return coverLetter; }
     public String getTitle() { return title; }
     public String getCompanyName() { return companyName; }
     public String getJobDescription() { return jobDescription; }

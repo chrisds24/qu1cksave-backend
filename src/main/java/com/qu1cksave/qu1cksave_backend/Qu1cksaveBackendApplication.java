@@ -24,7 +24,7 @@ public class Qu1cksaveBackendApplication {
 //		docker-compose down		(If you want to reset. Then compose up again)
 // 		docker-compose up -d
 // 4.) ./gradlew bootRun
-// 5.) Go to http://localhost:8080/jobs
+// 5.) Go to http://localhost:8080/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
 
 // In terminal log: No active profile set, falling back to 1 default profile: "default"
 // - https://stackoverflow.com/questions/68171743/eclipse-no-active-profile-set-falling-back-to-default-profiles-default

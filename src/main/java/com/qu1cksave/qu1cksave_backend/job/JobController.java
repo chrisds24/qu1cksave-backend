@@ -29,19 +29,25 @@ public class JobController {
     //   Auth header. I remember it's passed as a parameter in Spring Security
 
     @GetMapping()
-    public List<JobDto> getJobs() {
+    public List<JobDto> getJobs(@RequestParam("id") String userId) {
         // TODO: Replace mollyMemberId with user id obtained from auth header
-        UUID mollyMemberId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
-//        UUID unknownMemberId = UUID.fromString("abab3d55-4eee-4a2e-8c64-e1fe386b76f8");
-        return jobService.getJobs(mollyMemberId);
-//        return jobService.getJobs(unknownMemberId);
+        //  - I'll compare the one from the query and the auth header
+        String strAuthUserId = "269a3d55-4eee-4a2e-8c64-e1fe386b76f8";
+
+        // User wants jobs that don't belong to them
+        if (!strAuthUserId.equals(userId)) {
+            return null; // TODO: Return an appropriate JSON error object
+        }
+
+        UUID authUserId = UUID.fromString(strAuthUserId);
+        return jobService.getJobs(authUserId);
+
+        // For testing: http://localhost:8080/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
     }
 
-    @GetMapping("/{id}")
-    public JobDto getJob(@PathVariable UUID id) {
-        UUID mollyMemberId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
-//        UUID unknownMemberId = UUID.fromString("abab3d55-4eee-4a2e-8c64-e1fe386b76f8");
-        return jobService.getJob(id, mollyMemberId);
-//        return jobService.getJob(id, unknownMemberId);
-    }
+//    @GetMapping("/{id}")
+//    public JobDto getJob(@PathVariable UUID id) {
+//        UUID mollyMemberId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
+//        return jobService.getJob(id, mollyMemberId);
+//    }
 }
