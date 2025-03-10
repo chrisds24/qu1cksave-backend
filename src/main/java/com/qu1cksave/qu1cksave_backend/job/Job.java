@@ -1,7 +1,6 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetter;
 import com.qu1cksave.qu1cksave_backend.resume.Resume;
 import jakarta.persistence.Column;
@@ -16,6 +15,7 @@ import jakarta.persistence.Transient;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -70,8 +70,9 @@ public class Job {
     //    to a DTO first.
     // https://stackoverflow.com/questions/71497619/field-with-transient-annotation-doesnt-appear-in-returned-json
     // - TODO: How to set value of transient field?
+    // -
     @Transient
-//    @JsonInclude
+//    @JsonInclude // This doesn't allow populating a transient field
     private Resume resume; // NOT a column of the table
 
     @Column(name = "cover_letter_id")
@@ -121,13 +122,25 @@ public class Job {
     // - Need an embeddable type
     // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#mapping-embeddables
     // - Map to jsonb
+    // https://stackoverflow.com/questions/57484739/deserialization-of-dynamic-attribute-of-json-entity-using-jackson
+    // - ERROR (SOLVED): Some error about how String can't be cast to Integer
+    //   -- Turns out the error is coming from converting the returned JSON
+    //   -- The numbers from the JSON are considered String, which can't be
+    //      cast to an Integer. Which is a problem since YearMonthDate expects
+    //      an Integer
+    // - SOLUTION: Using Map<String, Object> instead to deserialize JSON into
+    //   YearMonthDate
+    // - JsonCreate and JsonDeserialize could have also worked, but this seems
+    //   to be the simplest and works well enough for now
     @Column(name = "date_applied")
     @JdbcTypeCode(SqlTypes.JSON)
-    private YearMonthDate dateApplied;
+    private Map<String, Object> dateApplied;
+//    private YearMonthDate dateApplied;
 
     @Column(name = "date_posted")
     @JdbcTypeCode(SqlTypes.JSON)
-    private YearMonthDate datePosted;
+    private Map<String, Object> datePosted;
+//    private YearMonthDate datePosted;
 
     @Column(name = "job_status", nullable = false)
     private String jobStatus;
@@ -170,8 +183,8 @@ public class Job {
         String usState,
         String city,
         String dateSaved,
-        YearMonthDate dateApplied,
-        YearMonthDate datePosted,
+        Map<String, Object> dateApplied,
+        Map<String, Object> datePosted,
         String jobStatus,
         String[] links,
         String foundFrom
@@ -220,8 +233,8 @@ public class Job {
     public String getUsState() { return usState; }
     public String getCity() { return city; }
     public String getDateSaved() { return dateSaved; }
-    public YearMonthDate getDateApplied() { return dateApplied; }
-    public YearMonthDate getDatePosted() { return datePosted; }
+    public Map<String, Object> getDateApplied() { return dateApplied; }
+    public Map<String, Object> getDatePosted() { return datePosted; }
     public String getJobStatus() { return jobStatus; }
     public String[] getLinks() { return links; }
     public String getFoundFrom() { return foundFrom; }
@@ -244,8 +257,8 @@ public class Job {
     public void setUsState(String usState) { this.usState = usState; }
     public void setCity(String city) { this.city = city; }
     public void setDateSaved(String dateSaved) { this.dateSaved = dateSaved; }
-    public void setDateApplied(YearMonthDate dateApplied) { this.dateApplied = dateApplied; }
-    public void setDatePosted(YearMonthDate datePosted) { this.datePosted = datePosted; }
+    public void setDateApplied(Map<String, Object> dateApplied) { this.dateApplied = dateApplied; }
+    public void setDatePosted(Map<String, Object> datePosted) { this.datePosted = datePosted; }
     public void setJobStatus(String jobStatus) { this.jobStatus = jobStatus; }
     public void setLinks(String[] links) { this.links = links; }
     public void setFoundFrom(String foundFrom) { this.foundFrom = foundFrom; }

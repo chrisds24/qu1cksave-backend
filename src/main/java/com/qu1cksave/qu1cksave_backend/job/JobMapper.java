@@ -3,6 +3,9 @@ package com.qu1cksave.qu1cksave_backend.job;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterMapper;
 import com.qu1cksave.qu1cksave_backend.resume.ResumeMapper;
 
+import java.util.HashMap;
+import java.util.Map;
+
 // Note:
 // https://www.baeldung.com/java-entity-vs-dto
 // - This link doesn't have the mapper as a Spring Bean (@Component)
@@ -38,8 +41,10 @@ public class JobMapper {
             entity.getUsState(),
             entity.getCity(),
             entity.getDateSaved(),
-            entity.getDateApplied(),
-            entity.getDatePosted(),
+            entity.getDateApplied() != null ?
+                JobMapper.toYearMonthDate(entity.getDateApplied()) : null,
+            entity.getDatePosted() != null ?
+                JobMapper.toYearMonthDate(entity.getDatePosted()) : null,
             entity.getJobStatus(),
             entity.getLinks(),
             entity.getFoundFrom()
@@ -51,9 +56,11 @@ public class JobMapper {
             dto.getId(),
             dto.getMemberId(),
             dto.getResumeId(),
-            dto.getResume() != null ? ResumeMapper.toEntity(dto.getResume()) : null,
+            dto.getResume() != null ?
+                ResumeMapper.toEntity(dto.getResume()) : null,
             dto.getCoverLetterId(),
-            dto.getCoverLetter() != null ? CoverLetterMapper.toEntity(dto.getCoverLetter()) : null,
+            dto.getCoverLetter() != null ?
+                CoverLetterMapper.toEntity(dto.getCoverLetter()) : null,
             dto.getTitle(),
             dto.getCompanyName(),
             dto.getJobDescription(),
@@ -65,11 +72,30 @@ public class JobMapper {
             dto.getUsState(),
             dto.getCity(),
             dto.getDateSaved(),
-            dto.getDateApplied(),
-            dto.getDatePosted(),
+            dto.getDateApplied() != null ?
+                JobMapper.toMap(dto.getDateApplied()) : null,
+            dto.getDatePosted() != null ?
+                JobMapper.toMap(dto.getDatePosted()) : null,
             dto.getJobStatus(),
             dto.getLinks(),
             dto.getFoundFrom()
         );
+    }
+
+    // Map<String, Object> to YearMonthDate
+    public static YearMonthDate toYearMonthDate(Map<String, Object> mapYearMonthDate) {
+        return new YearMonthDate(
+            Integer.valueOf(String.valueOf(mapYearMonthDate.get("year"))),
+            Integer.valueOf(String.valueOf(mapYearMonthDate.get("month"))),
+            Integer.valueOf(String.valueOf(mapYearMonthDate.get("date")))
+        );
+    }
+
+    public static Map<String, Object> toMap(YearMonthDate yearMonthDate) {
+        Map<String, Object> mapYearMonthDate = new HashMap<String, Object>();
+        mapYearMonthDate.put("year", yearMonthDate.getYear().toString());
+        mapYearMonthDate.put("month", yearMonthDate.getMonth().toString());
+        mapYearMonthDate.put("date", yearMonthDate.getDate().toString());
+        return mapYearMonthDate;
     }
 }

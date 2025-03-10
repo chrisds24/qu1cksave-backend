@@ -1,6 +1,5 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
-import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetter;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResumeDto;
 import org.springframework.data.annotation.PersistenceCreator;
@@ -60,7 +59,8 @@ public class JobDto {
     // - When using class-based projections and there's more than one
     //   constructor, need further hints for DTO projections such as
     //   @PersistenceCreator
-    @PersistenceCreator
+    // - I didn't end up needing to use projections
+//    @PersistenceCreator
     public JobDto(
         UUID id,
         UUID memberId,
