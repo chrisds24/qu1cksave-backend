@@ -9,9 +9,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface JobRepository extends JpaRepository<Job, UUID> {
-    // TODO: Search "see spring data jpa repository return value"
+    // TODO: Search "log spring data jpa repository return value"
 
-//    List<Job> findByMemberId(UUID memberId);
+    List<Job> findByMemberId(UUID memberId);
     @NativeQuery(value = """ 
         SELECT
             j.*,
@@ -33,7 +33,9 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
             LEFT JOIN cover_letter c ON j.cover_letter_id = c.id AND j.member_id = c.member_id
         WHERE j.member_id = ?1
     """)
-    List<JobDto> findByMemberIdWithFiles(UUID memberId);
+    List<Job> findByMemberIdWithFiles(UUID memberId);
+    // https://docs.spring.io/spring-data/jpa/reference/repositories/projections.html#projections.dtos
+    // - About projections
     // https://stackoverflow.com/questions/37111445/spring-data-jpa-classcastexception-integer-cannot-be-cast-to-long
     // List<JobDto> findByMemberIdWithFiles(@Param("memberId") UUID memberId);
     // - The code above also works.

@@ -1,5 +1,7 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetter;
 import com.qu1cksave.qu1cksave_backend.resume.Resume;
 import jakarta.persistence.Column;
@@ -66,13 +68,17 @@ public class Job {
     //   still include in Jackson) use @JsonInclude.
     // - TODO: ME: Though, I won't need JsonInclude here since I'm converting
     //    to a DTO first.
+    // https://stackoverflow.com/questions/71497619/field-with-transient-annotation-doesnt-appear-in-returned-json
+    // - TODO: How to set value of transient field?
     @Transient
+//    @JsonInclude
     private Resume resume; // NOT a column of the table
 
     @Column(name = "cover_letter_id")
     private UUID coverLetterId;
 
     @Transient
+//    @JsonInclude
     private CoverLetter coverLetter; // NOT a column of the table
 
     // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#regular-column-mappings

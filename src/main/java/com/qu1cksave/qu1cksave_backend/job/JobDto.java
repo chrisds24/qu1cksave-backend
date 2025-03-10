@@ -3,6 +3,7 @@ package com.qu1cksave.qu1cksave_backend.job;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetter;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResumeDto;
+import org.springframework.data.annotation.PersistenceCreator;
 
 import java.util.UUID;
 
@@ -31,30 +32,35 @@ public class JobDto {
     //  - ME: I can use this if I want to not return null fields as part of the
     //    JSON response
 
-    private final UUID id; // NOT NULLABLE
-    private final UUID memberId; // NOT NULLABLE
-    private final UUID resumeId;
-    private final ResumeDto resume;
-    private final UUID coverLetterId;
-    private final CoverLetterDto coverLetter;
-    private final String title; // NOT NULLABLE
-    private final String companyName; // NOT NULLABLE
-    private final String jobDescription;
-    private final String notes;
-    private final String isRemote; // NOT NULLABLE
-    private final Integer salaryMin;
-    private final Integer salaryMax;
-    private final String country;
-    private final String usState;
-    private final String city;
-    private final String dateSaved; // NOT NULLABLE
-    private final YearMonthDate dateApplied;
-    private final YearMonthDate datePosted;
-    private final String jobStatus; // NOT NULLABLE
-    private final String[] links;
-    private final String foundFrom;
+    private final UUID id; // NOT NULLABLE                          // 1
+    private final UUID memberId; // NOT NULLABLE                    // 2
+    private final UUID resumeId;                                    // 3
+    private final ResumeDto resume;                                 // 4
+    private final UUID coverLetterId;                               // 5
+    private final CoverLetterDto coverLetter;                       // 6
+    private final String title; // NOT NULLABLE                     // 7
+    private final String companyName; // NOT NULLABLE               // 8
+    private final String jobDescription;                            // 9
+    private final String notes;                                     // 10
+    private final String isRemote; // NOT NULLABLE                  // 11
+    private final Integer salaryMin;                                // 12
+    private final Integer salaryMax;                                // 13
+    private final String country;                                   // 14
+    private final String usState;                                   // 15
+    private final String city;                                      // 16
+    private final String dateSaved; // NOT NULLABLE                 // 17
+    private final YearMonthDate dateApplied;                        // 18
+    private final YearMonthDate datePosted;                         // 19
+    private final String jobStatus; // NOT NULLABLE                 // 20
+    private final String[] links;                                   // 21
+    private final String foundFrom;                                 // 22
 
     // Constructor
+    // https://docs.spring.io/spring-data/jpa/reference/repositories/projections.html#projections.dtos
+    // - When using class-based projections and there's more than one
+    //   constructor, need further hints for DTO projections such as
+    //   @PersistenceCreator
+    @PersistenceCreator
     public JobDto(
         UUID id,
         UUID memberId,
