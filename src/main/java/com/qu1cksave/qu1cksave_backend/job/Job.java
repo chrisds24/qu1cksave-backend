@@ -66,11 +66,23 @@ public class Job {
     //   mapped by hibernate. but then jackson will not serialize the field
     //   when converting to JSON. If you need mix JPA with JSON(omit by JPA but
     //   still include in Jackson) use @JsonInclude.
-    // - TODO: ME: Though, I won't need JsonInclude here since I'm converting
-    //    to a DTO first.
+    // - ME: Though, I won't need JsonInclude here since I'm converting
+    //   to a DTO first.
+    //
+    // ==============================================================
+    // TODO: How to get another entity (different table) if that entity is not
+    //   a field of the current entity?
+    //
     // https://stackoverflow.com/questions/71497619/field-with-transient-annotation-doesnt-appear-in-returned-json
-    // - TODO: How to set value of transient field?
-    // -
+    // - TODO: How to set value of transient field? Maybe I shouldn't use it?
+    // https://stackoverflow.com/questions/17508881/does-transient-field-value-get-loaded
+    // - if a field exists in the database and in the class but you only want
+    //   to read from the DB then you could mark it as insertable=false,
+    //   updatable=false and not as @Transient
+    // ----------------------------
+    // https://stackoverflow.com/questions/71306449/populating-a-non-column-field-in-entity-using-spring-repository
+    // - This looks like the problem I'm dealing with
+    // - @SqlResultSetMappings, @SqlResultSetMapping, and @NamedNativeQueries
     @Transient
 //    @JsonInclude // This doesn't allow populating a transient field
     private Resume resume; // NOT a column of the table
