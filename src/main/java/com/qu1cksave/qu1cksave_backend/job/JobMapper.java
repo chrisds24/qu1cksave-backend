@@ -1,10 +1,11 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterMapper;
 import com.qu1cksave.qu1cksave_backend.resume.ResumeMapper;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.time.Instant;
 
 // Note:
 // https://www.baeldung.com/java-entity-vs-dto
@@ -23,32 +24,44 @@ public class JobMapper {
         //   implicitly convertible to boolean
         // - ME: So we need to do entity.getSalaryMin() != null for null check
         //   instead of using the value's truthiness/falsiness
-        return new JobDto(
-            entity.getId(),
-            entity.getMemberId(),
-            entity.getResumeId(),
-            entity.getResume() != null ? ResumeMapper.toDto(entity.getResume()) : null,
-            entity.getCoverLetterId(),
-            entity.getCoverLetter() != null ? CoverLetterMapper.toDto(entity.getCoverLetter()) : null,
-            entity.getTitle(),
-            entity.getCompanyName(),
-            entity.getJobDescription(),
-            entity.getNotes(),
-            entity.getIsRemote(),
-            entity.getSalaryMin(),
-            entity.getSalaryMax(),
-            entity.getCountry(),
-            entity.getUsState(),
-            entity.getCity(),
-            entity.getDateSaved(),
-            entity.getDateApplied() != null ?
-                JobMapper.toYearMonthDate(entity.getDateApplied()) : null,
-            entity.getDatePosted() != null ?
-                JobMapper.toYearMonthDate(entity.getDatePosted()) : null,
-            entity.getJobStatus(),
-            entity.getLinks(),
-            entity.getFoundFrom()
-        );
+        try {
+            return new JobDto(
+                entity.getId(),
+                entity.getMemberId(),
+                entity.getResumeId(),
+    //            entity.getResume() != null ? ResumeMapper.toDto(entity.getResume()) : null,
+                entity.getCoverLetterId(),
+    //            entity.getCoverLetter() != null ? CoverLetterMapper.toDto(entity.getCoverLetter()) : null,
+                entity.getTitle(),
+                entity.getCompanyName(),
+                entity.getJobDescription(),
+                entity.getNotes(),
+                entity.getIsRemote(),
+                entity.getSalaryMin(),
+                entity.getSalaryMax(),
+                entity.getCountry(),
+                entity.getUsState(),
+                entity.getCity(),
+                entity.getDateSaved(),
+    //            entity.getDateApplied() != null ?
+    //                YearMonthDate.toYearMonthDate(entity.getDateApplied()) : null,
+                entity.getDateApplied() != null ? new ObjectMapper().writeValueAsString(entity.getDateApplied()) : null,
+    //            entity.getDatePosted() != null ?
+    //                YearMonthDate.toYearMonthDate(entity.getDatePosted()) : null,
+                entity.getDatePosted() != null ? new ObjectMapper().writeValueAsString(entity.getDatePosted()) : null,
+                entity.getJobStatus(),
+                // Need to convert String[] to String, since JobDto requires a
+                //   String. I couldn't use multiple constructors because JPA
+                //   wants JobDto to only have one constructor if I'm using it
+                //   as a return type for a method in the repository
+                entity.getLinks() != null ? new ObjectMapper().writeValueAsString(entity.getLinks()) : null,
+                entity.getFoundFrom(),
+                null, // Job entity does not have a resume
+                null // Job entity does not have a coverLetter
+            );
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static Job toEntity(JobDto dto) {
@@ -56,11 +69,11 @@ public class JobMapper {
             dto.getId(),
             dto.getMemberId(),
             dto.getResumeId(),
-            dto.getResume() != null ?
-                ResumeMapper.toEntity(dto.getResume()) : null,
+//            dto.getResume() != null ?
+//                ResumeMapper.toEntity(dto.getResume()) : null,
             dto.getCoverLetterId(),
-            dto.getCoverLetter() != null ?
-                CoverLetterMapper.toEntity(dto.getCoverLetter()) : null,
+//            dto.getCoverLetter() != null ?
+//                CoverLetterMapper.toEntity(dto.getCoverLetter()) : null,
             dto.getTitle(),
             dto.getCompanyName(),
             dto.getJobDescription(),
@@ -71,31 +84,16 @@ public class JobMapper {
             dto.getCountry(),
             dto.getUsState(),
             dto.getCity(),
-            dto.getDateSaved(),
-            dto.getDateApplied() != null ?
-                JobMapper.toMap(dto.getDateApplied()) : null,
-            dto.getDatePosted() != null ?
-                JobMapper.toMap(dto.getDatePosted()) : null,
+            Instant.parse(dto.getDateSaved()),
+//            dto.getDateApplied() != null ?
+//                YearMonthDate.toMap(dto.getDateApplied()) : null,
+            dto.getDateApplied(),
+//            dto.getDatePosted() != null ?
+//                YearMonthDate.toMap(dto.getDatePosted()) : null,
+            dto.getDatePosted(),
             dto.getJobStatus(),
             dto.getLinks(),
             dto.getFoundFrom()
         );
-    }
-
-    // Map<String, Object> to YearMonthDate
-    public static YearMonthDate toYearMonthDate(Map<String, Object> mapYearMonthDate) {
-        return new YearMonthDate(
-            Integer.valueOf(String.valueOf(mapYearMonthDate.get("year"))),
-            Integer.valueOf(String.valueOf(mapYearMonthDate.get("month"))),
-            Integer.valueOf(String.valueOf(mapYearMonthDate.get("date")))
-        );
-    }
-
-    public static Map<String, Object> toMap(YearMonthDate yearMonthDate) {
-        Map<String, Object> mapYearMonthDate = new HashMap<String, Object>();
-        mapYearMonthDate.put("year", yearMonthDate.getYear().toString());
-        mapYearMonthDate.put("month", yearMonthDate.getMonth().toString());
-        mapYearMonthDate.put("date", yearMonthDate.getDate().toString());
-        return mapYearMonthDate;
     }
 }

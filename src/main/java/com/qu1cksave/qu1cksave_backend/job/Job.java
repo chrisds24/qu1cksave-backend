@@ -15,6 +15,7 @@ import jakarta.persistence.Transient;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
@@ -83,16 +84,16 @@ public class Job {
     // https://stackoverflow.com/questions/71306449/populating-a-non-column-field-in-entity-using-spring-repository
     // - This looks like the problem I'm dealing with
     // - @SqlResultSetMappings, @SqlResultSetMapping, and @NamedNativeQueries
-    @Transient
-//    @JsonInclude // This doesn't allow populating a transient field
-    private Resume resume; // NOT a column of the table
+//    @Transient
+////    @JsonInclude // This doesn't make it so it allows populating a transient field
+//    private Resume resume; // NOT a column of the table
 
     @Column(name = "cover_letter_id")
     private UUID coverLetterId;
 
-    @Transient
-//    @JsonInclude
-    private CoverLetter coverLetter; // NOT a column of the table
+//    @Transient
+////    @JsonInclude
+//    private CoverLetter coverLetter; // NOT a column of the table
 
     // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#regular-column-mappings
     // - Has info on @Column annotation members, such as nullable
@@ -128,7 +129,8 @@ public class Job {
 
     // Stored as timestamptz in the database
     @Column(name = "date_saved", nullable = false)
-    private String dateSaved;
+    private Instant dateSaved;
+//    private String dateSaved;
 
     // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#embeddable-objects
     // - Need an embeddable type
@@ -181,9 +183,9 @@ public class Job {
         UUID id,
         UUID memberId,
         UUID resumeId,
-        Resume resume,
+//        Resume resume,
         UUID coverLetterId,
-        CoverLetter coverLetter,
+//        CoverLetter coverLetter,
         String title,
         String companyName,
         String jobDescription,
@@ -194,7 +196,7 @@ public class Job {
         String country,
         String usState,
         String city,
-        String dateSaved,
+        Instant dateSaved,
         Map<String, Object> dateApplied,
         Map<String, Object> datePosted,
         String jobStatus,
@@ -204,9 +206,9 @@ public class Job {
         this.id = id;
         this.memberId = memberId;
         this.resumeId = resumeId;
-        this.resume = resume;
+//        this.resume = resume;
         this.coverLetterId = coverLetterId;
-        this.coverLetter = coverLetter;
+//        this.coverLetter = coverLetter;
         this.title = title;
         this.companyName = companyName;
         this.jobDescription = jobDescription;
@@ -231,9 +233,9 @@ public class Job {
     public UUID getId() { return id; }
     public UUID getMemberId() { return memberId; }
     public UUID getResumeId() { return resumeId; }
-    public Resume getResume() { return resume; }
+//    public Resume getResume() { return resume; }
     public UUID getCoverLetterId() { return coverLetterId; }
-    public CoverLetter getCoverLetter() { return coverLetter; }
+//    public CoverLetter getCoverLetter() { return coverLetter; }
     public String getTitle() { return title; }
     public String getCompanyName() { return companyName; }
     public String getJobDescription() { return jobDescription; }
@@ -244,7 +246,7 @@ public class Job {
     public String getCountry() { return country; }
     public String getUsState() { return usState; }
     public String getCity() { return city; }
-    public String getDateSaved() { return dateSaved; }
+    public Instant getDateSaved() { return dateSaved; }
     public Map<String, Object> getDateApplied() { return dateApplied; }
     public Map<String, Object> getDatePosted() { return datePosted; }
     public String getJobStatus() { return jobStatus; }
@@ -255,9 +257,9 @@ public class Job {
     public void setId(UUID id) { this.id = id; }
     public void setMemberId(UUID memberId) { this.memberId = memberId; }
     public void setResumeId(UUID resumeId) { this.resumeId = resumeId; }
-    public void setResume(Resume resume) { this.resume = resume; }
+//    public void setResume(Resume resume) { this.resume = resume; }
     public void setCoverLetterId(UUID coverLetterId) { this.coverLetterId = coverLetterId; }
-    public void setCoverLetter(CoverLetter coverLetter) { this.coverLetter = coverLetter; }
+//    public void setCoverLetter(CoverLetter coverLetter) { this.coverLetter = coverLetter; }
     public void setTitle(String title) { this.title = title; }
     public void setCompanyName(String companyName) { this.companyName = companyName; }
     public void setJobDescription(String jobDescription) { this.jobDescription = jobDescription; }
@@ -268,7 +270,7 @@ public class Job {
     public void setCountry(String country) { this.country = country; }
     public void setUsState(String usState) { this.usState = usState; }
     public void setCity(String city) { this.city = city; }
-    public void setDateSaved(String dateSaved) { this.dateSaved = dateSaved; }
+    public void setDateSaved(Instant dateSaved) { this.dateSaved = dateSaved; }
     public void setDateApplied(Map<String, Object> dateApplied) { this.dateApplied = dateApplied; }
     public void setDatePosted(Map<String, Object> datePosted) { this.datePosted = datePosted; }
     public void setJobStatus(String jobStatus) { this.jobStatus = jobStatus; }

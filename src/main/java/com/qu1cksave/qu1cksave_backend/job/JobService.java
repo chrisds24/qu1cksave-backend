@@ -40,8 +40,8 @@ public class JobService {
     public List<JobDto> getJobs(UUID userId) {
         // TODO: Replace this with a native query or HQL to do a join and get
         //   Resumes/Cover Letters in one query efficiently
-        return jobRepository.findByMemberIdWithFiles(userId).stream().map(JobMapper::toDto).collect(Collectors.toList());
-//        return jobRepository.findByMemberIdWithFiles(userId);
+//        return jobRepository.findByMemberIdWithFiles(userId).stream().map(JobMapper::toDto).collect(Collectors.toList());
+        return jobRepository.findByMemberIdWithFiles(userId);
     }
 
     @Transactional(readOnly = true)

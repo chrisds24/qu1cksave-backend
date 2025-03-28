@@ -2,6 +2,9 @@ package com.qu1cksave.qu1cksave_backend.job;
 
 import jakarta.persistence.Embeddable;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Embeddable
 public class YearMonthDate {
 
@@ -30,4 +33,21 @@ public class YearMonthDate {
     public void setYear(Integer year) { this.year = year; }
     public void setMonth(Integer month) { this.month = month; }
     public void setDate(Integer date) { this.date = date; }
+
+    // Map<String, Object> to YearMonthDate
+    public static YearMonthDate toYearMonthDate(Map<String, Object> mapYearMonthDate) {
+        return new YearMonthDate(
+            Integer.valueOf(String.valueOf(mapYearMonthDate.get("year"))),
+            Integer.valueOf(String.valueOf(mapYearMonthDate.get("month"))),
+            Integer.valueOf(String.valueOf(mapYearMonthDate.get("date")))
+        );
+    }
+
+    public static Map<String, Object> toMap(YearMonthDate yearMonthDate) {
+        Map<String, Object> mapYearMonthDate = new HashMap<String, Object>();
+        mapYearMonthDate.put("year", yearMonthDate.getYear().toString());
+        mapYearMonthDate.put("month", yearMonthDate.getMonth().toString());
+        mapYearMonthDate.put("date", yearMonthDate.getDate().toString());
+        return mapYearMonthDate;
+    }
 }

@@ -18,6 +18,7 @@ public class ResumeDto {
     private final String mimeType;
 
     // TODO: Need an Integer[] byteArrayAsArray field
+    // - Have a separate ResumeWithFileDto
 
     // Constructors
 
@@ -39,7 +40,9 @@ public class ResumeDto {
     public String getFileName() { return fileName; }
     public String getMimeType() { return mimeType; }
 
-    public Object getSalaryMin() {
-        return null;
-    }
+
+//    @Override
+//    public String toString() {
+//        return String.format("{\n\tid: %s,\n\tmemberId: %s,\n\tfileName: %s,\n\tmimeType: %s\n}", id, memberId, fileName, mimeType);
+//    }
 }
