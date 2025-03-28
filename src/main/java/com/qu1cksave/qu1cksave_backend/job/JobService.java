@@ -38,8 +38,8 @@ public class JobService {
     //   -- Marco Behler also mentioned this
     @Transactional(readOnly = true)
     public List<JobDto> getJobs(UUID userId) {
-        // TODO: Replace this with a native query or HQL to do a join and get
-        //   Resumes/Cover Letters in one query efficiently
+        // Saving this commented line for reference, where the repository
+        //   returns a List<Job>, which gets converted to List<JobDto>
 //        return jobRepository.findByMemberIdWithFiles(userId).stream().map(JobMapper::toDto).collect(Collectors.toList());
         return jobRepository.findByMemberIdWithFiles(userId);
     }
@@ -50,44 +50,11 @@ public class JobService {
 //        return job.isPresent() ? JobMapper.toDto(job.get()) : null;
         // Suggested functional style by Intellij
         // https://stackoverflow.com/questions/3907394/java-is-there-a-map-function
-        // map and orElse are from Optional
+        // - map and orElse are from Optional
         return jobRepository.findByIdAndMemberId(id, userId)
             .map(JobMapper::toDto).orElse(null);
     }
 }
 
-// Test return value for get single job;
-//        return JobMapper.toDto(new Job(
-//            UUID.fromString("1d27e3ee-1111-4e0d-ac0f-dadfcc420ce3"),
-//            UUID.fromString("1c1de3ee-2222-4e0d-ac0f-dadfcc420ce3"),
-//            UUID.fromString("1c271dee-3333-4e0d-ac0f-dadfcc420ce3"),
-//            new Resume(
-//                UUID.fromString("1c271dee-3333-4e0d-ac0f-dadfcc420ce3"),
-//                UUID.fromString("1c1de3ee-2222-4e0d-ac0f-dadfcc420ce3"),
-//                "ChristianDelosSantos_Resume_SWE_Google",
-//                "pdf"
-//            ),
-//            UUID.fromString("1c27e31d-4444-4e0d-ac0f-dadfcc420ce3"),
-//            new CoverLetter(
-//                UUID.fromString("1c27e31d-4444-4e0d-ac0f-dadfcc420ce3"),
-//                UUID.fromString("1c1de3ee-2222-4e0d-ac0f-dadfcc420ce3"),
-//                "ChristianDelosSantos_CoverLetter_SWE_Google",
-//                "docx"
-//            ),
-//            "title",
-//            "companyName",
-//            "jobDescription",
-//            "notes",
-//            "isRemote",
-//            1,
-//            100,
-//            "country",
-//            "usState",
-//            "city",
-//            "dateSaved",
-//            new YearMonthDate(2025,3, 2),
-//            new YearMonthDate(2025, 3, 2),
-//            "jobStatus",
-//            new String[1],
-//            "foundFrom"
-//        ));
+// Convert string to UUID
+//   UUID.fromString("1d27e3ee-1111-4e0d-ac0f-dadfcc420ce3"),

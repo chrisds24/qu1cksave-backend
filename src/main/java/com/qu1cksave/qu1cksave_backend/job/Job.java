@@ -1,8 +1,5 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetter;
-import com.qu1cksave.qu1cksave_backend.resume.Resume;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,7 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 // https://stackoverflow.com/questions/60021815/why-has-javax-persistence-api-been-replaced-by-jakarta-persistence-api-in-spring
 // - javax.persistence.Transient and the one below serve the same purpose
-import jakarta.persistence.Transient;
+//import jakarta.persistence.Transient;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -22,28 +19,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "job")
 public class Job {
-    // TODO:
-    //  If when querying and only the id of the other table (Ex. resumeId) is
-    //    in the current table, but not the object itself (Ex. resume), how
-    //    should I annotate that column (if it should even be a column of the
-    //    entity in the first place?)
-    //    - Note that this is a different case as with byteArrayAsArray for
-    //      Resume and CoverLetter, since that byteArrayAsArray isn't obtained
-    //      from any table. So I can just create a Resume/CoverLetter DTO that
-    //      has that field
-    //    - Search "Hibernate entity field not column of a table"
-    // TODO: Read the case below, which is what I'm dealing with
-    //   - You get rid of a database column because it's possible to fetch
-    //     that from a different table with a JOIN. Now the entity has less
-    //     information than the DTO
-    //     (THIS IS MY USE CASE)
-    //  UPDATE:
-    //    - (DOUBLE CHECK THIS) I won't need associations since the tables
-    //      don't really store entities from another table, only the id
-    //    - I'l probably need custom queries (try HQL? If not, use actual SQL)
-    //    - Could also be useful: https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#join-fetch
-    //    - There are also Native Queries: https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#native-queries
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false)
@@ -71,11 +46,11 @@ public class Job {
     //   to a DTO first.
     //
     // ==============================================================
-    // TODO: How to get another entity (different table) if that entity is not
+    // How to get another entity (different table) if that entity is not
     //   a field of the current entity?
-    //
+    // - UPDATE: (3/28/25) I need to use another type, such as a JobDto, since
+    //   Transient doesn't work
     // https://stackoverflow.com/questions/71497619/field-with-transient-annotation-doesnt-appear-in-returned-json
-    // - TODO: How to set value of transient field? Maybe I shouldn't use it?
     // https://stackoverflow.com/questions/17508881/does-transient-field-value-get-loaded
     // - if a field exists in the database and in the class but you only want
     //   to read from the DB then you could mark it as insertable=false,
@@ -84,15 +59,15 @@ public class Job {
     // https://stackoverflow.com/questions/71306449/populating-a-non-column-field-in-entity-using-spring-repository
     // - This looks like the problem I'm dealing with
     // - @SqlResultSetMappings, @SqlResultSetMapping, and @NamedNativeQueries
-//    @Transient
-////    @JsonInclude // This doesn't make it so it allows populating a transient field
+//    @Transient // UPDATE: (3/28/25) Now using a JobDto as repo return type
+//    @JsonInclude // This doesn't make it so it allows populating a transient field
 //    private Resume resume; // NOT a column of the table
 
     @Column(name = "cover_letter_id")
     private UUID coverLetterId;
 
 //    @Transient
-////    @JsonInclude
+//    @JsonInclude
 //    private CoverLetter coverLetter; // NOT a column of the table
 
     // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#regular-column-mappings
@@ -128,6 +103,11 @@ public class Job {
     private String city;
 
     // Stored as timestamptz in the database
+    // - Needed to convert this to Instant, since Repository result is an
+    //   Instant, which JobDto can't convert to a String for its constructor
+    //   parameter.
+    // - So I need this to be Instant since my constructor for JobDto doesn't
+    //   take a String, and it can only have one constructor
     @Column(name = "date_saved", nullable = false)
     private Instant dateSaved;
 //    private String dateSaved;
@@ -298,7 +278,7 @@ public class Job {
 //   -- What happens down the line if you change the database schema and
 //      the Entity has more fields, or needs to change the type of one of
 //      the fields? That change could end up breaking the frontend.Example:
-//      TODO: Read the case below, which is what I'm dealing with
+//      NOTE: Read the case below, which is what I'm dealing with
 //      + You get rid of a database column because it's possible to fetch
 //        that from a different table with a JOIN. Now the entity has less
 //        information than the DTO
@@ -311,14 +291,25 @@ public class Job {
 // - We can manually create a Mapper class (Ex. UserMapper), or even
 //   better, use MapStruct
 // - return userRepository.findAll().stream().map(UserMapper::toDto).collect(Collectors.toList());
-//   -- TODO: Why use stream and collect again?
 // https://www.baeldung.com/mapstruct
 // - Though, I heard a few times that MapStruct is deprecated.
 // - I just created a manual mapper
-// TODO: Search "hibernate entity field not in table site:stackoverflow.com"
+// IMPORTANT: About "hibernate entity field not in table site:stackoverflow.com"
 // - https://www.baeldung.com/jpa-hibernate-associations
 // - https://stackoverflow.com/questions/63473073/hibernate-have-a-field-that-is-not-peristed-but-can-be-pulled-from-db
 // - https://stackoverflow.com/questions/4008418/hibernate-add-a-property-in-my-class-that-is-not-mapped-to-a-db-table
 // - https://stackoverflow.com/questions/52942906/can-a-jpa-entity-have-a-field-not-mapped-to-a-db-column
 // - https://stackoverflow.com/questions/4662582/make-hibernate-ignore-instance-variables-that-are-not-mapped
-// - TODO: Can also search "hibernate entity less fields than dto"
+// - Can also search "hibernate entity less fields than dto"
+
+// OLD NOTE: Read the case below, which is what I'm dealing with
+//   - You get rid of a database column because it's possible to fetch
+//     that from a different table with a JOIN. Now the entity has less
+//     information than the DTO
+//     (THIS IS MY USE CASE):
+//    - I won't need associations since the tables
+//      don't really store entities from another table, only the id
+//    - I'l probably need custom queries (try HQL? If not, use actual SQL)
+//    - Could also be useful: https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#join-fetch
+//    - There are also Native Queries: https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#native-queries
+//    - UPDATE: (3/28/25) I ended up using Native Queries

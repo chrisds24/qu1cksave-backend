@@ -5,6 +5,8 @@ import jakarta.persistence.Embeddable;
 import java.util.HashMap;
 import java.util.Map;
 
+// UPDATE: (3/28/25) I ended up not using this due to some conversion issue
+//   from the Repository result to this in the Job entity
 @Embeddable
 public class YearMonthDate {
 

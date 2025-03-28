@@ -34,7 +34,7 @@ public class JobController {
         //  - I'll compare the one from the query and the auth header
         String strAuthUserId = "269a3d55-4eee-4a2e-8c64-e1fe386b76f8";
 
-        // User wants jobs that don't belong to them
+        // User wants jobs that don't belong to them, so return an error
         if (!strAuthUserId.equals(userId)) {
             return null; // TODO: Return an appropriate JSON error object
         }

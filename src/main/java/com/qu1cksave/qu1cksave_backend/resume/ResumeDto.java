@@ -1,9 +1,6 @@
 package com.qu1cksave.qu1cksave_backend.resume;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.UUID;
 
@@ -21,12 +18,13 @@ public class ResumeDto {
     // - Have a separate ResumeWithFileDto
 
     // Constructors
-
+    // Need JsonProperty in constructor params so Jackson knows how to
+    //   deserialize
     public ResumeDto(
-        UUID id,
-        UUID memberId,
-        String fileName,
-        String mimeType
+        @JsonProperty("id") UUID id,
+        @JsonProperty("memberId") UUID memberId,
+        @JsonProperty("fileName") String fileName,
+        @JsonProperty("mimeType") String mimeType
     ) {
         this.id = id;
         this.memberId = memberId;

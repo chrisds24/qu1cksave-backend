@@ -27,6 +27,7 @@ public class User {
     //  https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#mapping-embeddables
     //  - According to the link, JSON arrays aren't supported, so maybe this
     //    might not work
+    //  - UPDATE: It does work
     @JdbcTypeCode(SqlTypes.JSON)
     private String[] roles;
 

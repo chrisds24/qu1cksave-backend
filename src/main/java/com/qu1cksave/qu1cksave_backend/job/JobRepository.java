@@ -2,19 +2,18 @@ package com.qu1cksave.qu1cksave_backend.job;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.NativeQuery;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface JobRepository extends JpaRepository<Job, UUID> {
-    // TODO: Search "log spring data jpa repository return value"
+    // TODO: Search "log spring data jpa repository result"
 
     List<Job> findByMemberId(UUID memberId);
 
-    // TODO: https://stackoverflow.com/questions/64762080/how-to-map-sql-native-query-result-into-dto-in-spring-jpa-repository
-    //   - Regarding NamedNativeQuery and SqlResultSetMapping
+    // https://stackoverflow.com/questions/64762080/how-to-map-sql-native-query-result-into-dto-in-spring-jpa-repository
+    // - Regarding NamedNativeQuery and SqlResultSetMapping
     @NativeQuery(value = """ 
         SELECT
             j.*,
@@ -63,8 +62,13 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
     // https://thorben-janssen.com/native-queries-with-spring-data-jpa/
     // - Because write operations need to be executed differently than read\
     //   operations, you also need to annotate the repository method with a @Modifying annotation.
+    // - TODO: (3/28/2025) This might be important for create/update/delete
 }
 
+
+// Original query I used
+// - Changed cover_letter to coverLetter in the version I used
+// - Also, member_id to memberId, etc.
 //@NativeQuery(value = """
 //    SELECT
 //        j.*,

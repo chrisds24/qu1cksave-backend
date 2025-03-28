@@ -5,18 +5,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResumeDto;
-import org.springframework.data.annotation.PersistenceCreator;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public class JobDto {
-    // TODO: How to specify NOT nullable?
     // TODO: Search for:
-    // - multiple constructors DTO
-    // - required/nullable parameters constructor DTO
+    //  - How to specify not nullable?
+    //  - required/nullable parameters constructor DTO
     // How to specify nullable?
     // - Optional could work to specify nullable...But there's a better way
     // - https://stackoverflow.com/questions/70065782/how-to-make-a-field-optional
@@ -30,7 +27,7 @@ public class JobDto {
     // - https://stackoverflow.com/questions/23454952/uses-for-optional
     //   -- Keep seeing that Optional is bad practice for fields
     // - https://www.baeldung.com/java-optional
-    // TODO: https://stackoverflow.com/questions/1281952/what-is-the-easiest-way-to-ignore-a-jpa-field-during-persistence
+    // https://stackoverflow.com/questions/1281952/what-is-the-easiest-way-to-ignore-a-jpa-field-during-persistence
     //  - You can also use JsonInclude.Include.NON_NULL and hide fields in JSON
     //    during deserialization
     //  - @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -68,62 +65,6 @@ public class JobDto {
     //   constructor, need further hints for DTO projections such as
     //   @PersistenceCreator
     // - I didn't end up needing to use projections
-
-    // Constructor used when converting from entity
-//    public JobDto(
-//        UUID id,
-//        UUID memberId,
-//        UUID resumeId,
-////        ResumeDto resume,
-//        UUID coverLetterId,
-////        CoverLetterDto coverLetter,
-//        String title,
-//        String companyName,
-//        String jobDescription,
-//        String notes,
-//        String isRemote,
-//        Integer salaryMin,
-//        Integer salaryMax,
-//        String country,
-//        String usState,
-//        String city,
-//        String dateSaved,
-//        Map<String, Object> dateApplied,
-//        Map<String, Object> datePosted,
-//        String jobStatus,
-//        String[] links,
-//        String foundFrom,
-//        // TODO: (3/17/2025) After switching the order of parameters and
-//        //   putting both resume and coverLetter here (since that's the order
-//        //   in the json_build_object), I'm getting the error below:
-//        //   Cannot cast java.lang.String to [Ljava.lang.String
-//        ResumeDto resume,
-//        CoverLetterDto coverLetter
-//    ) {
-//        this.id = id;
-//        this.memberId = memberId;
-//        this.resumeId = resumeId;
-//        this.coverLetterId = coverLetterId;
-//        this.title = title;
-//        this.companyName = companyName;
-//        this.jobDescription = jobDescription;
-//        this.notes = notes;
-//        this.isRemote = isRemote;
-//        this.salaryMin = salaryMin;
-//        this.salaryMax = salaryMax;
-//        this.country = country;
-//        this.usState = usState;
-//        this.city = city;
-//        this.dateSaved = dateSaved;
-//        this.dateApplied = dateApplied;
-//        this.datePosted = datePosted;
-//        this.jobStatus = jobStatus;
-//        this.links = links;
-//        this.foundFrom = foundFrom;
-//        this.resume = resume;
-//        this.coverLetter = coverLetter;
-//    }
-
     public JobDto(
         UUID id,
         UUID memberId,
@@ -183,9 +124,6 @@ public class JobDto {
             //   the try-catch as a solution, which removed the error
             this.links = links != null ? objectMapper.readValue(links, String[].class) : null;
             this.foundFrom = foundFrom;
-            // TODO (3/28/2025): Currently getting the error:
-            //   [Request processing failed: org.springframework.orm.jpa.JpaSystemException: Cannot instantiate query result type 'com.qu1cksave.qu1cksave_backend.job.JobDto' due to: null] with root cause
-            //   com.fasterxml.jackson.databind.exc.InvalidDefinitionException: Cannot construct instance of `com.qu1cksave.qu1cksave_backend.resume.ResumeDto` (no Creators, like default constructor, exist): cannot deserialize from Object value (no delegate- or property-based Creator)
             this.resume = resume != null ? objectMapper.readValue(resume, ResumeDto.class) : null;
             this.coverLetter = coverLetter != null ? objectMapper.readValue(coverLetter, CoverLetterDto.class) : null;
         } catch (JsonProcessingException e) {

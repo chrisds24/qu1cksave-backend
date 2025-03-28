@@ -1,5 +1,7 @@
 package com.qu1cksave.qu1cksave_backend.coverletter;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.UUID;
 
 public class CoverLetterDto {
@@ -15,12 +17,11 @@ public class CoverLetterDto {
     // - Have a separate CoverLetterWithFileDto
 
     // Constructors
-
     public CoverLetterDto(
-        UUID id,
-        UUID memberId,
-        String fileName,
-        String mimeType
+        @JsonProperty("id") UUID id,
+        @JsonProperty("memberId") UUID memberId,
+        @JsonProperty("fileName") String fileName,
+        @JsonProperty("mimeType") String mimeType
     ) {
         this.id = id;
         this.memberId = memberId;

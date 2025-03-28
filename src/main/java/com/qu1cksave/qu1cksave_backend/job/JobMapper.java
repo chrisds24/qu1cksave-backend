@@ -2,8 +2,6 @@ package com.qu1cksave.qu1cksave_backend.job;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterMapper;
-import com.qu1cksave.qu1cksave_backend.resume.ResumeMapper;
 
 import java.time.Instant;
 
@@ -29,9 +27,7 @@ public class JobMapper {
                 entity.getId(),
                 entity.getMemberId(),
                 entity.getResumeId(),
-    //            entity.getResume() != null ? ResumeMapper.toDto(entity.getResume()) : null,
                 entity.getCoverLetterId(),
-    //            entity.getCoverLetter() != null ? CoverLetterMapper.toDto(entity.getCoverLetter()) : null,
                 entity.getTitle(),
                 entity.getCompanyName(),
                 entity.getJobDescription(),
@@ -43,11 +39,7 @@ public class JobMapper {
                 entity.getUsState(),
                 entity.getCity(),
                 entity.getDateSaved(),
-    //            entity.getDateApplied() != null ?
-    //                YearMonthDate.toYearMonthDate(entity.getDateApplied()) : null,
                 entity.getDateApplied() != null ? new ObjectMapper().writeValueAsString(entity.getDateApplied()) : null,
-    //            entity.getDatePosted() != null ?
-    //                YearMonthDate.toYearMonthDate(entity.getDatePosted()) : null,
                 entity.getDatePosted() != null ? new ObjectMapper().writeValueAsString(entity.getDatePosted()) : null,
                 entity.getJobStatus(),
                 // Need to convert String[] to String, since JobDto requires a
@@ -69,11 +61,7 @@ public class JobMapper {
             dto.getId(),
             dto.getMemberId(),
             dto.getResumeId(),
-//            dto.getResume() != null ?
-//                ResumeMapper.toEntity(dto.getResume()) : null,
             dto.getCoverLetterId(),
-//            dto.getCoverLetter() != null ?
-//                CoverLetterMapper.toEntity(dto.getCoverLetter()) : null,
             dto.getTitle(),
             dto.getCompanyName(),
             dto.getJobDescription(),
@@ -85,15 +73,12 @@ public class JobMapper {
             dto.getUsState(),
             dto.getCity(),
             Instant.parse(dto.getDateSaved()),
-//            dto.getDateApplied() != null ?
-//                YearMonthDate.toMap(dto.getDateApplied()) : null,
             dto.getDateApplied(),
-//            dto.getDatePosted() != null ?
-//                YearMonthDate.toMap(dto.getDatePosted()) : null,
             dto.getDatePosted(),
             dto.getJobStatus(),
             dto.getLinks(),
             dto.getFoundFrom()
+            // Job entity doesn't have a resume/cover letter
         );
     }
 }
