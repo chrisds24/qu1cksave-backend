@@ -3,14 +3,14 @@ package com.qu1cksave.qu1cksave_backend.job;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterDto;
-import com.qu1cksave.qu1cksave_backend.resume.ResumeDto;
+import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
+import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
-public class JobDto {
+public class ResponseJobDto {
     // TODO: Search for:
     //  - How to specify not nullable?
     //  - required/nullable parameters constructor DTO
@@ -56,8 +56,8 @@ public class JobDto {
     private final String jobStatus; // NOT NULLABLE                 // 20
     private final String[] links;                                   // 21
     private final String foundFrom;                                 // 22
-    private final ResumeDto resume;                                 // 4
-    private final CoverLetterDto coverLetter;                       // 6
+    private final ResponseResumeDto resume;                                 // 4
+    private final ResponseCoverLetterDto coverLetter;                       // 6
 
     // Constructors
     // https://docs.spring.io/spring-data/jpa/reference/repositories/projections.html#projections.dtos
@@ -65,7 +65,7 @@ public class JobDto {
     //   constructor, need further hints for DTO projections such as
     //   @PersistenceCreator
     // - I didn't end up needing to use projections
-    public JobDto(
+    public ResponseJobDto(
         UUID id,
         UUID memberId,
         UUID resumeId,
@@ -124,8 +124,8 @@ public class JobDto {
             //   the try-catch as a solution, which removed the error
             this.links = links != null ? objectMapper.readValue(links, String[].class) : null;
             this.foundFrom = foundFrom;
-            this.resume = resume != null ? objectMapper.readValue(resume, ResumeDto.class) : null;
-            this.coverLetter = coverLetter != null ? objectMapper.readValue(coverLetter, CoverLetterDto.class) : null;
+            this.resume = resume != null ? objectMapper.readValue(resume, ResponseResumeDto.class) : null;
+            this.coverLetter = coverLetter != null ? objectMapper.readValue(coverLetter, ResponseCoverLetterDto.class) : null;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -135,9 +135,7 @@ public class JobDto {
     public UUID getId() { return id; }
     public UUID getMemberId() { return memberId; }
     public UUID getResumeId() { return resumeId; }
-    public ResumeDto getResume() { return resume; }
     public UUID getCoverLetterId() { return coverLetterId; }
-    public CoverLetterDto getCoverLetter() { return coverLetter; }
     public String getTitle() { return title; }
     public String getCompanyName() { return companyName; }
     public String getJobDescription() { return jobDescription; }
@@ -154,6 +152,8 @@ public class JobDto {
     public String getJobStatus() { return jobStatus; }
     public String[] getLinks() { return links; }
     public String getFoundFrom() { return foundFrom; }
+    public ResponseResumeDto getResume() { return resume; }
+    public ResponseCoverLetterDto getCoverLetter() { return coverLetter; }
 }
 
 // Just keep for now for printing values inside constructor

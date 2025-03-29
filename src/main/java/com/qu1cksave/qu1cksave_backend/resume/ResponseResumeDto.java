@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.UUID;
 
-public class ResumeDto {
+public class ResponseResumeDto {
 
     private final UUID id;
 
@@ -14,13 +14,22 @@ public class ResumeDto {
 
     private final String mimeType;
 
-    // TODO: Need an Integer[] byteArrayAsArray field
-    // - Have a separate ResumeWithFileDto
+    // TODO: (3/29/25) Need a byteArrayAsArray field
+    //  FIRST: Check if getting the list of jobs still works even with this
+    //  Otherwise, I'll need a separate ResumeWithFileDto needed?
+    //  I was originally thinking of using Integer[] (or int[]), but the size
+    //    of a number in JavaScript is 64 bits
+    //  - So long[] might be more appropriate (Also, double is also 64 bits)
+    //  - But there's also byte[] as an option
+    //  UPDATE: Since this is a DTO, I can't set its byteArrayAsArray later
+    //    byteArrayAsArray also doesn't come from the database
+    //    So I'll definitely need a ResponseResumeWithFilesDto
+//    private final long[] byteArrayAsArray;
 
     // Constructors
     // Need JsonProperty in constructor params so Jackson knows how to
     //   deserialize
-    public ResumeDto(
+    public ResponseResumeDto(
         @JsonProperty("id") UUID id,
         @JsonProperty("memberId") UUID memberId,
         @JsonProperty("fileName") String fileName,

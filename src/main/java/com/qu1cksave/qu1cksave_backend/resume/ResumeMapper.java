@@ -1,8 +1,8 @@
 package com.qu1cksave.qu1cksave_backend.resume;
 
 public class ResumeMapper {
-    public static ResumeDto toDto(Resume entity) {
-        return new ResumeDto(
+    public static ResponseResumeDto toDto(Resume entity) {
+        return new ResponseResumeDto(
             entity.getId(),
             entity.getMemberId(),
             entity.getFileName(),
@@ -10,7 +10,7 @@ public class ResumeMapper {
         );
     }
 
-    public static Resume toEntity(ResumeDto dto) {
+    public static Resume toEntity(ResponseResumeDto dto) {
         return new Resume(
             dto.getId(),
             dto.getMemberId(),

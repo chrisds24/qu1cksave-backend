@@ -1,8 +1,8 @@
 package com.qu1cksave.qu1cksave_backend.coverletter;
 
 public class CoverLetterMapper {
-    public static CoverLetterDto toDto(CoverLetter entity) {
-        return new CoverLetterDto(
+    public static ResponseCoverLetterDto toDto(CoverLetter entity) {
+        return new ResponseCoverLetterDto(
             entity.getId(),
             entity.getMemberId(),
             entity.getFileName(),
@@ -10,7 +10,7 @@ public class CoverLetterMapper {
         );
     }
 
-    public static CoverLetter toEntity(CoverLetterDto dto) {
+    public static CoverLetter toEntity(ResponseCoverLetterDto dto) {
         return new CoverLetter(
             dto.getId(),
             dto.getMemberId(),

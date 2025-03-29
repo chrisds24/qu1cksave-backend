@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.UUID;
 
-public class CoverLetterDto {
+public class ResponseCoverLetterDto {
     private final UUID id;
 
     private final UUID memberId;
@@ -17,7 +17,7 @@ public class CoverLetterDto {
     // - Have a separate CoverLetterWithFileDto
 
     // Constructors
-    public CoverLetterDto(
+    public ResponseCoverLetterDto(
         @JsonProperty("id") UUID id,
         @JsonProperty("memberId") UUID memberId,
         @JsonProperty("fileName") String fileName,

@@ -14,7 +14,7 @@ import java.time.Instant;
 // - It needs to be autowired and used as: jobMapper.toDto(jobEntity)
 //   Where jobMapper is the autowired instance set in the constructor
 public class JobMapper {
-    public static JobDto toDto(Job entity) {
+    public static ResponseJobDto toResponseDto(Job entity) {
         // https://stackoverflow.com/questions/2015071/why-boolean-in-java-takes-only-true-or-false-why-not-1-or-0-also
         // - Java, unlike languages like C and C++, treats boolean as a
         //   completely separate data type which has 2 distinct values: true
@@ -23,7 +23,7 @@ public class JobMapper {
         // - ME: So we need to do entity.getSalaryMin() != null for null check
         //   instead of using the value's truthiness/falsiness
         try {
-            return new JobDto(
+            return new ResponseJobDto(
                 entity.getId(),
                 entity.getMemberId(),
                 entity.getResumeId(),
@@ -56,7 +56,7 @@ public class JobMapper {
         }
     }
 
-    public static Job toEntity(JobDto dto) {
+    public static Job toEntity(ResponseJobDto dto) {
         return new Job(
             dto.getId(),
             dto.getMemberId(),

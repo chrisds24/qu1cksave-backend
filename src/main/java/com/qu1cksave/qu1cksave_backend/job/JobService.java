@@ -1,17 +1,11 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
-import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetter;
-import com.qu1cksave.qu1cksave_backend.resume.Resume;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Component
 public class JobService {
@@ -37,24 +31,29 @@ public class JobService {
     //   the outer transaction configuration determines the actual one used.
     //   -- Marco Behler also mentioned this
     @Transactional(readOnly = true)
-    public List<JobDto> getJobs(UUID userId) {
+    public List<ResponseJobDto> getJobs(UUID userId) {
         // Saving this commented line for reference, where the repository
         //   returns a List<Job>, which gets converted to List<JobDto>
 //        return jobRepository.findByMemberIdWithFiles(userId).stream().map(JobMapper::toDto).collect(Collectors.toList());
         return jobRepository.findByMemberIdWithFiles(userId);
     }
 
-    @Transactional(readOnly = true)
-    public JobDto getJob(UUID id, UUID userId) {
-//        Optional<Job> job = jobRepository.findById(id);
-//        return job.isPresent() ? JobMapper.toDto(job.get()) : null;
-        // Suggested functional style by Intellij
-        // https://stackoverflow.com/questions/3907394/java-is-there-a-map-function
-        // - map and orElse are from Optional
-        return jobRepository.findByIdAndMemberId(id, userId)
-            .map(JobMapper::toDto).orElse(null);
+    public ResponseJobDto createJob(RequestJobDto newJob, UUID userId) {
+        return null; // TODO
     }
 }
 
 // Convert string to UUID
 //   UUID.fromString("1d27e3ee-1111-4e0d-ac0f-dadfcc420ce3"),
+
+// Keep for reference
+//@Transactional(readOnly = true)
+//public JobDto getJob(UUID id, UUID userId) {
+////        Optional<Job> job = jobRepository.findById(id);
+////        return job.isPresent() ? JobMapper.toDto(job.get()) : null;
+//    // Suggested functional style by Intellij
+//    // https://stackoverflow.com/questions/3907394/java-is-there-a-map-function
+//    // - map and orElse are from Optional
+//    return jobRepository.findByIdAndMemberId(id, userId)
+//        .map(JobMapper::toDto).orElse(null);
+//}
