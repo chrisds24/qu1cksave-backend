@@ -126,8 +126,10 @@ public class ResponseJobDto {
 //        String[] links,
         @JsonProperty("links") String links,
         @JsonProperty("found_from") String foundFrom,
-//        ResumeDto resume,
-//        CoverLetterDto coverLetter
+        // This doesn't automatically convert to ResponseResumeDto since it
+        //   can't cast String to this
+//        @JsonProperty("resume") ResponseResumeDto resume,
+//        @JsonProperty("cover_letter") ResponseCoverLetterDto coverLetter
         @JsonProperty("resume") String resume,
         @JsonProperty("cover_letter") String coverLetter
     ) {
