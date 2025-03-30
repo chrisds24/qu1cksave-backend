@@ -50,19 +50,4 @@ public class JobController {
         UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
         return jobService.createJob(newJob, authUserId);
     }
-
-    // TESTING ONLY Delete later
-    @GetMapping("/nofiles")
-    public List<ResponseJobDto> getJobsNoFiles(@RequestParam("id") String userId) {
-        String strAuthUserId = "269a3d55-4eee-4a2e-8c64-e1fe386b76f8";
-
-        if (!strAuthUserId.equals(userId)) {
-            return null;
-        }
-
-        UUID authUserId = UUID.fromString(strAuthUserId);
-        return jobService.getJobsNoFiles(authUserId);
-
-        // For testing: http://localhost:8080/jobs/nofiles?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
-    }
 }

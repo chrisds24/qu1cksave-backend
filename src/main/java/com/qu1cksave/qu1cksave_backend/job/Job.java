@@ -128,13 +128,18 @@ public class Job {
     //   to be the simplest and works well enough for now
     @Column(name = "date_applied")
     @JdbcTypeCode(SqlTypes.JSON)
-    private Map<String, Object> dateApplied;
-//    private YearMonthDate dateApplied;
+//    private YearMonthDateDto dateApplied; // AlSO WORKS :)
+//    private Map<String, Object> dateApplied; // WORKS :)
+    // UPDATE: (3/30/25) Somehow works now, even though I didn't change
+    //   YearMonthDate at all? Maybe it was the value being returned
+    //   by the controller that was an issue before?
+    private YearMonthDate dateApplied;
 
     @Column(name = "date_posted")
     @JdbcTypeCode(SqlTypes.JSON)
-    private Map<String, Object> datePosted;
-//    private YearMonthDate datePosted;
+//    private YearMonthDateDto datePosted; // AlSO WORKS :)
+//    private Map<String, Object> dateApplied; // WORKS :)
+    private YearMonthDate datePosted;
 
     @Column(name = "job_status", nullable = false)
     private String jobStatus;
@@ -177,8 +182,8 @@ public class Job {
         String usState,
         String city,
         Instant dateSaved,
-        Map<String, Object> dateApplied,
-        Map<String, Object> datePosted,
+        YearMonthDate dateApplied,
+        YearMonthDate datePosted,
         String jobStatus,
         String[] links,
         String foundFrom
@@ -227,8 +232,8 @@ public class Job {
     public String getUsState() { return usState; }
     public String getCity() { return city; }
     public Instant getDateSaved() { return dateSaved; }
-    public Map<String, Object> getDateApplied() { return dateApplied; }
-    public Map<String, Object> getDatePosted() { return datePosted; }
+    public YearMonthDate getDateApplied() { return dateApplied; }
+    public YearMonthDate getDatePosted() { return datePosted; }
     public String getJobStatus() { return jobStatus; }
     public String[] getLinks() { return links; }
     public String getFoundFrom() { return foundFrom; }
@@ -251,8 +256,8 @@ public class Job {
     public void setUsState(String usState) { this.usState = usState; }
     public void setCity(String city) { this.city = city; }
     public void setDateSaved(Instant dateSaved) { this.dateSaved = dateSaved; }
-    public void setDateApplied(Map<String, Object> dateApplied) { this.dateApplied = dateApplied; }
-    public void setDatePosted(Map<String, Object> datePosted) { this.datePosted = datePosted; }
+    public void setDateApplied(YearMonthDate dateApplied) { this.dateApplied = dateApplied; }
+    public void setDatePosted(YearMonthDate datePosted) { this.datePosted = datePosted; }
     public void setJobStatus(String jobStatus) { this.jobStatus = jobStatus; }
     public void setLinks(String[] links) { this.links = links; }
     public void setFoundFrom(String foundFrom) { this.foundFrom = foundFrom; }

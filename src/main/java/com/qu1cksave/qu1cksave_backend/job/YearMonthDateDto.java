@@ -26,19 +26,19 @@ public class YearMonthDateDto {
     public Integer getDate() { return date; }
 
     // Map<String, Object> to YearMonthDateDto
-    public static YearMonthDateDto toYearMonthDateDto(Map<String, Object> mapYearMonthDate) {
-        return new YearMonthDateDto(
-            Integer.valueOf(String.valueOf(mapYearMonthDate.get("year"))),
-            Integer.valueOf(String.valueOf(mapYearMonthDate.get("month"))),
-            Integer.valueOf(String.valueOf(mapYearMonthDate.get("date")))
-        );
-    }
-
-    public static Map<String, Object> toMap(YearMonthDateDto yearMonthDateDto) {
-        Map<String, Object> mapYearMonthDate = new HashMap<String, Object>();
-        mapYearMonthDate.put("year", yearMonthDateDto.getYear().toString());
-        mapYearMonthDate.put("month", yearMonthDateDto.getMonth().toString());
-        mapYearMonthDate.put("date", yearMonthDateDto.getDate().toString());
-        return mapYearMonthDate;
-    }
+//    public static YearMonthDateDto toYearMonthDateDto(Map<String, Object> mapYearMonthDate) {
+//        return new YearMonthDateDto(
+//            Integer.valueOf(String.valueOf(mapYearMonthDate.get("year"))),
+//            Integer.valueOf(String.valueOf(mapYearMonthDate.get("month"))),
+//            Integer.valueOf(String.valueOf(mapYearMonthDate.get("date")))
+//        );
+//    }
+//
+//    public static Map<String, Object> toMap(YearMonthDateDto yearMonthDateDto) {
+//        Map<String, Object> mapYearMonthDate = new HashMap<String, Object>();
+//        mapYearMonthDate.put("year", yearMonthDateDto.getYear().toString());
+//        mapYearMonthDate.put("month", yearMonthDateDto.getMonth().toString());
+//        mapYearMonthDate.put("date", yearMonthDateDto.getDate().toString());
+//        return mapYearMonthDate;
+//    }
 }

@@ -43,12 +43,6 @@ public class JobService {
     public ResponseJobDto createJob(RequestJobDto newJob, UUID userId) {
         return null; // TODO
     }
-
-    // TESTING ONlY Delete later
-    @Transactional(readOnly = true)
-    public List<ResponseJobDto> getJobsNoFiles(UUID userId) {
-        return jobRepository.findByMemberId(userId).stream().map(JobMapper::toResponseDto).collect(Collectors.toList());
-    }
 }
 
 // Convert string to UUID
