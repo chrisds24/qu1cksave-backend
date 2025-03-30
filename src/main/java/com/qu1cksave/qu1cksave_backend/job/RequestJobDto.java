@@ -3,7 +3,6 @@ package com.qu1cksave.qu1cksave_backend.job;
 import com.qu1cksave.qu1cksave_backend.coverletter.RequestCoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.resume.RequestResumeDto;
 
-import java.util.Map;
 import java.util.UUID;
 
 public class RequestJobDto {
@@ -22,8 +21,8 @@ public class RequestJobDto {
     private final String country;
     private final String usState;
     private final String city;
-    private final Map<String, Object> dateApplied;
-    private final Map<String, Object> datePosted;
+    private final YearMonthDateDto dateApplied;
+    private final YearMonthDateDto datePosted;
     private final String jobStatus; // NOT NULLABLE
     private final String[] links;
     private final String foundFrom;
@@ -37,6 +36,8 @@ public class RequestJobDto {
     public RequestJobDto(
         UUID resumeId,
         RequestResumeDto resume,
+        // TODO: (3/30/25) For now, I'm using the actual type instead of String
+        //   since I want to check if Jackson is able to convert
 //        String Resume, // In case Jackson can't automatically convert
         UUID coverLetterId,
         RequestCoverLetterDto coverLetter,
@@ -51,8 +52,8 @@ public class RequestJobDto {
         String country,
         String usState,
         String city,
-        Map<String, Object> dateApplied,
-        Map<String, Object> datePosted,
+        YearMonthDateDto dateApplied,
+        YearMonthDateDto datePosted,
 //        String dateApplied,
 //        String datePosted,
         String jobStatus,
@@ -100,8 +101,8 @@ public class RequestJobDto {
     public String getCountry() { return country; }
     public String getUsState() { return usState; }
     public String getCity() { return city; }
-    public Map<String, Object> getDateApplied() { return dateApplied; }
-    public Map<String, Object> getDatePosted() { return datePosted; }
+    public YearMonthDateDto getDateApplied() { return dateApplied; }
+    public YearMonthDateDto getDatePosted() { return datePosted; }
     public String getJobStatus() { return jobStatus; }
     public String[] getLinks() { return links; }
     public String getFoundFrom() { return foundFrom; }

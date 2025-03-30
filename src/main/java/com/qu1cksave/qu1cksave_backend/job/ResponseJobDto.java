@@ -52,8 +52,10 @@ public class ResponseJobDto {
     private final String usState;                                   // 15
     private final String city;                                      // 16
     private final String dateSaved; // NOT NULLABLE                 // 17
-    private final Map<String, Object> dateApplied;                        // 18
-    private final Map<String, Object> datePosted;                         // 19
+//    private final Map<String, Object> dateApplied;                        // 18
+//    private final Map<String, Object> datePosted;                         // 19
+    private final YearMonthDateDto dateApplied;                        // 18
+    private final YearMonthDateDto datePosted;                         // 19
     private final String jobStatus; // NOT NULLABLE                 // 20
     private final String[] links;                                   // 21
     private final String foundFrom;                                 // 22
@@ -152,8 +154,11 @@ public class ResponseJobDto {
 
             // https://www.baeldung.com/jackson-object-mapper-tutorial
             ObjectMapper objectMapper = new ObjectMapper();
-            this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied, new TypeReference<Map<String, Object>>(){}) : null;
-            this.datePosted = datePosted != null ? objectMapper.readValue(datePosted, new TypeReference<Map<String, Object>>(){}) : null;
+            // If using Map<String, Object> for dateApplied/Posted
+//            this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied, new TypeReference<Map<String, Object>>(){}) : null;
+//            this.datePosted = datePosted != null ? objectMapper.readValue(datePosted, new TypeReference<Map<String, Object>>(){}) : null;
+            this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied, YearMonthDateDto.class) : null;
+            this.datePosted = datePosted != null ? objectMapper.readValue(datePosted, YearMonthDateDto.class) : null;
             this.jobStatus = jobStatus;
             // readValue has an error without the try-catch. Intellij suggested
             //   the try-catch as a solution, which removed the error
@@ -182,8 +187,8 @@ public class ResponseJobDto {
     public String getUsState() { return usState; }
     public String getCity() { return city; }
     public String getDateSaved() { return dateSaved; }
-    public Map<String, Object> getDateApplied() { return dateApplied; }
-    public Map<String, Object> getDatePosted() { return datePosted; }
+    public YearMonthDateDto getDateApplied() { return dateApplied; }
+    public YearMonthDateDto getDatePosted() { return datePosted; }
     public String getJobStatus() { return jobStatus; }
     public String[] getLinks() { return links; }
     public String getFoundFrom() { return foundFrom; }

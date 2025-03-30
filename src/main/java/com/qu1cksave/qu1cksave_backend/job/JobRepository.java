@@ -9,7 +9,7 @@ import java.util.UUID;
 public interface JobRepository extends JpaRepository<Job, UUID> {
     // TODO: Search "log spring data jpa repository result"
 
-//    List<Job> findByMemberId(UUID memberId); // Keep for reference
+    List<Job> findByMemberId(UUID memberId); // Keep for reference
 
     // https://stackoverflow.com/questions/64762080/how-to-map-sql-native-query-result-into-dto-in-spring-jpa-repository
     // - Regarding NamedNativeQuery and SqlResultSetMapping

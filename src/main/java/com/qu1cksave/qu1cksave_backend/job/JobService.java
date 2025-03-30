@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class JobService {
@@ -41,6 +42,12 @@ public class JobService {
     @Transactional
     public ResponseJobDto createJob(RequestJobDto newJob, UUID userId) {
         return null; // TODO
+    }
+
+    // TESTING ONlY Delete later
+    @Transactional(readOnly = true)
+    public List<ResponseJobDto> getJobsNoFiles(UUID userId) {
+        return jobRepository.findByMemberId(userId).stream().map(JobMapper::toResponseDto).collect(Collectors.toList());
     }
 }
 
