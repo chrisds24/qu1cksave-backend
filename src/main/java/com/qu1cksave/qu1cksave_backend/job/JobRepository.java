@@ -18,16 +18,16 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
             j.*,
             json_build_object(
               'id', r.id,
-              'memberId', r.member_id,
-              'fileName', r.file_name,
-              'mimeType', r.mime_type
+              'member_id', r.member_id,
+              'file_name', r.file_name,
+              'mime_type', r.mime_type
             ) AS resume,
             json_build_object(
               'id', c.id,
-              'memberId', c.member_id,
-              'fileName', c.file_name,
-              'mimeType', c.mime_type
-            ) AS coverLetter
+              'member_id', c.member_id,
+              'file_name', c.file_name,
+              'mime_type', c.mime_type
+            ) AS cover_letter
         FROM
             job j
             LEFT JOIN resume r ON j.resume_id = r.id AND j.member_id = r.member_id

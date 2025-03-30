@@ -1,5 +1,6 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -66,37 +67,69 @@ public class ResponseJobDto {
     //   @PersistenceCreator
     // - I didn't end up needing to use projections
     public ResponseJobDto(
-        UUID id,
-        UUID memberId,
-        UUID resumeId,
+//        UUID id,
+//        UUID memberId,
+//        UUID resumeId,
+////        ResumeDto resume,
+//        UUID coverLetterId,
+////        CoverLetterDto coverLetter,
+//        String title,
+//        String companyName,
+//        String jobDescription,
+//        String notes,
+//        String isRemote,
+//        Integer salaryMin,
+//        Integer salaryMax,
+//        String country,
+//        String usState,
+//        String city,
+//        Instant dateSaved,
+////        Map<String, Object> dateApplied,
+////        Map<String, Object> datePosted,
+//        String dateApplied,
+//        String datePosted,
+//        String jobStatus,
+//        // Needs to be a string since no automatic conversion from JSON array
+//        //   to a String array
+////        String[] links,
+//        String links,
+//        String foundFrom,
+////        ResumeDto resume,
+////        CoverLetterDto coverLetter
+//        String resume,
+//        String coverLetter,
+
+        @JsonProperty("id") UUID id,
+        @JsonProperty("member_id") UUID memberId,
+        @JsonProperty("resume_id") UUID resumeId,
 //        ResumeDto resume,
-        UUID coverLetterId,
+        @JsonProperty("cover_letter_id") UUID coverLetterId,
 //        CoverLetterDto coverLetter,
-        String title,
-        String companyName,
-        String jobDescription,
-        String notes,
-        String isRemote,
-        Integer salaryMin,
-        Integer salaryMax,
-        String country,
-        String usState,
-        String city,
-        Instant dateSaved,
+        @JsonProperty("title") String title,
+        @JsonProperty("company_name") String companyName,
+        @JsonProperty("job_description") String jobDescription,
+        @JsonProperty("notes") String notes,
+        @JsonProperty("is_remote") String isRemote,
+        @JsonProperty("salary_min") Integer salaryMin,
+        @JsonProperty("salary_max") Integer salaryMax,
+        @JsonProperty("country") String country,
+        @JsonProperty("us_state") String usState,
+        @JsonProperty("city") String city,
+        @JsonProperty("date_saved") Instant dateSaved,
 //        Map<String, Object> dateApplied,
 //        Map<String, Object> datePosted,
-        String dateApplied,
-        String datePosted,
-        String jobStatus,
-        // Needs to be a string since no automatic conversion from JSON array
-        //   to a String array
+        @JsonProperty("date_applied") String dateApplied,
+        @JsonProperty("date_posted") String datePosted,
+        @JsonProperty("job_status") String jobStatus,
+// Needs to be a string since no automatic conversion from JSON array
+//   to a String array
 //        String[] links,
-        String links,
-        String foundFrom,
+        @JsonProperty("links") String links,
+        @JsonProperty("found_from") String foundFrom,
 //        ResumeDto resume,
 //        CoverLetterDto coverLetter
-        String resume,
-        String coverLetter
+        @JsonProperty("resume") String resume,
+        @JsonProperty("cover_letter") String coverLetter
     ) {
         try {
             this.id = id;

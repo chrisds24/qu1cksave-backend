@@ -28,15 +28,19 @@ public class RequestJobDto {
     private final String[] links;
     private final String foundFrom;
     // In job EDIT mode, used to determine if resume is to be deleted or not
-    private final boolean keepResume;
-    private final boolean keepCoverLetter;
+    // - I'm using Boolean (object) instead of boolean(primitive) since these
+    //   fields could be null
+    private final Boolean keepResume;
+    private final Boolean keepCoverLetter;
 
     // Constructors
     public RequestJobDto(
         UUID resumeId,
         RequestResumeDto resume,
+//        String Resume, // In case Jackson can't automatically convert
         UUID coverLetterId,
         RequestCoverLetterDto coverLetter,
+//        String CoverLetter,
         String title,
         String companyName,
         String jobDescription,
@@ -49,11 +53,14 @@ public class RequestJobDto {
         String city,
         Map<String, Object> dateApplied,
         Map<String, Object> datePosted,
+//        String dateApplied,
+//        String datePosted,
         String jobStatus,
         String[] links,
+//        String links,
         String foundFrom,
-        boolean keepResume, // TODO: (3/29/25) Should I use Boolean instead?
-        boolean keepCoverLetter
+        Boolean keepResume,
+        Boolean keepCoverLetter
     ) {
         this.resumeId = resumeId;
         this.resume = resume;
@@ -98,6 +105,6 @@ public class RequestJobDto {
     public String getJobStatus() { return jobStatus; }
     public String[] getLinks() { return links; }
     public String getFoundFrom() { return foundFrom; }
-    public boolean getKeepResume() { return keepResume; }
-    public boolean getKeepCoverLetter() { return keepCoverLetter; }
+    public Boolean getKeepResume() { return keepResume; }
+    public Boolean getKeepCoverLetter() { return keepCoverLetter; }
 }

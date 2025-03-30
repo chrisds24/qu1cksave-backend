@@ -16,7 +16,7 @@ public class ResponseResumeDto {
 
     // TODO: (3/29/25) Need a byteArrayAsArray field
     //  FIRST: Check if getting the list of jobs still works even with this
-    //  Otherwise, I'll need a separate ResumeWithFileDto needed?
+    //  Otherwise, I'll need a separate ResumeWithFileDto
     //  I was originally thinking of using Integer[] (or int[]), but the size
     //    of a number in JavaScript is 64 bits
     //  - So long[] might be more appropriate (Also, double is also 64 bits)
@@ -24,6 +24,7 @@ public class ResponseResumeDto {
     //  UPDATE: Since this is a DTO, I can't set its byteArrayAsArray later
     //    byteArrayAsArray also doesn't come from the database
     //    So I'll definitely need a ResponseResumeWithFilesDto
+    //    - I can just inherit from this class. Though, is this bad practice?
 //    private final long[] byteArrayAsArray;
 
     // Constructors
@@ -31,9 +32,9 @@ public class ResponseResumeDto {
     //   deserialize
     public ResponseResumeDto(
         @JsonProperty("id") UUID id,
-        @JsonProperty("memberId") UUID memberId,
-        @JsonProperty("fileName") String fileName,
-        @JsonProperty("mimeType") String mimeType
+        @JsonProperty("member_id") UUID memberId,
+        @JsonProperty("file_name") String fileName,
+        @JsonProperty("mime_type") String mimeType
     ) {
         this.id = id;
         this.memberId = memberId;

@@ -38,6 +38,7 @@ public class JobService {
         return jobRepository.findByMemberIdWithFiles(userId);
     }
 
+    @Transactional
     public ResponseJobDto createJob(RequestJobDto newJob, UUID userId) {
         return null; // TODO
     }

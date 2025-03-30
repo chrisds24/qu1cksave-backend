@@ -19,9 +19,9 @@ public class ResponseCoverLetterDto {
     // Constructors
     public ResponseCoverLetterDto(
         @JsonProperty("id") UUID id,
-        @JsonProperty("memberId") UUID memberId,
-        @JsonProperty("fileName") String fileName,
-        @JsonProperty("mimeType") String mimeType
+        @JsonProperty("member_id") UUID memberId,
+        @JsonProperty("file_name") String fileName,
+        @JsonProperty("mime_type") String mimeType
     ) {
         this.id = id;
         this.memberId = memberId;
