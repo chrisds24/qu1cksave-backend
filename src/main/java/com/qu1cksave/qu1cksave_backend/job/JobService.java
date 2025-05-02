@@ -47,15 +47,3 @@ public class JobService {
 
 // Convert string to UUID
 //   UUID.fromString("1d27e3ee-1111-4e0d-ac0f-dadfcc420ce3"),
-
-// Keep for reference
-//@Transactional(readOnly = true)
-//public JobDto getJob(UUID id, UUID userId) {
-////        Optional<Job> job = jobRepository.findById(id);
-////        return job.isPresent() ? JobMapper.toDto(job.get()) : null;
-//    // Suggested functional style by Intellij
-//    // https://stackoverflow.com/questions/3907394/java-is-there-a-map-function
-//    // - map and orElse are from Optional
-//    return jobRepository.findByIdAndMemberId(id, userId)
-//        .map(JobMapper::toDto).orElse(null);
-//}

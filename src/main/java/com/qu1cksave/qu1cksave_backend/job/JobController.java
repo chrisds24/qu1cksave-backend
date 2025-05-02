@@ -27,6 +27,7 @@ public class JobController {
 
     // TODO: For everything below, need to get id of user from the JWT in the
     //   Auth header. I remember it's passed as a parameter in Spring Security
+    //   Also need OpenAPI schema validation (or something similar)
 
     @GetMapping()
     public List<ResponseJobDto> getJobs(@RequestParam("id") String userId) {
@@ -45,6 +46,7 @@ public class JobController {
         // For testing: http://localhost:8080/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
     }
 
+    // TODO: (4/28/2025) Next thing to do is createJob
     @PostMapping()
     public ResponseJobDto createJob(@RequestBody RequestJobDto newJob) {
         UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");

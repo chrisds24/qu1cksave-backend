@@ -38,9 +38,7 @@ public class ResponseJobDto {
     private final UUID id; // NOT NULLABLE                          // 1
     private final UUID memberId; // NOT NULLABLE                    // 2
     private final UUID resumeId;                                    // 3
-//    private final ResumeDto resume;                                 // 4
     private final UUID coverLetterId;                               // 5
-//    private final CoverLetterDto coverLetter;                       // 6
     private final String title; // NOT NULLABLE                     // 7
     private final String companyName; // NOT NULLABLE               // 8
     private final String jobDescription;                            // 9
@@ -69,38 +67,6 @@ public class ResponseJobDto {
     //   @PersistenceCreator
     // - I didn't end up needing to use projections
     public ResponseJobDto(
-//        UUID id,
-//        UUID memberId,
-//        UUID resumeId,
-////        ResumeDto resume,
-//        UUID coverLetterId,
-////        CoverLetterDto coverLetter,
-//        String title,
-//        String companyName,
-//        String jobDescription,
-//        String notes,
-//        String isRemote,
-//        Integer salaryMin,
-//        Integer salaryMax,
-//        String country,
-//        String usState,
-//        String city,
-//        Instant dateSaved,
-////        Map<String, Object> dateApplied,
-////        Map<String, Object> datePosted,
-//        String dateApplied,
-//        String datePosted,
-//        String jobStatus,
-//        // Needs to be a string since no automatic conversion from JSON array
-//        //   to a String array
-////        String[] links,
-//        String links,
-//        String foundFrom,
-////        ResumeDto resume,
-////        CoverLetterDto coverLetter
-//        String resume,
-//        String coverLetter,
-
         @JsonProperty("id") UUID id,
         @JsonProperty("member_id") UUID memberId,
         @JsonProperty("resume_id") UUID resumeId,
@@ -157,6 +123,7 @@ public class ResponseJobDto {
             // If using Map<String, Object> for dateApplied/Posted
 //            this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied, new TypeReference<Map<String, Object>>(){}) : null;
 //            this.datePosted = datePosted != null ? objectMapper.readValue(datePosted, new TypeReference<Map<String, Object>>(){}) : null;
+            // Otherwise, use these
             this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied, YearMonthDateDto.class) : null;
             this.datePosted = datePosted != null ? objectMapper.readValue(datePosted, YearMonthDateDto.class) : null;
             this.jobStatus = jobStatus;

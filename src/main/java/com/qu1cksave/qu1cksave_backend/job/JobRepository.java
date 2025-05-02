@@ -9,8 +9,6 @@ import java.util.UUID;
 public interface JobRepository extends JpaRepository<Job, UUID> {
     // TODO: Search "log spring data jpa repository result"
 
-    List<Job> findByMemberId(UUID memberId); // Keep for reference
-
     // https://stackoverflow.com/questions/64762080/how-to-map-sql-native-query-result-into-dto-in-spring-jpa-repository
     // - Regarding NamedNativeQuery and SqlResultSetMapping
     @NativeQuery(value = """ 
@@ -42,7 +40,9 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
     // - The code above also works.
     // - Replace "WHERE j.member_id = ?1" with "WHERE j.member_id =:memberId"
 
+
     // Keep for reference
+//    List<Job> findByMemberId(UUID memberId);
 //    Optional<Job> findByIdAndMemberId(UUID id, UUID memberId);
 }
 
@@ -65,28 +65,3 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
 // - Because write operations need to be executed differently than read\
 //   operations, you also need to annotate the repository method with a @Modifying annotation.
 // - TODO: (3/28/2025) This might be important for create/update/delete
-
-// Original query I used
-// - Changed cover_letter to coverLetter in the version I used
-// - Also, member_id to memberId, etc.
-//@NativeQuery(value = """
-//    SELECT
-//        j.*,
-//        json_build_object(
-//          'id', r.id,
-//          'member_id', r.member_id,
-//          'file_name', r.file_name,
-//          'mime_type', r.mime_type
-//        ) AS resume,
-//        json_build_object(
-//          'id', c.id,
-//          'member_id', c.member_id,
-//          'file_name', c.file_name,
-//          'mime_type', c.mime_type
-//        ) AS cover_letter
-//    FROM
-//        job j
-//        LEFT JOIN resume r ON j.resume_id = r.id AND j.member_id = r.member_id
-//        LEFT JOIN cover_letter c ON j.cover_letter_id = c.id AND j.member_id = c.member_id
-//    WHERE j.member_id = ?1
-//""")

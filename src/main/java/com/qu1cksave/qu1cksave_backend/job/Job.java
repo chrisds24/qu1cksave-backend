@@ -13,7 +13,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
-import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -65,10 +64,6 @@ public class Job {
 
     @Column(name = "cover_letter_id")
     private UUID coverLetterId;
-
-//    @Transient
-//    @JsonInclude
-//    private CoverLetter coverLetter; // NOT a column of the table
 
     // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#regular-column-mappings
     // - Has info on @Column annotation members, such as nullable
@@ -137,8 +132,6 @@ public class Job {
 
     @Column(name = "date_posted")
     @JdbcTypeCode(SqlTypes.JSON)
-//    private YearMonthDateDto datePosted; // AlSO WORKS :)
-//    private Map<String, Object> dateApplied; // WORKS :)
     private YearMonthDate datePosted;
 
     @Column(name = "job_status", nullable = false)
@@ -153,7 +146,7 @@ public class Job {
     //   type isn’t one of the basic types build in to Hibernate, you can use an AttributeConverter
     // TODO: Keep this one in mind in case it causes errors
     //   - Also, should this be String[] or List<String> ???
-    //   - UPDATE: This seems to work fine
+    //   - This seems to work fine
     @JdbcTypeCode(SqlTypes.JSON)
     private String[] links;
 
@@ -168,9 +161,7 @@ public class Job {
         UUID id,
         UUID memberId,
         UUID resumeId,
-//        Resume resume,
         UUID coverLetterId,
-//        CoverLetter coverLetter,
         String title,
         String companyName,
         String jobDescription,
@@ -191,9 +182,7 @@ public class Job {
         this.id = id;
         this.memberId = memberId;
         this.resumeId = resumeId;
-//        this.resume = resume;
         this.coverLetterId = coverLetterId;
-//        this.coverLetter = coverLetter;
         this.title = title;
         this.companyName = companyName;
         this.jobDescription = jobDescription;
@@ -218,9 +207,7 @@ public class Job {
     public UUID getId() { return id; }
     public UUID getMemberId() { return memberId; }
     public UUID getResumeId() { return resumeId; }
-//    public Resume getResume() { return resume; }
     public UUID getCoverLetterId() { return coverLetterId; }
-//    public CoverLetter getCoverLetter() { return coverLetter; }
     public String getTitle() { return title; }
     public String getCompanyName() { return companyName; }
     public String getJobDescription() { return jobDescription; }
@@ -242,9 +229,7 @@ public class Job {
     public void setId(UUID id) { this.id = id; }
     public void setMemberId(UUID memberId) { this.memberId = memberId; }
     public void setResumeId(UUID resumeId) { this.resumeId = resumeId; }
-//    public void setResume(Resume resume) { this.resume = resume; }
     public void setCoverLetterId(UUID coverLetterId) { this.coverLetterId = coverLetterId; }
-//    public void setCoverLetter(CoverLetter coverLetter) { this.coverLetter = coverLetter; }
     public void setTitle(String title) { this.title = title; }
     public void setCompanyName(String companyName) { this.companyName = companyName; }
     public void setJobDescription(String jobDescription) { this.jobDescription = jobDescription; }
