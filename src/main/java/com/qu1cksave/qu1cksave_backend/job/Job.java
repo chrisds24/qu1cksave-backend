@@ -9,7 +9,9 @@ import jakarta.persistence.Table;
 // https://stackoverflow.com/questions/60021815/why-has-javax-persistence-api-been-replaced-by-jakarta-persistence-api-in-spring
 // - javax.persistence.Transient and the one below serve the same purpose
 //import jakarta.persistence.Transient;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.SourceType;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
@@ -103,6 +105,11 @@ public class Job {
     //   parameter.
     // - So I need this to be Instant since my constructor for JobDto doesn't
     //   take a String, and it can only have one constructor
+    // https://www.baeldung.com/hibernate-creationtimestamp-updatetimestamp
+    // - Has info on how to auto generate date using DB as the source
+    // - https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#database-generated-columns
+    //   -- 9.5. Handling database-generated columns
+    @CreationTimestamp(source = SourceType.DB)
     @Column(name = "date_saved", nullable = false)
     private Instant dateSaved;
 //    private String dateSaved;

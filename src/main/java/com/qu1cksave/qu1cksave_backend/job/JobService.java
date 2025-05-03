@@ -41,9 +41,33 @@ public class JobService {
 
     @Transactional
     public ResponseJobDto createJob(RequestJobDto newJob, UUID userId) {
-        return null; // TODO
+        // 1: Create the resume (if there's one), returning the id (resumeId)
+        // 2: Create the coverLetter, returning the id (coverLetterId)
+        // 3: Create the job, using the associated file's id if it exists
+        // 4: Add files to S3
+        // At any point, if any of the steps above fail, the whole transaction
+        //   should and will fail
+
+        // Creating new entity
+        // - https://spring.io/guides/gs/accessing-data-jpa
+        // - https://docs.spring.io/spring-data/jpa/reference/jpa/entity-persistence.html
+        Job newJobEntity = JobMapper.createEntity(newJob, userId);
+
+        return JobMapper.toResponseDto(jobRepository.save(newJobEntity));
     }
 }
 
 // Convert string to UUID
 //   UUID.fromString("1d27e3ee-1111-4e0d-ac0f-dadfcc420ce3"),
+
+// Testing resources:
+// https://spring.io/guides/gs/testing-web
+// https://medium.com/@mbanaee61/api-testing-in-spring-boot-2a6d69e5c3ce
+// - This one seems pretty good
+
+// OpenAPI specification:
+// https://www.baeldung.com/spring-rest-openapi-documentation
+// https://github.com/springdoc/springdoc-openapi
+
+// Postman:
+// https://medium.com/turkcell/spring-boot-rest-api-testing-with-postman-bb283b124416
