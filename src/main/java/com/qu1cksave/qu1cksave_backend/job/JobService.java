@@ -41,6 +41,8 @@ public class JobService {
 
     // TODO: (5/3/25) I know there's something else I need for write
     //   transactions
+    //   @Modifying annotation. But not sure if it should go here or in the
+    //   repo function
     @Transactional
     public ResponseJobDto createJob(RequestJobDto newJob, UUID userId) {
         // 1: Create the resume (if there's one), returning the id (resumeId)
@@ -76,18 +78,24 @@ public class JobService {
 //   -- Annotate your integration test classes with @SpringBootTest to load the complete Spring application context.
 // - Database Integration Tests:
 //   -- Test the interaction between your services and the database. Use an in-memory database or a test database for isolation.
-//   -- @Sql("/data.sql") // Optional: Initialize test data using SQL scripts
+//   -- TODO: (5/3/25) @Sql("/data.sql") // Optional: Initialize test data using SQL scripts
+//       + Search more about "@Sql annotation spring boot test"
+//       + https://docs.spring.io/spring-framework/reference/testing/testcontext-framework/executing-sql.html
+//       + Might not need this since the yaml file I'm using has references to data.sql, schema.sql, etc.
+//         * NOT SURE THOUGH
+//
 // - TODO: (5/3/25) ++++++++++ ME +++++++++++++=
-// - (5/3/25) I think I'll mostly need @SpringBootTest and not @DataJpaTest
+// - I'll need @SpringBootTest and not @DataJpaTest
 // - I'll also only mock the AWS calls, but everything else should be integrated
+// - I'll be using TestRestTemplate
 //
 // https://www.baeldung.com/spring-boot-testing
 // - The application-integrationtest.properties contains the details to configure the persistence storage
-//   -- So this is how we specify a test database
+//   -- TODO: (5/3/25) So this is how we specify a test database
 // - @DataJpaTest
 //   -- @DataJpaTest provides some standard setup needed for testing the persistence layer
 //   -- https://www.baeldung.com/junit-datajpatest-repository
-//      + TODO: (5/3/25) Have a look at this regarding testing JPA queries
+//      + TODO: (Later) Regard testing JPA queries
 //
 // https://www.reddit.com/r/learnjava/comments/1ial99t/testing_in_java/
 // - Mockito
@@ -95,7 +103,8 @@ public class JobService {
 //
 // https://www.youtube.com/watch?v=6uSnF6IuWIw TODO: (5/3/25) WATCH THIS !!!
 // - Marco Behler on JUnit 5
-//   -- Has stuff about BeforeAll, AfterAll, BeforeEach, AfterEach
+//   -- TODO: (5/3/25) Has stuff about BeforeAll, AfterAll, BeforeEach, AfterEach
+//   -- TODO: (5/3/25) assertThatJson
 //
 // https://www.youtube.com/watch?v=JVPHSdHViMg
 // - Marco Behler testing frameworks/libraries
@@ -105,19 +114,54 @@ public class JobService {
 //   is mocked. So by the time the service is called, it's actually mocked
 //   (NOTE: The endpoint is the one being tested)
 //
+// - https://rieckpil.de/spring-boot-testing-mockmvc-vs-webtestclient-vs-testresttemplate/
+//   -- The table is very helpful
+//   -- Good example on how to use TestRestTemplate TODO: (5/3/25) I can use this example
+//
+// https://www.springboottutorial.com/integration-testing-for-spring-boot-rest-services
+// - Has a POST example
+//
+// TODO: (5/3/25): Didn't read these, but they seem good too. Could refer to if needed
+// https://ashok-s-nair.medium.com/java-integration-test-spring-rest-controller-6ea8539eb0b1
+// https://medium.com/swlh/https-medium-com-jet-cabral-testing-spring-boot-restful-apis-b84ea031973d
+//
 // Spring Boot Docs:  https://docs.spring.io/spring-boot/reference/testing/spring-boot-applications.html
-// - TODO: (5/3/25) Read this if there's time
+// - TODO: (5/3/25) Could refer to if needed
 
 // Test Database Spring Boot TODO: (5/3/25)
 // https://www.baeldung.com/spring-boot-testcontainers-integration-test
 // - Seems really good, haven't read yet though
+// - Test Containers: https://www.baeldung.com/docker-test-containers
 // https://www.baeldung.com/spring-testing-separate-data-source
 // - Seems useful
+// https://medium.com/javarevisited/spring-boot-testing-data-and-services-bc8b4c62ee8f
+// https://stackoverflow.com/questions/38262430/initialising-a-database-before-spring-boot-test
+// https://dev.to/mspilari/integration-tests-on-spring-boot-with-postgresql-and-testcontainers-4dpc
+// - TODO (5/3/25) Another nice resource
+// https://rieckpil.de/howto-write-spring-boot-integration-tests-with-a-real-database/
+// - TODO (5/3/25) Very good example
+// - .withInitScript("config/INIT.sql")  Seems like this runs data.sql in my case for example
 
-// Test http request / Test endpoint spring boot TODO: (5/3/25)
-// - TODO
+// Test Containers
+// https://docs.spring.io/spring-boot/reference/testing/testcontainers.html
+// - R2dbcConnectionDetails for PostgreSQLContainer
 
-// TODO: (5/3/25) TestRestTemplate vs. MockMvc
+// TestRestTemplate vs. MockMvc vs RestAssured
+// - https://stackoverflow.com/questions/52051570/whats-the-difference-between-mockmvc-restassured-and-testresttemplate
+//   -- Seems like MockMvc only mocks the service and other layers
+//      + Primarily for unit testing
+//   -- TestRestTemplate and RestAssured are for integration testing
+//   -- https://medium.com/swlh/https-medium-com-jet-cabral-testing-spring-boot-restful-apis-b84ea031973d
+//      + Seems good
+// - https://stackoverflow.com/questions/46732371/why-are-there-different-types-of-integration-tests-in-spring-boot
+//   -- Also a good read
+// - https://rieckpil.de/spring-boot-testing-mockmvc-vs-webtestclient-vs-testresttemplate/
+//   -- The table is very helpful
+//   -- Good example on how to use TestRestTemplate TODO: (5/3/25) I can use this example
+
+// RestAssured
+// - I keep seeing this one too
+// - https://www.baeldung.com/rest-assured-tutorial
 
 // OpenAPI specification:
 // https://www.baeldung.com/spring-rest-openapi-documentation
@@ -133,6 +177,10 @@ public class JobService {
 // https://www.reddit.com/r/SpringBoot/comments/fd1qbu/controller_unit_tests_vs_integration_tests_in/
 // https://www.reddit.com/r/rails/comments/iab5w3/what_is_the_difference_about_a_controller_test/
 // https://www.reddit.com/r/node/comments/xhe6kj/how_do_you_guys_deal_with_unit_testing_against_a/
+
+// TODO: (Later) Should AWS calls be mocked in integration tests?
+// - https://www.reddit.com/r/aws/comments/lyano4/integration_testing_aws_services/
+
 
 // Frontend/browser/end-to-end testing tools:
 // - Cypress, Selenium (GOVX asked me for this)
