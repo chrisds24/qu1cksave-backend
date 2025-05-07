@@ -101,6 +101,123 @@ class ProductTests {
 // - https://rieckpil.de/guide-to-springboottest-for-spring-boot-integration-tests/
 // - Spring Boot autoconfigures a WebTestClient bean for us, once our test uses: @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 // - The client is already autoconfigured, and the base URL points to our locally running Spring Boot. There’s no need to inject the random port and configure the client
+//
+//
+// https://www.baeldung.com/docker-test-containers
+// - In this tutorial, we’ll be looking at the Java Testcontainers library. It allows us to use Docker containers within our tests.
+// - Need to add testcontainers dependency
+// - The rule is annotated with @ClassRule. As a result, it will start the Docker container before any test in that class runs.
+//   The container will be destroyed after all methods are executed.
+// - If you apply @Rule annotation, the GenericContainer rule will start a new container for each test method.
+//   And it will stop the container when that test method finishes.
+// - For example, we fire up a PostgreSQL container with PostgreSQLContainer rule
+//   -- TODO (5/6/25) NOTE: (From ChatGPT) In JUnit 5, the @Container annotation is used for lifecycle management.
+//      Static fields annotated with @Container will start and stop the container once for the entire
+//      test instance, while instance fields will start and stop the container before and after each test method
+//   -- It is also possible to run PostgreSQL as a generic container. But it’d be more difficult to configure the connection
+// - If the tests require more complex services, we can specify them in a docker-compose file
+//   -- TODO (5/6/25) ME: How do I integrate my repository layer to this container?
+//      + FIRST, this is what happens when not using TestContainers
+//      + Annotating the test file with @SpringBootTest creates the application context
+//        using what was specified in the application.properties file (the test version)
+//      + When starting an application normally, this connects to the Postgres docker container
+//        * Though, it doesn't start the container (which is why we need to manually do docker-compose up -d)
+//      + And it actually wouldn't be this container using testcontainers, but the one started using docker-compose up -d
+//      + The same thing should happen when running the test
+//        * HOWEVER, wouldn't we need to manually change the environment variable before calling docker-compose up -d ???
+//        * YES, this is what we do in CSE 187 SlugSell, where we programmatically change
+//          process.env.POSTGRES_DB to test in db.ts for the test folder
+//          ** We can simply achieve this by through the test application.properties file
+//        * BUT...it's tedious to have to manually start a container for each test suite (Ex. product, resume, etc.)
+//        * So I'll need to have some script that automatically starts up a container when running each test suite
+//        * WHICH IS WHERE TESTCONTAINERS COME TO THE RESCUE
+//          ** But again, I'm not sure how to tell the repository to use this created container
+//          ** Maybe, I can simply just not start it manually myself and let testcontainers handle it?
+// - Then, we use DockerComposeContainer rule. This rule will start and run services as defined in the compose file.
+//   -- We use getServiceHost and getServicePost methods to build connection address to the service
+//   TODO: (5/6/25) ME: If the application context for the tests are created after this container has
+//    been started, the datasource, db url, etc. specified in the test application.properties would
+//    refer to the container created here
+//
+//
+// https://www.baeldung.com/spring-boot-testcontainers-integration-test
+// - To start using the PostgreSQL instance in a single test class, we have to create a container definition first and then use its parameters to establish a connection
+// - This one has an example on how to set up a container with a certain db name, user , password, etc.
+// - In addition to the JUnit 4 rules approach, we can modify the JDBC URL and instruct the Testcontainers to create a database instance per test class.
+//   This approach will work without requiring us to write some infrastructural code in our tests.
+//   -- spring.datasource.url=jdbc:tc:postgresql:11.1:///integration-tests-db
+//   -- The “tc:” will make Testcontainers instantiate database instances without any code change
+//   -- TODO: (5/6/25) ME: jdbc:tc:postgresql://localhost:5432/dev
+//      * I'll probably use this
+//      * TODO: (5/6/25) NOTE: Replace dev with test if I'm using test as the POSTGRES_DB value
+// - System.setProperty() is how we set environment variables
+// - As in previous examples, we applied the @ClassRule annotation to a field holding the container definition.
+//   This way, the DataSource connection properties are populated with correct values before Spring context creation
+//
+//
+// https://dev.to/mspilari/integration-tests-on-spring-boot-with-postgresql-and-testcontainers-4dpc
+// - @Testcontainers
+//   -- This annotation is from the Testcontainers library and is used to manage container lifecycles automatically during the test lifecycle.
+//   -- It ensures that containers are started before any tests run and stopped when tests complete.
+// - @Container
+//   -- A Testcontainers-specific annotation that designates a field as a container, making sure the container starts before running tests and stops afterward.
+//   -- In this case, it's used to manage a PostgreSQL container that emulates a database environment for testing
+// - @ServiceConnection
+//   -- This annotation is part of Spring Boot’s integration with Testcontainers. It allows automatic service discovery,
+//      helping Spring Boot use the PostgreSQLContainer to connect to the
+//      PostgreSQL instance.
+//
+//
+// https://rieckpil.de/howto-write-spring-boot-integration-tests-with-a-real-database/
+// - For projects where we have multiple dependencies from Testcontainers, we must align their
+//   versions to avoid incompatibilities. Testcontainers provides a Maven Bill of Materials (BOM)
+//   for this purpose. Once we define the testcontainers-bom as part of Maven’s dependencyManagement
+//   section, we can include all Testcontainers dependencies without specifying their versions.
+//   The BOM will align all Testcontainers dependency versions for us
+// - TODO: (5/6/25) This one has a way to add dependencies using Gradle
+// - Using JUnit Jupiter, we can register the Testcontainers extension with @Testcontainers.
+//   Next, we have to identify all our container definitions with @Container
+// - .withInitScript("config/INIT.sql")
+//   -- ME: This could be a way to fill the db
+//- Testcontainers maps the PostgreSQL’s main port (5432) to a random and ephemeral port,
+//  so we must override our configuration dynamically.
+//  For Spring Boot applications < 2.2.6, we can achieve this with an
+//  ApplicationContextInitializer and set the connection parameters dynamically
+// TODO: (5/6/25) For applications that use JUnit Jupiter (part of JUnit 5),
+//  we can’t use the @ClassRule anymore.
+//  The extension model of JUnit Jupiter exceeds the rule/runner API from JUnit 4.
+//  With the help of @DynamicPropertySource we can dynamically override the datasource connection parameters
+// TODO: (5/6/25) Simplified Spring Boot Configuration with @ServiceConnection
+//  Using: JUnit 5 and Spring Boot >= 3.1
+//  Traditionally, when using Testcontainers for integration testing, we would define a
+//  @DynamicPropertySource to configure the application properties with container-specific
+//  details dynamically. With Spring Boot 3.1, we can skip this step by annotating our container
+//  fields with @ServiceConnection
+//
+//
+// https://docs.spring.io/spring-boot/reference/testing/spring-boot-applications.html
+//- If you are using JUnit 5, there is no need to add the equivalent
+//  @ExtendWith(SpringExtension.class) as @SpringBootTest and the other @Test annotations
+//  are already annotated with it
+//- The @LocalServerPort annotation can be used to inject the actual port used into your test.
+//  For convenience, tests that need to make REST calls to the started server can additionally
+//  autowire a WebTestClient
+//  -- This setup requires spring-webflux on the classpath
+//
+//
+// https://docs.spring.io/spring-boot/reference/testing/testcontainers.html
+// - @Testcontainers, @Container
+// - Spring Boot’s auto-configuration can consume the details of a service connection and use
+//   them to establish a connection to a remote service.
+//   When doing so, the connection details take precedence over any connection-related configuration properties.
+//   -- @ServiceConnection annotation on the field annotated with @Container
+//   -- You’ll need to add the spring-boot-testcontainers module as a test dependency in order to use service connections with Testcontainers.
+// - By default all applicable connection details beans will be created for a given Container.
+//   For example, a PostgreSQLContainer will create both JdbcConnectionDetails and R2dbcConnectionDetails
+// - A slightly more verbose but also more flexible alternative to service connections is @DynamicPropertySource.
+//   A static @DynamicPropertySource method allows adding dynamic property values to the Spring Environment
+
+
 
 
 // TODO: Go in this order
