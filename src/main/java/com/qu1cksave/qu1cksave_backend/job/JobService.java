@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -37,6 +38,12 @@ public class JobService {
         //   returns a List<Job>, which gets converted to List<JobDto>
 //        return jobRepository.findByMemberIdWithFiles(userId).stream().map(JobMapper::toDto).collect(Collectors.toList());
         return jobRepository.findByMemberIdWithFiles(userId);
+    }
+
+    // TODO: Remove later. For testing only
+    @Transactional(readOnly = true)
+    public ResponseJobDto getJob(UUID id) {
+        return jobRepository.findById(id).map(JobMapper::toResponseDto).orElse(null);
     }
 
     // TODO: (5/3/25) I know there's something else I need for write

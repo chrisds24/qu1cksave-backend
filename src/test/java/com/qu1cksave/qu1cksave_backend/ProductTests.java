@@ -15,15 +15,15 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-// Or use this one below
+// Or use this one below (Probably won't need it)
 //@SpringBootTest(
 //    webEnvironment = WebEnvironment.RANDOM_PORT,
 //    classes = Qu1cksaveBackendApplication.class
 //)
-@ExtendWith(SpringExtension.class)
 @TestPropertySource(
-    locations = "classpath:application-integrationtest.properties")
-//@Import(EmployeeServiceImplTestContextConfiguration.class) Ex. If needed
+    locations = "classpath:application-product-integrationtest.properties"
+)
+//@Import(EmployeeServiceImplTestContextConfiguration.class) Ex. Make equivalent if needed
 class ProductTests {
 
     @LocalServerPort
@@ -216,8 +216,6 @@ class ProductTests {
 //   For example, a PostgreSQLContainer will create both JdbcConnectionDetails and R2dbcConnectionDetails
 // - A slightly more verbose but also more flexible alternative to service connections is @DynamicPropertySource.
 //   A static @DynamicPropertySource method allows adding dynamic property values to the Spring Environment
-
-
 
 
 // TODO: Go in this order

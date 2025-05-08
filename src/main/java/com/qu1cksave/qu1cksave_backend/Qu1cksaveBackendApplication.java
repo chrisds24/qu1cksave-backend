@@ -13,13 +13,17 @@ public class Qu1cksaveBackendApplication {
 // When running the app:
 // 1.) Might need to do File > Invalidate Caches
 // 2.) Set environment variables
-//		 export POSTGRES_HOST=jdbc:postgresql://localhost:5432/dev
-//       - (OLD: Node version) POSTGRES_HOST=localhost
-//       - Can add ?useSSL=false at end if needed (self explanatory)
+//       OLD:
+//		 - export POSTGRES_HOST=jdbc:postgresql://localhost:5432/dev
+//         -- (OLD Node version) POSTGRES_HOST=localhost
+//         -- Can add ?useSSL=false at end if needed (self explanatory)
+//       export POSTGRES_HOST=localhost
+//       - The docker-compose.yml uses this
+//       - Also, the spring.datasource.url
+//		 export POSTGRES_PORT=5432
+//       export POSTGRES_DB=dev
 //		 export POSTGRES_USER=postgres
 //		 export POSTGRES_PASSWORD=postgres
-//		 export POSTGRES_DB=dev
-//		 - The docker-compose.yml uses this
 // 3.) Run postgres docker container
 //		docker-compose down		(If you want to reset. Then compose up again)
 // 		docker-compose up -d

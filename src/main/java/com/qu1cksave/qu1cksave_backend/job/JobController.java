@@ -46,7 +46,15 @@ public class JobController {
         // For testing: http://localhost:8080/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
     }
 
-    // TODO: (4/28/2025) Next thing to do is createJob
+    // TODO: Remove later. For testing only
+    @GetMapping("/{id}")
+    public ResponseJobDto getJob(@PathVariable UUID id) {
+        // Use this job's id for testing:
+        // '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
+        // Expected: 'Software Engineer', 'Microsoft', very long description
+        return jobService.getJob(id);
+    }
+
     @PostMapping()
     public ResponseJobDto createJob(@RequestBody RequestJobDto newJob) {
         UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
