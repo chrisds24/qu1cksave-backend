@@ -9,7 +9,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 //@SpringBootTest // Only this originally
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(
-	locations = "classpath:application-product-integrationtest.properties"
+	locations = "classpath:application-application-product-integrationtest.properties"
 )
 @Testcontainers
 class Qu1cksaveBackendApplicationTests {
@@ -42,9 +42,9 @@ class Qu1cksaveBackendApplicationTests {
 //   -- we’re using WebEnvironment.MOCK here so that the container will operate in a mock servlet environment
 //   -- ME: I'm using RANDOM_PORT since I don't want the container to run in a mock environment
 // - the @TestPropertySource annotation helps configure the locations of properties files specific to our tests.
-//   Note that the property file loaded with @TestPropertySource will override the existing application.properties file.
-//   The application-integrationtest.properties contains the details to configure the persistence storage
-//   TODO: (5/5/25) ME: I can just copy the application.properties file I have, then change
+//   Note that the property file loaded with @TestPropertySource will override the existing application-product-integrationtest.properties file.
+//   The application-product-integrationtest.properties contains the details to configure the persistence storage
+//   TODO: (5/5/25) ME: I can just copy the application-product-integrationtest.properties file I have, then change
 //    the DB name and URL. Though, I'd also need to dynamically change what the test
 //    database uses (In SlugSell, we set process.env.POSTGRES_DB = "test", since the test
 //    database uses POSTGRES_DB).
@@ -105,7 +105,7 @@ class Qu1cksaveBackendApplicationTests {
 //   -- TODO (5/6/25) ME: How do I integrate my repository layer to this container?
 //      + FIRST, this is what happens when not using TestContainers
 //      + Annotating the test file with @SpringBootTest creates the application context
-//        using what was specified in the application.properties file (the test version)
+//        using what was specified in the application-product-integrationtest.properties file (the test version)
 //      + When starting an application normally, this connects to the Postgres docker container
 //        * Though, it doesn't start the container (which is why we need to manually do docker-compose up -d)
 //      + And it actually wouldn't be this container using testcontainers, but the one started using docker-compose up -d
@@ -113,7 +113,7 @@ class Qu1cksaveBackendApplicationTests {
 //        * HOWEVER, wouldn't we need to manually change the environment variable before calling docker-compose up -d ???
 //        * YES, this is what we do in CSE 187 SlugSell, where we programmatically change
 //          process.env.POSTGRES_DB to test in db.ts for the test folder
-//          ** We can simply achieve this by through the test application.properties file
+//          ** We can simply achieve this by through the test application-product-integrationtest.properties file
 //        * BUT...it's tedious to have to manually start a container for each test suite (Ex. product, resume, etc.)
 //        * So I'll need to have some script that automatically starts up a container when running each test suite
 //        * WHICH IS WHERE TESTCONTAINERS COME TO THE RESCUE
@@ -122,7 +122,7 @@ class Qu1cksaveBackendApplicationTests {
 // - Then, we use DockerComposeContainer rule. This rule will start and run services as defined in the compose file.
 //   -- We use getServiceHost and getServicePost methods to build connection address to the service
 //   TODO: (5/6/25) ME: If the application context for the tests are created after this container has
-//    been started, the datasource, db url, etc. specified in the test application.properties would
+//    been started, the datasource, db url, etc. specified in the test application-product-integrationtest.properties would
 //    refer to the container created here
 //
 //

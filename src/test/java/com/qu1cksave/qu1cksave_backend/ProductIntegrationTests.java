@@ -29,18 +29,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 // - Probably won't need to though
 //@Sql("/data.sql") // Can this be put here? Probably don't need this either
 // From https://www.baeldung.com/spring-boot-testcontainers-integration-test
-@ActiveProfiles("tc") // Not sure if I need this
+@ActiveProfiles("tc")
 class ProductIntegrationTests {
     @LocalServerPort
     private int port;
-
-//     TODO: (5/7/25) I'll need to set POSTGRES_DB to "test" instead of "dev"
-//     - Like in the SlugSell tests
-//     - Not sure where to do it though
-//     - Or maybe an alternative way would be better?
-    //   -- Could just hardcode it?
-    //   -- One of the links has a way to create a container that references a file
-    //      + Maybe that would be better? Then I'll just have a test version of the docker-compose.yml
 
     // IF NEEDED
 //    @Container
