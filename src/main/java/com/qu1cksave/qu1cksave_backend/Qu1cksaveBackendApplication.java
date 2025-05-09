@@ -22,6 +22,7 @@ public class Qu1cksaveBackendApplication {
 //		 - export POSTGRES_HOST=jdbc:postgresql://localhost:5432/dev
 //         -- (OLD Node version) POSTGRES_HOST=localhost
 //         -- Can add ?useSSL=false at end if needed (self explanatory)
+//
 //       export POSTGRES_HOST=localhost
 //       - The docker-compose.yml uses this
 //       - Also, the spring.datasource.url
@@ -32,8 +33,13 @@ public class Qu1cksaveBackendApplication {
 // 3.) Run postgres docker container
 //		docker-compose down		(If you want to reset. Then compose up again)
 // 		docker-compose up -d
-// 4.) ./gradlew bootRun
+//      To run a specific one:
+//        docker-compose -f docker-compose-test.yml up -d
+//        docker-compose -f docker-compose-test.yml down
+// 4.) ./gradlew bootRun		To run
 // 5.) Go to http://localhost:8080/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
+//
+// For tests:  ./gradlew clean test --info		(More info)   	OR		 ./gradlew clean test
 
 // In terminal log: No active profile set, falling back to 1 default profile: "default"
 // - https://stackoverflow.com/questions/68171743/eclipse-no-active-profile-set-falling-back-to-default-profiles-default

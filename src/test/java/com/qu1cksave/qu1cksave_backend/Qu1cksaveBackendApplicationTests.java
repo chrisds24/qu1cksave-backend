@@ -1,27 +1,135 @@
 package com.qu1cksave.qu1cksave_backend;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-//@SpringBootTest // Only this originally
+import java.time.Duration;
+
+import static java.time.temporal.ChronoUnit.SECONDS;
+
+//class Qu1cksaveBackendApplicationTests {
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+// Or use this one below (Probably won't need it)
+//@SpringBootTest(
+//    webEnvironment = WebEnvironment.RANDOM_PORT,
+//    classes = Qu1cksaveBackendApplication.class
+//)
 @TestPropertySource(
-	locations = "classpath:application-application-product-integrationtest.properties"
+	locations = "classpath:application-product-integrationtest.properties"
 )
 @Testcontainers
+// @Import(EmployeeServiceImplTestContextConfiguration.class)
+// - Make equivalent if needed
+// - Probably won't need to though
+//@Sql("/data.sql") // Can this be put here? Probably don't need this either
+// From https://www.baeldung.com/spring-boot-testcontainers-integration-test
+@ActiveProfiles("tc")
 class Qu1cksaveBackendApplicationTests {
-	@LocalServerPort
-	private int port;
+	// Not needed
+//    @LocalServerPort
+//    private int port;
 
-	// Only this originally
-	// - test that will fail if the application context cannot start
+	// Non-static field 'postgresUser' cannot be referenced from a static context
+	// - Need to make this static to fix
+	@Value("${POSTGRES_DB}")
+	private static String postgresDb;
+
+	@Value("${POSTGRES_USER}")
+	private static String postgresUser;
+
+	@Value("${POSTGRES_PASSWORD}")
+	private static String postgresPassword;
+
+	String regex = ".*(\"message\":\\s?\"started\".*|] started\n$)";
+
+	// ME: Maybe I could use PostgreSQLContainer<>("postgres:latest") ?
+	//   Or just postgres
+	// This will use a random port
+	@Container
+	static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer<>("postgres:12")
+		.withDatabaseName(postgresDb)
+		.withUsername(postgresUser)
+		.withPassword(postgresPassword)
+		.withInitScripts("/sql/schema.sql", "/sql/data.sql")
+//		.withInitScript("/sql/data.sql")
+		.withStartupTimeout(Duration.of(120, SECONDS));
+
+	@DynamicPropertySource
+	static void postgresqlProperties(DynamicPropertyRegistry registry) {
+		// Need this since the postgreSQLContainer uses a random port
+		registry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl);
+		// Don't need these since already set to this
+//        registry.add("spring.datasource.password", postgreSQLContainer::getPassword);
+//        registry.add("spring.datasource.username", postgreSQLContainer::getUsername);
+	}
+
+	@Autowired
+	private WebTestClient webTestClient;
+
 	@Test
 	void contextLoads() {
 	}
+
+	// https://docs.spring.io/spring-framework/reference/testing/webtestclient.html
+	// - Has useful methods/assertions
+	@Test
+	void shouldGetOneJob() {
+		// '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
+		// Expected: 'Software Engineer', 'Microsoft', very long description
+		this.webTestClient
+			.get()
+			.uri("/jobs/269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
+//            .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectBody()
+			.jsonPath("$.title").isEqualTo("Software Engineer")
+			.jsonPath("$.companyName").isEqualTo("Microsoft")
+		;
+	}
+
+	//    @Test
+//    void shouldCreateNewCustomers() {
+//        this.webTestClient
+//            .post()
+//            .uri("/api/customers")
+//            .bodyValue("""
+//         {
+//        "firstName": "Mike",
+//        "lastName": "Thomson",
+//        "id": 43
+//       }
+//        """)
+//            .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+//            .exchange()
+//            .expectStatus()
+//            .isCreated();
+//    }
+
+	// TODO: (5/7/25): I need to set the URI for my whole backend
+	//  Ex. /api/v1     instead of just /
+	//  So it would become http://localhost:8080/api/v1/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
+	//  Instead of http://localhost:8080/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8 (CURRENT)
 }
+
+// TODO: (5/8/25) Could be useful
+// I create the container using PostgreSQL Container with a given username,
+//   password, db name, etc.
+// Then I could set it in application-product-integrationtest.properties
+//   so Spring Data JPA could use it
 
 
 // ---------------- NOTES ---------------
@@ -209,6 +317,7 @@ class Qu1cksaveBackendApplicationTests {
 // https://www.baeldung.com/spring-boot-testing
 // https://medium.com/@mbanaee61/api-testing-in-spring-boot-2a6d69e5c3ce
 // https://rieckpil.de/spring-boot-testing-mockmvc-vs-webtestclient-vs-testresttemplate/
+// https://rieckpil.de/spring-webtestclient-for-efficient-testing-of-your-rest-api/
 // https://www.baeldung.com/docker-test-containers
 // https://www.baeldung.com/spring-boot-testcontainers-integration-test
 // https://dev.to/mspilari/integration-tests-on-spring-boot-with-postgresql-and-testcontainers-4dpc
