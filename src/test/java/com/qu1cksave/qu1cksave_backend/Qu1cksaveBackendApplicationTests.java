@@ -1,5 +1,7 @@
 package com.qu1cksave.qu1cksave_backend;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,30 +14,19 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
 
-import static java.time.temporal.ChronoUnit.SECONDS;
+import static java.time.temporal.ChronoUnit.MINUTES;
 
-//class Qu1cksaveBackendApplicationTests {
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-// Or use this one below (Probably won't need it)
-//@SpringBootTest(
-//    webEnvironment = WebEnvironment.RANDOM_PORT,
-//    classes = Qu1cksaveBackendApplication.class
-//)
 @TestPropertySource(
 	locations = "classpath:application-product-integrationtest.properties"
 )
 @Testcontainers
-// @Import(EmployeeServiceImplTestContextConfiguration.class)
-// - Make equivalent if needed
-// - Probably won't need to though
-//@Sql("/data.sql") // Can this be put here? Probably don't need this either
-// From https://www.baeldung.com/spring-boot-testcontainers-integration-test
-@ActiveProfiles("tc")
 class Qu1cksaveBackendApplicationTests {
 	// Not needed
 //    @LocalServerPort
@@ -43,28 +34,34 @@ class Qu1cksaveBackendApplicationTests {
 
 	// Non-static field 'postgresUser' cannot be referenced from a static context
 	// - Need to make this static to fix
-	@Value("${POSTGRES_DB}")
-	private static String postgresDb;
+	// - @Value doesn't work
+//	@Value("${POSTGRES_DB}")
+	private static final String postgresDb = System.getenv("POSTGRES_DB");
 
-	@Value("${POSTGRES_USER}")
-	private static String postgresUser;
+	private static String postgresUser = System.getenv("POSTGRES_USER");
 
-	@Value("${POSTGRES_PASSWORD}")
-	private static String postgresPassword;
+	private static String postgresPassword = System.getenv("POSTGRES_PASSWORD");
 
-	String regex = ".*(\"message\":\\s?\"started\".*|] started\n$)";
-
-	// ME: Maybe I could use PostgreSQLContainer<>("postgres:latest") ?
-	//   Or just postgres
 	// This will use a random port
 	@Container
-	static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer<>("postgres:12")
+	static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest")
 		.withDatabaseName(postgresDb)
 		.withUsername(postgresUser)
 		.withPassword(postgresPassword)
-		.withInitScripts("/sql/schema.sql", "/sql/data.sql")
-//		.withInitScript("/sql/data.sql")
-		.withStartupTimeout(Duration.of(120, SECONDS));
+		// sql folder needs to be in resources
+		.withInitScripts("sql/schema.sql", "sql/data.sql")
+		.withStartupTimeout(Duration.of(3, MINUTES));
+
+	// Not needed
+//	@BeforeAll
+//	static void beforeAll() {
+//		postgreSQLContainer.start();
+//	}
+//
+//	@AfterAll
+//	static void afterAll() {
+//		postgreSQLContainer.stop();
+//	}
 
 	@DynamicPropertySource
 	static void postgresqlProperties(DynamicPropertyRegistry registry) {
@@ -84,6 +81,7 @@ class Qu1cksaveBackendApplicationTests {
 
 	// https://docs.spring.io/spring-framework/reference/testing/webtestclient.html
 	// - Has useful methods/assertions
+	// TODO: (5/10/25) Fix this test. Error in jsonPath("$.title")...
 	@Test
 	void shouldGetOneJob() {
 		// '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
@@ -289,6 +287,9 @@ class Qu1cksaveBackendApplicationTests {
 //  fields with @ServiceConnection
 //
 //
+// https://testcontainers.com/guides/testing-spring-boot-rest-api-using-testcontainers/
+// - Has start() for @BeforeAll
+//
 // https://docs.spring.io/spring-boot/reference/testing/spring-boot-applications.html
 //- If you are using JUnit 5, there is no need to add the equivalent
 //  @ExtendWith(SpringExtension.class) as @SpringBootTest and the other @Test annotations
@@ -322,6 +323,7 @@ class Qu1cksaveBackendApplicationTests {
 // https://www.baeldung.com/spring-boot-testcontainers-integration-test
 // https://dev.to/mspilari/integration-tests-on-spring-boot-with-postgresql-and-testcontainers-4dpc
 // https://rieckpil.de/howto-write-spring-boot-integration-tests-with-a-real-database/
+// https://testcontainers.com/guides/testing-spring-boot-rest-api-using-testcontainers/
 
 // If there's time, might be good to just see:
 //   https://www.youtube.com/watch?v=6uSnF6IuWIw
