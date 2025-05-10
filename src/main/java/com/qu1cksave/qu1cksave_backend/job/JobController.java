@@ -25,6 +25,11 @@ public class JobController {
 //    @GetMapping("/me")
 //    public Job[] getUserJobs(...) { ... }
 
+    // TODO: (5/7/25): I need to set the URI for my whole backend
+    //  Ex. /api/v1     instead of just /
+    //  So it would become http://localhost:8080/api/v1/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
+    //  Instead of http://localhost:8080/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8 (CURRENT)
+
     // TODO: For everything below, need to get id of user from the JWT in the
     //   Auth header. I remember it's passed as a parameter in Spring Security
     //   Also need OpenAPI schema validation (or something similar)

@@ -1,20 +1,13 @@
 package com.qu1cksave.qu1cksave_backend;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
-import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -52,7 +45,7 @@ class Qu1cksaveBackendApplicationTests {
 		.withInitScripts("sql/schema.sql", "sql/data.sql")
 		.withStartupTimeout(Duration.of(3, MINUTES));
 
-	// Not needed
+	// Not needed. But could be useful for extra setup
 //	@BeforeAll
 //	static void beforeAll() {
 //		postgreSQLContainer.start();
@@ -81,21 +74,19 @@ class Qu1cksaveBackendApplicationTests {
 
 	// https://docs.spring.io/spring-framework/reference/testing/webtestclient.html
 	// - Has useful methods/assertions
-	// TODO: (5/10/25) Fix this test. Error in jsonPath("$.title")...
 	@Test
 	void shouldGetOneJob() {
 		// '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
 		// Expected: 'Software Engineer', 'Microsoft', very long description
 		this.webTestClient
 			.get()
-			.uri("/jobs/269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
-//            .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
 			.exchange()
 			.expectStatus()
 			.isOk()
 			.expectBody()
 			.jsonPath("$.title").isEqualTo("Software Engineer")
-			.jsonPath("$.companyName").isEqualTo("Microsoft")
+			.jsonPath("$.company_name").isEqualTo("Microsoft")
 		;
 	}
 
@@ -116,18 +107,25 @@ class Qu1cksaveBackendApplicationTests {
 //            .expectStatus()
 //            .isCreated();
 //    }
-
-	// TODO: (5/7/25): I need to set the URI for my whole backend
-	//  Ex. /api/v1     instead of just /
-	//  So it would become http://localhost:8080/api/v1/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
-	//  Instead of http://localhost:8080/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8 (CURRENT)
 }
 
-// TODO: (5/8/25) Could be useful
-// I create the container using PostgreSQL Container with a given username,
-//   password, db name, etc.
-// Then I could set it in application-product-integrationtest.properties
-//   so Spring Data JPA could use it
+// NOTE: (5/10/25) What I did for container setup
+// 1.) Using @TestPropertySource, specify that this test suite will use
+//     application-product-integrationtest.properties
+//     - In that properties file, set spring.jpa.hibernate.ddl-auto=none,
+//       spring.datasource.username, spring.datasource.password.
+//     - The rest will be set using @DynamicProperty sources
+// 2.) Create the container using PostgreSQL Container with the db name, user
+//     name, and password as specified in the env variables.
+//     - Don't forget to run the script to initialize the database schema and data
+//     - @Value doesn't work. I remember that the app context is created after
+//       container creation (NOT SURE)
+// 3.) Using @DynamicPropertySource, set properties (such as spring.datasource.url)
+//     - Note that the container uses a random port, which is why we need to use
+//       @DynamicPropertySource to set spring.datasource.url, which includes
+//       the port
+// 	   - Now, the app context will use these properties.
+// 4.) Now we can test
 
 
 // ---------------- NOTES ---------------
@@ -150,7 +148,7 @@ class Qu1cksaveBackendApplicationTests {
 // - the @TestPropertySource annotation helps configure the locations of properties files specific to our tests.
 //   Note that the property file loaded with @TestPropertySource will override the existing application-product-integrationtest.properties file.
 //   The application-product-integrationtest.properties contains the details to configure the persistence storage
-//   TODO: (5/5/25) ME: I can just copy the application-product-integrationtest.properties file I have, then change
+//   NOTE: (5/5/25) ME: I can just copy the application-product-integrationtest.properties file I have, then change
 //    the DB name and URL. Though, I'd also need to dynamically change what the test
 //    database uses (In SlugSell, we set process.env.POSTGRES_DB = "test", since the test
 //    database uses POSTGRES_DB).
@@ -203,12 +201,12 @@ class Qu1cksaveBackendApplicationTests {
 // - If you apply @Rule annotation, the GenericContainer rule will start a new container for each test method.
 //   And it will stop the container when that test method finishes.
 // - For example, we fire up a PostgreSQL container with PostgreSQLContainer rule
-//   -- TODO (5/6/25) NOTE: (From ChatGPT) In JUnit 5, the @Container annotation is used for lifecycle management.
+//   -- NOTE: (5/6/25) (From ChatGPT) In JUnit 5, the @Container annotation is used for lifecycle management.
 //      Static fields annotated with @Container will start and stop the container once for the entire
 //      test instance, while instance fields will start and stop the container before and after each test method
 //   -- It is also possible to run PostgreSQL as a generic container. But it’d be more difficult to configure the connection
 // - If the tests require more complex services, we can specify them in a docker-compose file
-//   -- TODO (5/6/25) ME: How do I integrate my repository layer to this container?
+//   -- NOTE: (5/6/25) ME: How do I integrate my repository layer to this container?
 //      + FIRST, this is what happens when not using TestContainers
 //      + Annotating the test file with @SpringBootTest creates the application context
 //        using what was specified in the application-product-integrationtest.properties file (the test version)
@@ -227,7 +225,7 @@ class Qu1cksaveBackendApplicationTests {
 //          ** Maybe, I can simply just not start it manually myself and let testcontainers handle it?
 // - Then, we use DockerComposeContainer rule. This rule will start and run services as defined in the compose file.
 //   -- We use getServiceHost and getServicePost methods to build connection address to the service
-//   TODO: (5/6/25) ME: If the application context for the tests are created after this container has
+//   NOTE: (5/6/25) ME: If the application context for the tests are created after this container has
 //    been started, the datasource, db url, etc. specified in the test application-product-integrationtest.properties would
 //    refer to the container created here
 //
@@ -239,9 +237,9 @@ class Qu1cksaveBackendApplicationTests {
 //   This approach will work without requiring us to write some infrastructural code in our tests.
 //   -- spring.datasource.url=jdbc:tc:postgresql:11.1:///integration-tests-db
 //   -- The “tc:” will make Testcontainers instantiate database instances without any code change
-//   -- TODO: (5/6/25) ME: jdbc:tc:postgresql://localhost:5432/dev
+//   -- NOTE: (5/6/25) ME: jdbc:tc:postgresql://localhost:5432/dev
 //      * I'll probably use this
-//      * TODO: (5/6/25) NOTE: Replace dev with test if I'm using test as the POSTGRES_DB value
+//      * NOTE: (5/6/25) NOTE: Replace dev with test if I'm using test as the POSTGRES_DB value
 // - System.setProperty() is how we set environment variables
 // - As in previous examples, we applied the @ClassRule annotation to a field holding the container definition.
 //   This way, the DataSource connection properties are populated with correct values before Spring context creation
@@ -266,7 +264,7 @@ class Qu1cksaveBackendApplicationTests {
 //   for this purpose. Once we define the testcontainers-bom as part of Maven’s dependencyManagement
 //   section, we can include all Testcontainers dependencies without specifying their versions.
 //   The BOM will align all Testcontainers dependency versions for us
-// - TODO: (5/6/25) This one has a way to add dependencies using Gradle
+// - NOTE: (5/6/25) This one has a way to add dependencies using Gradle
 // - Using JUnit Jupiter, we can register the Testcontainers extension with @Testcontainers.
 //   Next, we have to identify all our container definitions with @Container
 // - .withInitScript("config/INIT.sql")
@@ -275,11 +273,11 @@ class Qu1cksaveBackendApplicationTests {
 //  so we must override our configuration dynamically.
 //  For Spring Boot applications < 2.2.6, we can achieve this with an
 //  ApplicationContextInitializer and set the connection parameters dynamically
-// TODO: (5/6/25) For applications that use JUnit Jupiter (part of JUnit 5),
+// NOTE: (5/6/25) For applications that use JUnit Jupiter (part of JUnit 5),
 //  we can’t use the @ClassRule anymore.
 //  The extension model of JUnit Jupiter exceeds the rule/runner API from JUnit 4.
 //  With the help of @DynamicPropertySource we can dynamically override the datasource connection parameters
-// TODO: (5/6/25) Simplified Spring Boot Configuration with @ServiceConnection
+// NOTE: (5/6/25) Simplified Spring Boot Configuration with @ServiceConnection
 //  Using: JUnit 5 and Spring Boot >= 3.1
 //  Traditionally, when using Testcontainers for integration testing, we would define a
 //  @DynamicPropertySource to configure the application properties with container-specific
