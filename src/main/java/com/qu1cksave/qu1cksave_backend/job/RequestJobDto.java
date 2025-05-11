@@ -1,5 +1,6 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qu1cksave.qu1cksave_backend.coverletter.RequestCoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.resume.RequestResumeDto;
 
@@ -34,34 +35,36 @@ public class RequestJobDto {
 
     // Constructors
     public RequestJobDto(
-        UUID resumeId,
-        RequestResumeDto resume,
+        @JsonProperty("resume_id") UUID resumeId,
+        @JsonProperty("resume") RequestResumeDto resume,
         // TODO: (3/30/25) For now, I'm using the actual type instead of String
         //   since I want to check if Jackson is able to convert
+        //   UPDATE: (5/11/25) Jackson is able to convert String[] links
+        //    and also dateApplied/Posted
 //        String Resume, // In case Jackson can't automatically convert
-        UUID coverLetterId,
-        RequestCoverLetterDto coverLetter,
+        @JsonProperty("cover_letter_id") UUID coverLetterId,
+        @JsonProperty("cover_letter") RequestCoverLetterDto coverLetter,
 //        String CoverLetter,
-        String title,
-        String companyName,
-        String jobDescription,
-        String notes,
-        String isRemote,
-        Integer salaryMin,
-        Integer salaryMax,
-        String country,
-        String usState,
-        String city,
-        YearMonthDateDto dateApplied,
-        YearMonthDateDto datePosted,
+        @JsonProperty("title") String title,
+        @JsonProperty("company_name") String companyName,
+        @JsonProperty("job_description") String jobDescription,
+        @JsonProperty("notes") String notes,
+        @JsonProperty("is_remote") String isRemote,
+        @JsonProperty("salary_min") Integer salaryMin,
+        @JsonProperty("salary_max") Integer salaryMax,
+        @JsonProperty("country") String country,
+        @JsonProperty("us_state") String usState,
+        @JsonProperty("city") String city,
+        @JsonProperty("date_applied") YearMonthDateDto dateApplied,
+        @JsonProperty("date_posted") YearMonthDateDto datePosted,
 //        String dateApplied,
 //        String datePosted,
-        String jobStatus,
-        String[] links,
+        @JsonProperty("job_status") String jobStatus,
+        @JsonProperty("links") String[] links,
 //        String links,
-        String foundFrom,
-        Boolean keepResume,
-        Boolean keepCoverLetter
+        @JsonProperty("found_from") String foundFrom,
+        @JsonProperty("keep_resume") Boolean keepResume,
+        @JsonProperty("keep_cover_letter") Boolean keepCoverLetter
     ) {
         this.resumeId = resumeId;
         this.resume = resume;

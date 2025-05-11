@@ -1,5 +1,6 @@
 package com.qu1cksave.qu1cksave_backend.job;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,7 +43,9 @@ public class JobController {
 
         // User wants jobs that don't belong to them, so return an error
         if (!strAuthUserId.equals(userId)) {
-            return null; // TODO: Return an appropriate JSON error object
+            // TODO: Return an appropriate JSON error object
+            //  Check out @ControllerAdvice
+            return null;
         }
 
         UUID authUserId = UUID.fromString(strAuthUserId);
@@ -61,6 +64,7 @@ public class JobController {
     }
 
     @PostMapping()
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseJobDto createJob(@RequestBody RequestJobDto newJob) {
         UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
         return jobService.createJob(newJob, authUserId);

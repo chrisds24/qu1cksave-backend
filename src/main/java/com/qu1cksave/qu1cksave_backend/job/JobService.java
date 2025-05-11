@@ -5,9 +5,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Component
 public class JobService {
@@ -46,10 +44,11 @@ public class JobService {
         return jobRepository.findById(id).map(JobMapper::toResponseDto).orElse(null);
     }
 
-    // TODO: (5/3/25) I know there's something else I need for write
-    //   transactions
-    //   @Modifying annotation. But not sure if it should go here or in the
-    //   repo function
+    // @Modifying annotation
+    // - https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html#jpa.modifying-queries
+    // - Only relevant when using @Query
+    //   -- So this should go to a function in the repo if I have a
+    //      modifying @Query
     @Transactional
     public ResponseJobDto createJob(RequestJobDto newJob, UUID userId) {
         // 1: Create the resume (if there's one), returning the id (resumeId)
@@ -70,6 +69,9 @@ public class JobService {
 
 // Convert string to UUID
 //   UUID.fromString("1d27e3ee-1111-4e0d-ac0f-dadfcc420ce3"),
+
+// ---------- Spring Data JPA Query Methods -------
+// https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html
 
 // ------------ Testing resources --------------
 

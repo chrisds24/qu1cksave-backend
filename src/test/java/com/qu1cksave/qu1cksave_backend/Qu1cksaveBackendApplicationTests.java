@@ -3,6 +3,8 @@ package com.qu1cksave.qu1cksave_backend;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
@@ -14,6 +16,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.time.Duration;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(
@@ -74,6 +77,15 @@ class Qu1cksaveBackendApplicationTests {
 
 	// https://docs.spring.io/spring-framework/reference/testing/webtestclient.html
 	// - Has useful methods/assertions
+	// https://www.javadoc.io/doc/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.html
+	// - Docs on methods
+	// - The following also have methods
+	// - URI: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.UriSpec.html
+	// - Request: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.RequestHeadersSpec.html
+	// - Request Body: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.RequestBodySpec.html
+	// - Response: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.ResponseSpec.html
+ 	// - Body Content: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.BodyContentSpec.html
+ 	// -
 	@Test
 	void shouldGetOneJob() {
 		// '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
@@ -84,29 +96,76 @@ class Qu1cksaveBackendApplicationTests {
 			.exchange()
 			.expectStatus()
 			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
 			.expectBody()
 			.jsonPath("$.title").isEqualTo("Software Engineer")
 			.jsonPath("$.company_name").isEqualTo("Microsoft")
 		;
 	}
 
-	//    @Test
-//    void shouldCreateNewCustomers() {
-//        this.webTestClient
-//            .post()
-//            .uri("/api/customers")
-//            .bodyValue("""
-//         {
-//        "firstName": "Mike",
-//        "lastName": "Thomson",
-//        "id": 43
-//       }
-//        """)
-//            .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-//            .exchange()
-//            .expectStatus()
-//            .isCreated();
-//    }
+	@Test
+    void shouldCreateNewJobNoFiles() {
+		String newJob = """
+			{
+				"title": "test swe",
+				"company_name": "test company",
+				"job_description": "test job description",
+				"notes": "test notes",
+				"is_remote": "Remote",
+				"salary_min": 75000,
+				"salary_max": 120000,
+				"country": "US",
+				"us_state": "CA",
+				"city": "San Diego",
+				"date_applied": {
+					"year": 2025,
+					"month": 4,
+					"date": 9
+				},
+				"date_posted": {
+					"year": 2025,
+					"month": 4,
+					"date": 8
+				},
+				"job_status": "Applied",
+				"links": ["https://www.linkedin.com/jobs/view/4125105888/?alternateChannel=search&refId=L%2FaJTJBeDgAXxHgZ%2B3%2FBAw%3D%3D&trackingId=GQdu9ntQnwrk1Hxp2qSNAQ%3D%3D", "https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9"],
+				"found_from": "LinkedIn"
+			}
+		""";
+
+		// Remote, Hybrid, On-site for isRemote
+        this.webTestClient
+            .post()
+            .uri("/jobs")
+			.contentType(MediaType.APPLICATION_JSON)
+			// No resume and cover letter
+            .bodyValue(newJob)
+            .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+            .exchange()
+            .expectStatus()
+            .isCreated()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody()
+//			.json(newJob)
+			.jsonPath("$.id").isNotEmpty()
+			// This member_id is hardcoded for now (Molly Member's id)
+			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
+			.jsonPath("$.date_saved").isNotEmpty()
+			.jsonPath("$.title").isEqualTo("test swe")
+			.jsonPath("$.date_applied.month").isEqualTo(4)
+			.jsonPath("$.date_posted.date").isEqualTo(8)
+			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9")
+		;
+    }
+
+	// TODO: (5/11/25) Need a test when a Resume is included
+	//  So update service to handle if there's a Resume
+	//  - Will Jackson be able to convert the RequestResumeDto? Or should I
+	//    use String?
+	//    -- Jackson is able to convert String[] links and also dateApplied/Posted
+	//  Then work on delete, then edit
 }
 
 // NOTE: (5/10/25) What I did for container setup
