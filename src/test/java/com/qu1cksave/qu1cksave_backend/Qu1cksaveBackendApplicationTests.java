@@ -1,5 +1,6 @@
 package com.qu1cksave.qu1cksave_backend;
 
+import com.qu1cksave.qu1cksave_backend.job.ResponseJobDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -16,6 +18,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.time.Duration;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -105,6 +108,21 @@ class Qu1cksaveBackendApplicationTests {
 	}
 
 	@Test
+	void getNonExistentJob() {
+		this.webTestClient
+			.get()
+			.uri("/jobs/deadbeef-abab-6161-7c7c-fefe58135858")
+			.exchange()
+			.expectStatus()
+			.isNotFound()
+			.expectBody()
+			.consumeWith(result -> {
+                assertNull(result.getResponseBody());
+			});
+		;
+	}
+
+	@Test
     void shouldCreateNewJobNoFiles() {
 		String newJob = """
 			{
@@ -135,7 +153,7 @@ class Qu1cksaveBackendApplicationTests {
 		""";
 
 		// Remote, Hybrid, On-site for isRemote
-        this.webTestClient
+		this.webTestClient
             .post()
             .uri("/jobs")
 			.contentType(MediaType.APPLICATION_JSON)
@@ -156,9 +174,113 @@ class Qu1cksaveBackendApplicationTests {
 			.jsonPath("$.title").isEqualTo("test swe")
 			.jsonPath("$.date_applied.month").isEqualTo(4)
 			.jsonPath("$.date_posted.date").isEqualTo(8)
-			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9")
-		;
+			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
     }
+
+	// TODO: Use this test instead once I've solved the deserialization error
+	//  but check the return value of the post request using
+	//  asserts (assertEquals, assertNotNull, etc.)
+	//  - https://stackoverflow.com/questions/19389723/can-not-deserialize-instance-of-java-lang-string-out-of-start-object-token
+//	@Test
+//	void shouldCreateNewJobNoFilesThenGetThatJob() {
+//		String newJob = """
+//			{
+//				"title": "test swe 2",
+//				"company_name": "test company 2",
+//				"job_description": "test job description 2",
+//				"notes": "test notes 2",
+//				"is_remote": "Hybrid",
+//				"salary_min": 100000,
+//				"salary_max": 150000,
+//				"country": "US",
+//				"us_state": "CA",
+//				"city": "San Francisco",
+//				"date_applied": {
+//					"year": 2025,
+//					"month": 4,
+//					"date": 10
+//				},
+//				"date_posted": {
+//					"year": 2025,
+//					"month": 4,
+//					"date": 9
+//				},
+//				"job_status": "Applied",
+//				"links": ["https://www.linkedin.com/jobs/view/4195258183/?alternateChannel=search&refId=7N512OAV%2BcMGdOAvxeHftg%3D%3D&trackingId=F%2BYRBlchvepimqrWqryNSA%3D%3D", "https://job-boards.greenhouse.io/gleanwork/jobs/4006733005", "https://job-boards.greenhouse.io/gleanwork"],
+//				"found_from": "LinkedIn"
+//			}
+//		""";
+//
+//		// Create the job
+//		ResponseJobDto responseJobDto = this.webTestClient
+//			.post()
+//			.uri("/jobs")
+//			.contentType(MediaType.APPLICATION_JSON)
+//			// No resume and cover letter
+//			.bodyValue(newJob)
+//			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+//			.exchange()
+//			.expectStatus()
+//			.isCreated()
+//			.expectHeader()
+//			.contentType(MediaType.APPLICATION_JSON)
+//			.expectBody(ResponseJobDto.class)
+//			.returnResult()
+//			.getResponseBody()
+//		;
+//
+//		// Note: I think it's the expectBody(ResponseJobDto.class) that's causing:
+//		// com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.String` from Object value (token `JsonToken.START_OBJECT`)
+//		//         at [Source: UNKNOWN; line: 1, column: 429] (through reference chain: com.qu1cksave.qu1cksave_backend.job.ResponseJobDto["date_applied"])
+//
+//		assertNotNull(responseJobDto);
+//
+//		// Get the job
+//		this.webTestClient
+//			.get()
+//			.uri("/jobs/" + responseJobDto.getId())
+//			.exchange()
+//			.expectStatus()
+//			.isOk()
+//			.expectHeader()
+//			.contentType(MediaType.APPLICATION_JSON)
+//			.expectBody(ResponseJobDto.class)
+//			.consumeWith(result -> {
+//				assertEquals(responseJobDto, result.getResponseBody());
+//			});
+//	}
+
+	// TODO: Uncomment this after adding delete route
+	@Test
+	void shouldDeleteOneJobThenGetThatJob() {
+		// Delete job
+		this.webTestClient
+			.delete()
+			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody()
+			.jsonPath("$.title").isEqualTo("Software Engineer")
+			.jsonPath("$.company_name").isEqualTo("Microsoft")
+		;
+
+		// Make sure it's no longer there
+		this.webTestClient
+			.get()
+			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+			.exchange()
+			.expectStatus()
+			.isNotFound()
+			.expectBody()
+			.isEmpty()
+//			.consumeWith(result -> {
+//				assertNull(result.getResponseBody());
+//			});
+		;
+	}
 
 	// TODO: (5/11/25) Need a test when a Resume is included
 	//  So update service to handle if there's a Resume

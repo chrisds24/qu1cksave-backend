@@ -1,6 +1,7 @@
 package com.qu1cksave.qu1cksave_backend.job;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class JobController {
     //   Also need OpenAPI schema validation (or something similar)
 
     @GetMapping()
+    // TODO: (5/12/25) I should try using UUID userId instead of String userId
     public List<ResponseJobDto> getJobs(@RequestParam("id") String userId) {
         // TODO: Replace mollyMemberId with user id obtained from auth header
         //  - I'll compare the one from the query and the auth header
@@ -54,13 +56,20 @@ public class JobController {
         // For testing: http://localhost:8080/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
     }
 
-    // TODO: Remove later. For testing only
-    @GetMapping("/{id}")
-    public ResponseJobDto getJob(@PathVariable UUID id) {
+    // https://stackoverflow.com/questions/25422255/how-to-return-404-response-status-in-spring-boot-responsebody-method-return-t
+    // - ResponseEntity to set status code
+    // https://stackoverflow.com/questions/24292373/spring-boot-rest-controller-how-to-return-different-http-status-codes
+    // - Pass HttpServletResponse to controller to set status code
+    // https://stackoverflow.com/questions/56008051/difference-between-httpservletresponse-and-a-responseentityspring
+    // - HttpServletResponse is from Java. ResponseEntity is from Spring
+    // TODO: (5/12/25) I should also use authUserId to get the job
+    @GetMapping("/{id}") // NOTE: For now, this is used for testing only
+    public ResponseEntity<ResponseJobDto> getJob(@PathVariable UUID id) {
         // Use this job's id for testing:
         // '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
         // Expected: 'Software Engineer', 'Microsoft', very long description
-        return jobService.getJob(id);
+        ResponseJobDto job = jobService.getJob(id);
+        return new ResponseEntity<ResponseJobDto>(job, job != null ? HttpStatus.OK : HttpStatus.NOT_FOUND);
     }
 
     @PostMapping()
@@ -68,5 +77,13 @@ public class JobController {
     public ResponseJobDto createJob(@RequestBody RequestJobDto newJob) {
         UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
         return jobService.createJob(newJob, authUserId);
+    }
+
+    @DeleteMapping("/{id}")
+    // 200 for delete if returning something
+    public ResponseEntity<ResponseJobDto> deleteJob(@PathVariable UUID id) {
+        UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
+        ResponseJobDto job = jobService.deleteJobByIdAndUserId(id, authUserId);
+        return new ResponseEntity<ResponseJobDto>(job, job != null ? HttpStatus.OK : HttpStatus.NOT_FOUND);
     }
 }

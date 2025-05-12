@@ -1,10 +1,13 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -38,7 +41,6 @@ public class JobService {
         return jobRepository.findByMemberIdWithFiles(userId);
     }
 
-    // TODO: Remove later. For testing only
     @Transactional(readOnly = true)
     public ResponseJobDto getJob(UUID id) {
         return jobRepository.findById(id).map(JobMapper::toResponseDto).orElse(null);
@@ -64,6 +66,11 @@ public class JobService {
         Job newJobEntity = JobMapper.createEntity(newJob, userId);
 
         return JobMapper.toResponseDto(jobRepository.save(newJobEntity));
+    }
+
+    @Transactional
+    public ResponseJobDto deleteJobByIdAndUserId(UUID id, UUID userId) {
+        return jobRepository.deleteByIdAndMemberIdReturningJob(id, userId).orElse(null);
     }
 }
 

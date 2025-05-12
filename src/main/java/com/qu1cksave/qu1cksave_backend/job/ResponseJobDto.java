@@ -8,7 +8,9 @@ import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 public class ResponseJobDto {
@@ -161,6 +163,49 @@ public class ResponseJobDto {
     public String getFoundFrom() { return foundFrom; }
     public ResponseResumeDto getResume() { return resume; }
     public ResponseCoverLetterDto getCoverLetter() { return coverLetter; }
+
+    @Override
+    public boolean equals(Object comparedObject) {
+        // Variables in same memory location so they are the same
+        if (this == comparedObject) {
+            return true;
+        }
+
+        // if comparedObject is not a ResponseJobDto, can't be the same object
+        if (!(comparedObject instanceof ResponseJobDto)) {
+            return false;
+        }
+
+        ResponseJobDto comparedResponseJobDto = (ResponseJobDto) comparedObject;
+
+        // Compare instance variables of each object
+        // https://stackoverflow.com/questions/11271554/compare-two-objects-in-java-with-possible-null-values
+        // - Compare objects with null check
+        return Objects.equals(this.getId(), comparedResponseJobDto.getId()) &&
+            Objects.equals(this.getMemberId(), comparedResponseJobDto.getMemberId()) &&
+            Objects.equals(this.getResumeId(), comparedResponseJobDto.getResumeId()) &&
+            Objects.equals(this.getCoverLetterId(), comparedResponseJobDto.getCoverLetterId()) &&
+            Objects.equals(this.getTitle(), comparedResponseJobDto.getTitle()) &&
+            Objects.equals(this.getCompanyName(), comparedResponseJobDto.getCompanyName()) &&
+            Objects.equals(this.getJobDescription(), comparedResponseJobDto.getJobDescription()) &&
+            Objects.equals(this.getNotes(), comparedResponseJobDto.getNotes()) &&
+            Objects.equals(this.getIsRemote(), comparedResponseJobDto.getIsRemote()) &&
+            Objects.equals(this.getSalaryMin(), comparedResponseJobDto.getSalaryMin()) &&
+            Objects.equals(this.getSalaryMax(), comparedResponseJobDto.getSalaryMax()) &&
+            Objects.equals(this.getCountry(), comparedResponseJobDto.getCountry()) &&
+            Objects.equals(this.getUsState(), comparedResponseJobDto.getUsState()) &&
+            Objects.equals(this.getCity(), comparedResponseJobDto.getCity()) &&
+            Objects.equals(this.getDateSaved(), comparedResponseJobDto.getDateSaved()) &&
+            Objects.equals(this.getDateApplied(), comparedResponseJobDto.getDateApplied()) &&
+            Objects.equals(this.getDatePosted(), comparedResponseJobDto.getDatePosted()) &&
+            Objects.equals(this.getJobStatus(), comparedResponseJobDto.getJobStatus()) &&
+            // https://stackoverflow.com/questions/8777257/equals-vs-arrays-equals-in-java
+            // - Compare content of arrays
+            Arrays.equals(this.getLinks(), comparedResponseJobDto.getLinks()) &&
+            Objects.equals(this.getFoundFrom(), comparedResponseJobDto.getFoundFrom()) &&
+            Objects.equals(this.getResume(), comparedResponseJobDto.getResume()) &&
+            Objects.equals(this.getCoverLetter(), comparedResponseJobDto.getCoverLetter());
+    }
 }
 
 // Just keep for now for printing values inside constructor

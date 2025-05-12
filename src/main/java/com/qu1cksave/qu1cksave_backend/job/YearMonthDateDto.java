@@ -1,9 +1,7 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Objects;
 
 public class YearMonthDateDto {
     private final Integer year;
@@ -24,4 +22,24 @@ public class YearMonthDateDto {
     public Integer getYear() { return year; }
     public Integer getMonth() { return month; }
     public Integer getDate() { return date; }
+
+    @Override
+    public boolean equals(Object comparedObject) {
+        // If same memory location
+        if (this == comparedObject) {
+            return true;
+        }
+
+        // If not a YearMonthDateDto, can't be the same object
+        if (!(comparedObject instanceof YearMonthDateDto)) {
+            return false;
+        }
+
+        YearMonthDateDto comparedYearMonthDateDto = (YearMonthDateDto) comparedObject;
+
+        // If same instance variables, same object
+        return Objects.equals(this.getYear(), comparedYearMonthDateDto.getYear()) &&
+            Objects.equals(this.getMonth(), comparedYearMonthDateDto.getMonth()) &&
+            Objects.equals(this.getDate(), comparedYearMonthDateDto.getDate());
+    }
 }

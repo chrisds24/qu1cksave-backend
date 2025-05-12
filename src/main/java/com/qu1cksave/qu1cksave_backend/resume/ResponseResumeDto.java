@@ -2,6 +2,7 @@ package com.qu1cksave.qu1cksave_backend.resume;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class ResponseResumeDto {
@@ -49,8 +50,25 @@ public class ResponseResumeDto {
     public String getMimeType() { return mimeType; }
 
 
-//    @Override
-//    public String toString() {
-//        return String.format("{\n\tid: %s,\n\tmemberId: %s,\n\tfileName: %s,\n\tmimeType: %s\n}", id, memberId, fileName, mimeType);
-//    }
+    @Override
+    public boolean equals(Object comparedObject) {
+        // Same memory location, so same object
+        if (this == comparedObject) {
+            return true;
+        }
+
+        // Not a ResponseResumeDto, can't be same object
+        if (!(comparedObject instanceof ResponseResumeDto)) {
+            return false;
+        }
+
+        ResponseResumeDto comparedResponseResumeDto =
+            (ResponseResumeDto) comparedObject;
+
+        // Compare instance variables
+        return Objects.equals(this.getId(), comparedResponseResumeDto.getId()) &&
+            Objects.equals(this.getMemberId(), comparedResponseResumeDto.getMemberId()) &&
+            Objects.equals(this.getFileName(), comparedResponseResumeDto.getFileName()) &&
+            Objects.equals(this.getMimeType(), comparedResponseResumeDto.getMimeType());
+    }
 }

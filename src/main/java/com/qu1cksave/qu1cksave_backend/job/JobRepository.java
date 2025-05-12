@@ -1,9 +1,11 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.NativeQuery;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface JobRepository extends JpaRepository<Job, UUID> {
@@ -40,6 +42,15 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
     // - The code above also works.
     // - Replace "WHERE j.member_id = ?1" with "WHERE j.member_id =:memberId"
 
+    // https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html#jpa.modifying-queries.derived-delete
+    // - Derived delete query to specify params to delete by + the return val
+    // - DOESN'T WORK. It returns an Integer
+//    Optional<Job> deleteByIdAndMemberId(UUID id, UUID memberId);
+    // TODO: (5/12/25) Fix the error below
+    //  Modifying queries can only use void or int/Integer as return type; Offending method: public abstract java.util.Optional com.qu1cksave.qu1cksave_backend.job.JobRepository.deleteByIdAndMemberIdReturningJob(java.util.UUID,java.util.UUID)
+    @Modifying
+    @NativeQuery(value = "DELETE FROM job WHERE id = ?1 AND member_id = ?2 RETURNING *")
+    Optional<ResponseJobDto> deleteByIdAndMemberIdReturningJob(UUID id, UUID memberId);
 
     // Keep for reference
 //    List<Job> findByMemberId(UUID memberId);
