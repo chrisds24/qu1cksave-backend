@@ -42,15 +42,25 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
     // - The code above also works.
     // - Replace "WHERE j.member_id = ?1" with "WHERE j.member_id =:memberId"
 
-    // https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html#jpa.modifying-queries.derived-delete
+    // IMPORTANT: https://courses.baeldung.com/courses/1295711/lectures/30603968
+    // - Modifying queries have caveats
+    //   -- Ex. Deleting, then retrieving that same object in the same
+    //      transaction. That object is still returned
+    //   -- This is because the persistence context isn’t cleared immediately
+    //      after we execute the modifying operation, and the task we just
+    //      deleted still exists in the 1st level cache, so Spring Data JPA
+    //      happily retrieves it from there without hitting the database
+    // - @Modifying(clearAutomatically = true)
+    //   -- Indicates to Spring that we want to clear the persistent context
+    //      after we execute our modifying query
+    // - There's also flushAutomatically (rare scenario it's needed)
+    // - I won't need it for this use case
+    // IMPORTANT:
+    // - Modifying queries can only use void or int/Integer as return type; Offending method: public abstract java.util.Optional com.qu1cksave.qu1cksave_backend.job.JobRepository.deleteByIdAndMemberIdReturningJob(java.util.UUID,java.util.UUID)
+    // - So I'm just using a derived query, which returns an Integer
+// https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html#jpa.modifying-queries.derived-delete
     // - Derived delete query to specify params to delete by + the return val
-    // - DOESN'T WORK. It returns an Integer
-//    Optional<Job> deleteByIdAndMemberId(UUID id, UUID memberId);
-    // TODO: (5/12/25) Fix the error below
-    //  Modifying queries can only use void or int/Integer as return type; Offending method: public abstract java.util.Optional com.qu1cksave.qu1cksave_backend.job.JobRepository.deleteByIdAndMemberIdReturningJob(java.util.UUID,java.util.UUID)
-    @Modifying
-    @NativeQuery(value = "DELETE FROM job WHERE id = ?1 AND member_id = ?2 RETURNING *")
-    Optional<ResponseJobDto> deleteByIdAndMemberIdReturningJob(UUID id, UUID memberId);
+    Integer deleteByIdAndMemberId(UUID id, UUID memberId);
 
     // Keep for reference
 //    List<Job> findByMemberId(UUID memberId);

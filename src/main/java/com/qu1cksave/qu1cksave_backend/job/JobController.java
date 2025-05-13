@@ -79,6 +79,16 @@ public class JobController {
         return jobService.createJob(newJob, authUserId);
     }
 
+    @PutMapping
+    public ResponseEntity<ResponseJobDto> editJob(
+        @PathVariable UUID id,
+        @RequestBody RequestJobDto editJob)
+    {
+        UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
+        ResponseJobDto job = jobService.editJob(id, authUserId, editJob);
+        return new ResponseEntity<ResponseJobDto>(job, job != null ? HttpStatus.OK : HttpStatus.NOT_FOUND);
+    }
+
     @DeleteMapping("/{id}")
     // 200 for delete if returning something
     public ResponseEntity<ResponseJobDto> deleteJob(@PathVariable UUID id) {

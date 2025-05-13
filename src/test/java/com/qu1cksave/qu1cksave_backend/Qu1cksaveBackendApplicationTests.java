@@ -116,6 +116,7 @@ class Qu1cksaveBackendApplicationTests {
 			.expectStatus()
 			.isNotFound()
 			.expectBody()
+//			.isEmpty() // Alternative to consumeWith then asserting
 			.consumeWith(result -> {
                 assertNull(result.getResponseBody());
 			});
@@ -276,7 +277,7 @@ class Qu1cksaveBackendApplicationTests {
 			.isNotFound()
 			.expectBody()
 			.isEmpty()
-//			.consumeWith(result -> {
+//			.consumeWith(result -> { // Alternative to isEmpty
 //				assertNull(result.getResponseBody());
 //			});
 		;
