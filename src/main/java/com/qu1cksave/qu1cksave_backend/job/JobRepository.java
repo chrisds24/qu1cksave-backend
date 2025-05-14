@@ -42,6 +42,8 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
     // - The code above also works.
     // - Replace "WHERE j.member_id = ?1" with "WHERE j.member_id =:memberId"
 
+    Optional<Job> findByIdAndMemberId(UUID id, UUID memberId);
+
     // IMPORTANT: https://courses.baeldung.com/courses/1295711/lectures/30603968
     // - Modifying queries have caveats
     //   -- Ex. Deleting, then retrieving that same object in the same
@@ -64,7 +66,7 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
 
     // Keep for reference
 //    List<Job> findByMemberId(UUID memberId);
-//    Optional<Job> findByIdAndMemberId(UUID id, UUID memberId);
+
 }
 
 // https://stackoverflow.com/questions/51626520/whether-using-queries-in-jpa-repositories-is-proper-practice

@@ -4,6 +4,7 @@ import jakarta.persistence.Embeddable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Embeddable
 public class YearMonthDate {
@@ -33,6 +34,26 @@ public class YearMonthDate {
     public void setYear(Integer year) { this.year = year; }
     public void setMonth(Integer month) { this.month = month; }
     public void setDate(Integer date) { this.date = date; }
+
+    @Override
+    public boolean equals(Object comparedObject) {
+        // If same memory location
+        if (this == comparedObject) {
+            return true;
+        }
+
+        // If not a YearMonthDateDto, can't be the same object
+        if (!(comparedObject instanceof YearMonthDate)) {
+            return false;
+        }
+
+        YearMonthDate comparedYearMonthDate = (YearMonthDate) comparedObject;
+
+        // If same instance variables, same object
+        return Objects.equals(this.getYear(), comparedYearMonthDate.getYear()) &&
+            Objects.equals(this.getMonth(), comparedYearMonthDate.getMonth()) &&
+            Objects.equals(this.getDate(), comparedYearMonthDate.getDate());
+    }
 
     // Map<String, Object> to YearMonthDate
 //    public static YearMonthDate toYearMonthDate(Map<String, Object> mapYearMonthDate) {

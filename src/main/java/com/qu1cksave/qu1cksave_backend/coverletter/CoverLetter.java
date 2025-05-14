@@ -4,13 +4,15 @@ import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Generated;
 
 import java.util.UUID;
 
 public class CoverLetter {
+    @Generated
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(nullable = false)
+    @ColumnDefault("gen_random_uuid()")
     private UUID id;
 
     @Column(name = "member_id", nullable = false)

@@ -41,6 +41,35 @@ class Qu1cksaveBackendApplicationTests {
 
 	private static String postgresPassword = System.getenv("POSTGRES_PASSWORD");
 
+	private static final String testJob = """
+			{
+				"title": "test swe",
+				"company_name": "test company",
+				"job_description": "test job description",
+				"notes": "test notes",
+				"is_remote": "Remote",
+				"salary_min": 75000,
+				"salary_max": 120000,
+				"country": "US",
+				"us_state": "CA",
+				"city": "San Diego",
+				"date_applied": {
+					"year": 2025,
+					"month": 4,
+					"date": 9
+				},
+				"date_posted": {
+					"year": 2025,
+					"month": 4,
+					"date": 8
+				},
+				"job_status": "Applied",
+				"links": ["https://www.linkedin.com/jobs/view/4125105888/?alternateChannel=search&refId=L%2FaJTJBeDgAXxHgZ%2B3%2FBAw%3D%3D&trackingId=GQdu9ntQnwrk1Hxp2qSNAQ%3D%3D", "https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9"],
+				"found_from": "LinkedIn"
+			}
+		""";
+
+
 	// This will use a random port
 	@Container
 	static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest")
@@ -125,41 +154,13 @@ class Qu1cksaveBackendApplicationTests {
 
 	@Test
     void shouldCreateNewJobNoFiles() {
-		String newJob = """
-			{
-				"title": "test swe",
-				"company_name": "test company",
-				"job_description": "test job description",
-				"notes": "test notes",
-				"is_remote": "Remote",
-				"salary_min": 75000,
-				"salary_max": 120000,
-				"country": "US",
-				"us_state": "CA",
-				"city": "San Diego",
-				"date_applied": {
-					"year": 2025,
-					"month": 4,
-					"date": 9
-				},
-				"date_posted": {
-					"year": 2025,
-					"month": 4,
-					"date": 8
-				},
-				"job_status": "Applied",
-				"links": ["https://www.linkedin.com/jobs/view/4125105888/?alternateChannel=search&refId=L%2FaJTJBeDgAXxHgZ%2B3%2FBAw%3D%3D&trackingId=GQdu9ntQnwrk1Hxp2qSNAQ%3D%3D", "https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9"],
-				"found_from": "LinkedIn"
-			}
-		""";
-
 		// Remote, Hybrid, On-site for isRemote
 		this.webTestClient
             .post()
             .uri("/jobs")
 			.contentType(MediaType.APPLICATION_JSON)
 			// No resume and cover letter
-            .bodyValue(newJob)
+            .bodyValue(testJob)
             .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
             .exchange()
             .expectStatus()
@@ -167,7 +168,7 @@ class Qu1cksaveBackendApplicationTests {
 			.expectHeader()
 			.contentType(MediaType.APPLICATION_JSON)
 			.expectBody()
-//			.json(newJob)
+//			.json(testJob)
 			.jsonPath("$.id").isNotEmpty()
 			// This member_id is hardcoded for now (Molly Member's id)
 			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
@@ -281,6 +282,56 @@ class Qu1cksaveBackendApplicationTests {
 //				assertNull(result.getResponseBody());
 //			});
 		;
+	}
+
+	@Test
+	void shouldEditJobThenGetThatJob() {
+		// '018ead6b-d160-772d-a001-2606322ebd1c'
+		// 'Software Engineer, Quantum Error Correction, Quantum AI'
+		// 'Google'
+
+		// Edit the job
+		this.webTestClient
+			.put()
+			.uri("/jobs/018ead6b-d160-772d-a001-2606322ebd1c")
+			.contentType(MediaType.APPLICATION_JSON)
+			// No resume and cover letter
+			.bodyValue(testJob)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody()
+//			.json(testJob)
+			.jsonPath("$.id").isEqualTo("018ead6b-d160-772d-a001-2606322ebd1c")
+			// This member_id is hardcoded for now (Molly Member's id)
+			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
+			.jsonPath("$.title").isEqualTo("test swe")
+			.jsonPath("$.date_applied.month").isEqualTo(4)
+			.jsonPath("$.date_posted.date").isEqualTo(8)
+			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
+
+		// Get the job
+		this.webTestClient
+			.get()
+			.uri("/jobs/018ead6b-d160-772d-a001-2606322ebd1c")
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody()
+			.jsonPath("$.id").isEqualTo("018ead6b-d160-772d-a001-2606322ebd1c")
+			// This member_id is hardcoded for now (Molly Member's id)
+			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
+			.jsonPath("$.title").isEqualTo("test swe")
+//			.jsonPath("$.title").isEqualTo("Software Engineer, Quantum Error Correction, Quantum AI")
+			.jsonPath("$.date_applied.month").isEqualTo(4)
+			.jsonPath("$.date_posted.date").isEqualTo(8)
+			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
+
 	}
 
 	// TODO: (5/11/25) Need a test when a Resume is included

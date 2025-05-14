@@ -79,7 +79,7 @@ public class JobController {
         return jobService.createJob(newJob, authUserId);
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     public ResponseEntity<ResponseJobDto> editJob(
         @PathVariable UUID id,
         @RequestBody RequestJobDto editJob)

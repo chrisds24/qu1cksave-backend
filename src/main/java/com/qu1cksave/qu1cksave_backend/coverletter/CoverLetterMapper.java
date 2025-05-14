@@ -1,7 +1,11 @@
 package com.qu1cksave.qu1cksave_backend.coverletter;
 
+import com.qu1cksave.qu1cksave_backend.resume.Resume;
+
+import java.util.UUID;
+
 public class CoverLetterMapper {
-    public static ResponseCoverLetterDto toDto(CoverLetter entity) {
+    public static ResponseCoverLetterDto toResponseDto(CoverLetter entity) {
         return new ResponseCoverLetterDto(
             entity.getId(),
             entity.getMemberId(),
@@ -10,12 +14,11 @@ public class CoverLetterMapper {
         );
     }
 
-    public static CoverLetter toEntity(ResponseCoverLetterDto dto) {
-        return new CoverLetter(
-            dto.getId(),
-            dto.getMemberId(),
-            dto.getFileName(),
-            dto.getMimeType()
-        );
+    public static CoverLetter createEntity(RequestCoverLetterDto dto, UUID userId) {
+        CoverLetter coverLetter = new CoverLetter();
+        coverLetter.setMemberId(userId);
+        coverLetter.setFileName(dto.getFileName());
+        coverLetter.setMimeType(dto.getMimeType());
+        return coverLetter;
     }
 }

@@ -19,6 +19,8 @@ import org.hibernate.annotations.SourceType;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -278,6 +280,106 @@ public class Job {
     public void setJobStatus(String jobStatus) { this.jobStatus = jobStatus; }
     public void setLinks(String[] links) { this.links = links; }
     public void setFoundFrom(String foundFrom) { this.foundFrom = foundFrom; }
+
+
+    // Used to set all columns using a given RequestJobDto
+    // - Useful for updating an entity in the db
+    public void setColumnsFromRequestJobDto(RequestJobDto editJob) {
+        //   resumeId, coverLetterId, title, companyName, jobDescription, notes,
+        //   isRemote, salaryMin, salaryMax, country, usState, city, dateApplied,
+        //   datePosted, jobStatus, links, foundFrom
+        this.resumeId = editJob.getResumeId();
+        this.coverLetterId = editJob.getCoverLetterId();
+        this.title = editJob.getTitle();
+        this.companyName = editJob.getCompanyName();
+        this.jobDescription = editJob.getJobDescription();
+        this.notes = editJob.getNotes();
+        this.isRemote = editJob.getIsRemote();
+        this.salaryMin = editJob.getSalaryMin();
+        this.salaryMax = editJob.getSalaryMax();
+        this.country = editJob.getCountry();
+        this.usState = editJob.getUsState();
+        this.city = editJob.getCity();
+        // Need to convert YearMonthDateDto to YearMonthDate first
+        this.dateApplied = YearMonthDateMapper.toEmbeddable(editJob.getDateApplied());;
+        this.datePosted = YearMonthDateMapper.toEmbeddable(editJob.getDatePosted());
+        this.jobStatus = editJob.getJobStatus();
+        this.links = editJob.getLinks();
+        this.foundFrom = editJob.getFoundFrom();
+    }
+
+    // Use instead if using @DynamicUpdate
+    public void setColumnsIfDifferentFromRequestJobDto(RequestJobDto editJob) {
+        // If equal values, don't set. Otherwise, the set the value
+        // - null is equal to null
+        // - null in editJob (the request job dto) means clear the value
+        //   for that column in the database
+        // - For Objects.equals, null is equal to null
+
+        //   resumeId, coverLetterId, title, companyName, jobDescription, notes,
+        //   isRemote, salaryMin, salaryMax, country, usState, city, dateApplied,
+        //   datePosted, jobStatus, links, foundFrom
+
+        if (!Objects.equals(editJob.getResumeId(), this.resumeId)) {
+            this.resumeId = editJob.getResumeId();
+        }
+        if (!Objects.equals(editJob.getCoverLetterId(), this.coverLetterId)) {
+            this.coverLetterId = editJob.getCoverLetterId();
+        }
+        if (!Objects.equals(editJob.getTitle(), this.title)) {
+            this.title = editJob.getTitle();
+        }
+        if (!Objects.equals(editJob.getCompanyName(), this.companyName)) {
+            this.companyName = editJob.getCompanyName();
+        }
+        if (!Objects.equals(editJob.getJobDescription(), this.jobDescription)) {
+            this.jobDescription = editJob.getJobDescription();
+        }
+        if (!Objects.equals(editJob.getNotes(), this.notes)) {
+            this.notes = editJob.getNotes();
+        }
+        if (!Objects.equals(editJob.getIsRemote(), this.isRemote)) {
+            this.isRemote = editJob.getIsRemote();
+        }
+        if (!Objects.equals(editJob.getSalaryMin(), this.salaryMin)) {
+            this.salaryMin = editJob.getSalaryMin();
+        }
+        if (!Objects.equals(editJob.getSalaryMax(), this.salaryMax)) {
+            this.salaryMax = editJob.getSalaryMax();
+        }
+        if (!Objects.equals(editJob.getCountry(), this.country)) {
+            this.country = editJob.getCountry();
+        }
+        if (!Objects.equals(editJob.getUsState(), this.usState)) {
+            this.usState = editJob.getUsState();
+        }
+        if (!Objects.equals(editJob.getCity(), this.city)) {
+            this.city = editJob.getCity();
+        }
+
+        // Need to convert YearMonthDateDto to YearMonthDate first
+        YearMonthDate editJobDateApplied =
+            YearMonthDateMapper.toEmbeddable(editJob.getDateApplied());
+        if (!Objects.equals(editJobDateApplied, this.dateApplied)) {
+            this.dateApplied = editJobDateApplied;
+        }
+
+        YearMonthDate editJobDatePosted =
+            YearMonthDateMapper.toEmbeddable(editJob.getDatePosted());
+        if (!Objects.equals(editJobDatePosted, this.datePosted)) {
+            this.datePosted = editJobDatePosted;
+        }
+
+        if (!Objects.equals(editJob.getJobStatus(), this.jobStatus)) {
+            this.jobStatus = editJob.getJobStatus();
+        }
+        if (!Arrays.equals(editJob.getLinks(), this.links)) {
+            this.links = editJob.getLinks();
+        }
+        if (!Objects.equals(editJob.getFoundFrom(), this.foundFrom)) {
+            this.foundFrom = editJob.getFoundFrom();
+        }
+    }
 
     // Causes error:
     //   com.fasterxml.jackson.databind.exc.InvalidDefinitionException: Java 8 date/time type `java.time.Instant` not supported by default: add Module "com.fasterxml.jackson.datatype:jackson-datatype-jsr310" to enable handling (through reference chain: com.qu1cksave.qu1cksave_backend.job.Job["dateSaved"])

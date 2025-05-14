@@ -1,5 +1,10 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
+import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterRepository;
+import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
+import com.qu1cksave.qu1cksave_backend.resume.Resume;
+import com.qu1cksave.qu1cksave_backend.resume.ResumeMapper;
+import com.qu1cksave.qu1cksave_backend.resume.ResumeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +19,8 @@ import java.util.UUID;
 @Component
 public class JobService {
     private final JobRepository jobRepository;
+    private final ResumeRepository resumeRepository;
+    private final CoverLetterRepository coverLetterRepository;
 
     // TODO: How does Spring, Spring MVC, Hibernate, and/or Spring Data JPA
     //   handle exceptions?
@@ -22,8 +29,14 @@ public class JobService {
 
     // If I need a property value, Ex:
     //   @Value("${postgres.host}") String postgresHost
-    public JobService(@Autowired JobRepository jobRepository) {
+    public JobService(
+        @Autowired JobRepository jobRepository,
+        @Autowired ResumeRepository resumeRepository,
+        @Autowired CoverLetterRepository coverLetterRepository
+    ) {
         this.jobRepository = jobRepository;
+        this.resumeRepository = resumeRepository;
+        this.coverLetterRepository = coverLetterRepository;
     }
 
     // Note: https://www.marcobehler.com/guides/spring-transaction-management-transactional-in-depth
@@ -68,14 +81,16 @@ public class JobService {
         // - https://docs.spring.io/spring-data/jpa/reference/jpa/entity-persistence.html
         Job newJobEntity = JobMapper.createEntity(newJob, userId);
 
+        // If save somehow returns null, should case an exception
         return JobMapper.toResponseDto(jobRepository.save(newJobEntity));
     }
 
     @Transactional
     public ResponseJobDto editJob(UUID id, UUID userId, RequestJobDto editJob) {
         // 1.) Get job from database
-        //     - We'll use the resumeId and coverLetterId from this since the
-        //       frontend job could have stale data for those
+        //     - We'll use the resumeId and coverLetterId from this to query
+        //       the resume and cover letter tables since the frontend job
+        //       could have stale data for those
         //     - TODO: (5/13/25) What's the most appropriate way to handle a
         //        situation like this? What are all the situations where there
         //        could be stale data?
@@ -94,44 +109,162 @@ public class JobService {
         // 2.) Query resume table (add, edit, delete, or do nothing)
         // 3.) Query cover letter table
         // 4.) Edit job
+        //     - We'll use the resume id that we get from querying the resume
+        //       tables (Not the resumeId from jobEntity)
+        //     - If we added, updated, or didn't modify an existing resume, we
+        //       will have queried the resume table (even if we're keeping the
+        //       same file just to keep the code logic simple) and would end
+        //       up with a resume
+        //     - If we deleted or didn't have a resume to begin with, resume
+        //       would be null and we'd have no resume id
+        //     - Same applies to cover letters
         // 5.) Make S3 calls for resume and cover letter
         // 6.) Return the job with resume and cover letter metadata attached
 
-        // 1.) Get the job
-        ResponseJobDto responseJobDto = jobRepository.findById(id).
-            map(JobMapper::toResponseDto).orElse(null);
+        // -------------------- 1.) Get the job -------------------------------
+        Job jobEntity = jobRepository.findByIdAndMemberId(id, userId).orElse(null);
 
-        if (responseJobDto == null) { // Job not found
+        if (jobEntity == null) { // Job not found
             return null;
         }
-
-        // Not needed since I'll be editing this obtained job, then calling
-        //   save to update it in the db
-//        UUID resumeId = responseJobDto.getResumeId();
-//        UUID coverLetterId = responseJobDto.getCoverLetterId();
 
         // Mismatch between resumeId from frontend job (editJob) and database
         //   job, so editJob is stale. So don't allow edit and return an
         //   error instead
+        // if ((newJob.resume_id && !resumeId) || (newJob.cover_letter_id && !coverLetterId)) {
+        // - Original only checks if stale frontend job has a file but the db
+        //   job does not
+        // - It's better to check if there's a mismatch
+        // - What if frontend job didn't have a resume, but the db job does
+        // - An edit is made using the stale job (aka stale browser tab) and
+        //   user adds a resume
+        // - The db creates a new row with new id for this resume and we also
+        //   add to S3
+        // - Now, the job has this new id, resulting in us losing a reference
+        //   to the other resume id
+        // - UPDATE: This won't happen. Even if the frontend job had a resume
+        //   but no resume id, the db job's resume id (most up to date) is
+        //   always used. Therefore, this will function as an "edit resume"
+        //   which is what it actually is
+        //   -- However, it's better to just not allow further operations
+        //      until the user updates their frontend jobs by reloading
+        // - NOTE: There is no issue with stale frontend jobs with no files
+        //   The stale frontend job can just update the db job
+        //   If the job doesn't actually exist since it's deleted, then
+        //   there'll simply be a Not Found error
         // TODO: I should throw an exception instead, which is more informative
         //  But this will work for now
-        if (!Objects.equals(editJob.getResumeId(), resumeId) ||
-            !Objects.equals(editJob.getCoverLetterId(), coverLetterId)
+        if (!Objects.equals(editJob.getResumeId(), jobEntity.getResumeId()) ||
+            !Objects.equals(editJob.getCoverLetterId(), jobEntity.getCoverLetterId())
         ) {
             return null;
         }
 
-        // TODO: 2.) Query resume table
+        // ---------------------- 2.) Query resume table ----------------------
+        // The same ideas apply to dealing with cover letters
+        // We use a combination of editJob having a resume, editJob having a
+        //   resumeId, and keepResume being true or false
+        //     NOTE: No editJob.resume means that no resume is being uploaded
+        //       (DOES NOT MEAN that the actual job does not currently have
+        //        a resume. That is what editJob.resumeId is for, which
+        //        indicates that the actual job has a resume...unless the
+        //        frontend data is stale...SEE ABOVE)
+        // 1.) No editJob.resume, no editJob.resumeId (Case C.a in frontend):
+        //     -- Job to be edited has no resume to begin with
+        //     -- Nothing to attach to job
+        // 2.) No editJob.resume, has editJob.resumeId, keepResume is true (Case A):
+        //     -- Job has a resume, but we won't update or delete
+        //     -- Attach resume when returning job
+        // 3.) No editJob.resume, has editJob.resumeId, keepResume is false (Case C.b):
+        //     -- Job has a resume, which we will delete.
+        //     -- Nothing to attach to job
+        // 4.) Has editJob.resume, but no editJob.resumeId (Case B.a):
+        //     -- Job has no resume, but a resume has been uploaded which
+        //        we are adding to the job
+        //     -- Attach resume when returning job
+        // 5.) Has editJob.resume and a editJob.resumeId (Case B.b):
+        //     -- We're replacing the resume specified by editJob.resumeId to
+        //        be editJob.resume (the currently uploaded resume)
+        //     -- Attach resume when returning job
+        // IMPORTANT: Keep in mind that we are using the resumeId from the
+        //   retrieved job using findBy. I'm using editJob.resumeId here to
+        //   mean that the user meant to edit a job with a resume id.
+        //   They should be the same in most cases, except when the frontend has
+        //   stale data where we simply terminate the request
+        ResponseResumeDto resume = null;
+        String resumeAction = null; // Used for S3 call
+        UUID resumeId = jobEntity.getResumeId();
 
-        // TODO: 3.) Query cover letter table
+        // IMPORTANT: Notice how we're using jobEntity.resumeId, not
+        //   editJob.resumeId (which could be stale)
+        // Though, if we do get here, it wouldn't be stale (since the
+        //   request is terminated if it is)
+        if (editJob.getResume() == null) {
+            if (resumeId != null) { // Cases 2 and 3
+                Boolean keepResume = editJob.getKeepResume();
+                if (keepResume != null && keepResume) {
+                    // Case 2: Keep the resume specified by editJob.resumeId
+                    // - Need to get it so we can attach metadata later
+                    resume = resumeRepository.findByIdAndMemberId(
+                        resumeId,
+                        userId
+                    ).map(ResumeMapper::toResponseDto).orElse(null);
+                    if (resume == null) { throw new RuntimeException(); }
+                    // --------- IMPORTANT: Original Node version --------
+                    // - It throws an exception if the resume isn't found
+                    //   -- Which is appropriate since the resume should exist
+//                try {
+//                    const { rows } = await pool.query(query);
+//                    resume = rows[0];
+//                } catch {
+//                    return undefined;
+//                }
+                    // -------------------------------------------------------
+                } else { // keepResume is false (or is not set, which won't happen)
+                    // Case 3: Delete the resume specified by editJob.
+                    if (resumeRepository.deleteByIdAndMemberId(resumeId, userId) < 1) {
+                        // Original Node version doesn't do this
+                        throw new RuntimeException();
+                    }
+                    resumeAction = "delete";
+                }
+            } // else...Case 1: editJob has no resume id and no resume...So nothing to do
+        } else { // Cases 4 and 5
+            if (resumeId == null) {
+                // Case 4: Add new resume
+                Resume newResumeEntity = ResumeMapper.createEntity(
+                    editJob.getResume(), userId
+                );
+                // If save somehow returns null, should cause an exception
+                resume = ResumeMapper.toResponseDto(resumeRepository.save(newResumeEntity));
+                resumeAction = "put";
+            } else {
+                // Case 5: Update existing resume
+                // Need to get resume entity first, update fields, then save
+                Resume resumeEntity = resumeRepository.findByIdAndMemberId(
+                    resumeId,
+                    userId
+                ).orElse(null);
 
-        // 4.) Edit job
-        // - Just editing all editable fields
-        //  title, companyName, jobDescription, notes, isRemote,
-        //  salaryMin, salaryMax, country, usState, city, dateApplied,
-        //  datePosted, jobStatus, links, foundFrom
-        // - In the Node/Express version, I just edited even the values that
-        //   stayed the same for simplicity
+                if (resumeEntity == null) {
+                    throw new RuntimeException();
+                } else {
+                    resumeEntity.setFileName(editJob.getResume().getFileName());
+                    resumeEntity.setMimeType(editJob.getResume().getMimeType());
+                    // If save somehow returns null, should case an exception
+                    resume = ResumeMapper.toResponseDto(resumeRepository.save(resumeEntity));
+                    resumeAction = "put";
+                }
+            }
+        }
+
+
+
+
+
+        // ------------------- 3.) Query cover letter table -------------------
+
+        // --------------------------- 4.) Edit job ---------------------------
         // https://stackoverflow.com/questions/11881479/how-do-i-update-an-entity-using-spring-data-jpa
         // - JPA follows the latter approach. save() in Spring Data JPA is
         //   backed by merge() in plain JPA, therefore it makes your entity
@@ -155,7 +288,29 @@ public class JobService {
         // - I can just return the job from the get, since it'll have all the
         //   updates
         // https://www.baeldung.com/spring-data-partial-update
-        // - TODO: (5/13/25) Read this !!!
+        // - @DynamicUpdate or updatable param for @Column
+        // - https://dzone.com/articles/when-to-use-the-dynamicupdate-with-spring-data-jpa
+        //   -- Good use case explanation
+        //
+        // Just editing all editable fields
+        //   resumeId, coverLetterId, title, companyName, jobDescription, notes,
+        //   isRemote, salaryMin, salaryMax, country, usState, city, dateApplied,
+        //   datePosted, jobStatus, links, foundFrom
+        // - Notice how there's no id, memberId, and dateSaved since those
+        //   should not be updatable
+        // - In the Node/Express version, I just edited even the values that
+        //   stayed the same for simplicity
+        jobEntity.setColumnsFromRequestJobDto(editJob);
+        ResponseJobDto responseJobDto = JobMapper.toResponseDto(jobRepository.save(jobEntity));
+
+        // TODO: 5.) S3 Calls
+
+        // 6.) Return the job with resume and cover letter metadata
+        // TODO: Need to attach resume and cover letter metadata
+        //  - How to quickly do this without writing out new BlahBlah(...) ???
+        //  - Maybe there's a spread operator in Java?
+        return responseJobDto;
+
     }
 
     @Transactional
