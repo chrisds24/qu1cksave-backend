@@ -1,6 +1,8 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterRepository;
+import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 import com.qu1cksave.qu1cksave_backend.resume.Resume;
 import com.qu1cksave.qu1cksave_backend.resume.ResumeMapper;
@@ -199,7 +201,7 @@ public class JobService {
         //   editJob.resumeId (which could be stale)
         // Though, if we do get here, it wouldn't be stale (since the
         //   request is terminated if it is)
-        if (editJob.getResume() == null) {
+        if (editJob.getResume() == null) { // Cases 1, 2, and 3 (no uploaded resume)
             if (resumeId != null) { // Cases 2 and 3
                 Boolean keepResume = editJob.getKeepResume();
                 if (keepResume != null && keepResume) {
@@ -235,7 +237,7 @@ public class JobService {
                 Resume newResumeEntity = ResumeMapper.createEntity(
                     editJob.getResume(), userId
                 );
-                // If save somehow returns null, should cause an exception
+                // TODO: If save somehow returns null, should cause an exception
                 resume = ResumeMapper.toResponseDto(resumeRepository.save(newResumeEntity));
                 resumeAction = "put";
             } else {
@@ -251,18 +253,18 @@ public class JobService {
                 } else {
                     resumeEntity.setFileName(editJob.getResume().getFileName());
                     resumeEntity.setMimeType(editJob.getResume().getMimeType());
-                    // If save somehow returns null, should case an exception
+                    // TODO: If save somehow returns null, should case an exception
                     resume = ResumeMapper.toResponseDto(resumeRepository.save(resumeEntity));
                     resumeAction = "put";
                 }
             }
         }
 
-
-
-
-
         // ------------------- 3.) Query cover letter table -------------------
+        // Same strategy as querying the resume table
+        ResponseCoverLetterDto coverLetter = null;
+        String coverLetterAction = null; // Used for S3 call
+        UUID coverLetterId = jobEntity.getCoverLetterId();
 
         // --------------------------- 4.) Edit job ---------------------------
         // https://stackoverflow.com/questions/11881479/how-do-i-update-an-entity-using-spring-data-jpa
@@ -300,17 +302,29 @@ public class JobService {
         //   should not be updatable
         // - In the Node/Express version, I just edited even the values that
         //   stayed the same for simplicity
+        //   -- I believe the data that weren't updated weren't set by the
+        //      frontend, but they were set to null in the SQL query
+        // Here, I'm just using the resume and cover letter id from editJob
+        //   instead of jobEntity since they should be the same (if they were
+        //   not, the request would have been terminated)
         jobEntity.setColumnsFromRequestJobDto(editJob);
-        ResponseJobDto responseJobDto = JobMapper.toResponseDto(jobRepository.save(jobEntity));
+        // Update resume id and cover letter id
+        // Cases 2, 4, and 5 would have a resume
+        // For Cases 2 (keep resume) and 5 (edit), we can still just update
+        //   resumeId even though there's no actual change to it.
+        // For Case 4 (add), we add a resumeId
+        jobEntity.setResumeId(resume != null ? resume.getId() : null);
+        jobEntity.setCoverLetterId(coverLetter != null ? coverLetter.getId(): null);
+        ResponseJobDto responseJobDtoWithFiles = JobMapper.toResponseDtoWithFiles(
+            jobRepository.save(jobEntity),
+            resume,
+            coverLetter
+        );
 
         // TODO: 5.) S3 Calls
 
-        // 6.) Return the job with resume and cover letter metadata
-        // TODO: Need to attach resume and cover letter metadata
-        //  - How to quickly do this without writing out new BlahBlah(...) ???
-        //  - Maybe there's a spread operator in Java?
-        return responseJobDto;
-
+        // 6.) Return the job with resume and cover letter metadata attached
+        return responseJobDtoWithFiles;
     }
 
     @Transactional

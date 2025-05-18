@@ -2,6 +2,8 @@ package com.qu1cksave.qu1cksave_backend.job;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
+import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -92,6 +94,52 @@ public class JobMapper {
         // Job entity does not have a resume or cover letter
 
         return job;
+    }
+
+    // Used in editJob
+    // Converts a Job entity to a ResponseJobDto, but attaches a
+    //   ResponseResumeDto and ResponseCoverLetterDto (not from the Job entity,
+    //   but obtained separately)
+    // Direct copy of the "no files" version
+    public static ResponseJobDto toResponseDtoWithFiles(
+        Job entity,
+        ResponseResumeDto responseResumeDto,
+        ResponseCoverLetterDto responseCoverLetterDto
+    ) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return new ResponseJobDto(
+                entity.getId(),
+                entity.getMemberId(),
+                entity.getResumeId(),
+                entity.getCoverLetterId(),
+                entity.getTitle(),
+                entity.getCompanyName(),
+                entity.getJobDescription(),
+                entity.getNotes(),
+                entity.getIsRemote(),
+                entity.getSalaryMin(),
+                entity.getSalaryMax(),
+                entity.getCountry(),
+                entity.getUsState(),
+                entity.getCity(),
+                entity.getDateSaved(),
+                entity.getDateApplied() != null ? objectMapper.writeValueAsString(entity.getDateApplied()) : null,
+                entity.getDatePosted() != null ? objectMapper.writeValueAsString(entity.getDatePosted()) : null,
+                entity.getJobStatus(),
+                entity.getLinks() != null ? objectMapper.writeValueAsString(entity.getLinks()) : null,
+                entity.getFoundFrom(),
+                // TODO: (5/17/25) Test if these two work works
+                // (5/17/25) Maybe I could have just changed the type passed to
+                //   the constructor to not be String, but I don't want to deal
+                //   with checking if the other endpoints would still work the
+                //   same
+                responseResumeDto != null ? objectMapper.writeValueAsString(responseResumeDto) : null,
+                responseCoverLetterDto != null ? objectMapper.writeValueAsString(responseCoverLetterDto) : null
+            );
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
 
