@@ -5,6 +5,7 @@ import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetter;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterMapper;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterRepository;
 import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
+import com.qu1cksave.qu1cksave_backend.resume.RequestResumeDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 import com.qu1cksave.qu1cksave_backend.resume.Resume;
 import com.qu1cksave.qu1cksave_backend.resume.ResumeMapper;
@@ -58,6 +59,8 @@ public class JobService {
         //   returns a List<Job>, which gets converted to List<JobDto>
 //        return jobRepository.findByMemberIdWithFiles(userId).stream().map(JobMapper::toDto).collect(Collectors.toList());
         return jobRepository.findByMemberIdWithFiles(userId);
+        // TODO: Should throw an exception so I can catch and return
+        //   null, which the frontend expects where there's an error
     }
 
     @Transactional(readOnly = true)
@@ -72,21 +75,72 @@ public class JobService {
     //      modifying @Query
     @Transactional
     public ResponseJobDto createJob(RequestJobDto newJob, UUID userId) {
-        // 1: Create the resume (if there's one), returning the id (resumeId)   TODO
-        // 2: Create the coverLetter, returning the id (coverLetterId)          TODO
-        // 3: Create the job, using the associated file's id if it exists
-        // 4: Add files to S3                                                   TODO
+        // 1: Create the resume (if there's one), returning the id (resumeId)
+        // 2: Create the coverLetter, returning the id (coverLetterId)
+        // 3: Create the job, using the associated files' id if they exists
+        // 4: Add files to S3
         // At any point, if any of the steps above fail, the whole transaction
         //   should and will fail
         // 5: Return the job with file metadata included
 
-        // Creating new entity
-        // - https://spring.io/guides/gs/accessing-data-jpa
-        // - https://docs.spring.io/spring-data/jpa/reference/jpa/entity-persistence.html
-        Job newJobEntity = JobMapper.createEntity(newJob, userId);
+        // --------------- 1.) Create the resume -------------------
+        ResponseResumeDto responseResumeDto = null;
+        if (newJob.getResume() != null) {
+            Resume newResumeEntity = ResumeMapper.createEntity(
+                newJob.getResume(), userId
+            );
+            responseResumeDto = ResumeMapper.toResponseDto(
+                resumeRepository.save(newResumeEntity)
+            );
+            // TODO: If save somehow returns null, should cause an exception
+            // TODO: Should throw an exception so I can catch and return
+            //   null, which the frontend expects where there's an error
+        }
 
-        // If save somehow returns null, should case an exception
-        return JobMapper.toResponseDto(jobRepository.save(newJobEntity));
+        // --------------- 2.) Create the cover letter -------------------
+        ResponseCoverLetterDto responseCoverLetterDto = null;
+        if (newJob.getCoverLetter() != null) {
+            CoverLetter newCoverLetterEntity = CoverLetterMapper.createEntity(
+                newJob.getCoverLetter(), userId
+            );
+            responseCoverLetterDto = CoverLetterMapper.toResponseDto(
+                coverLetterRepository.save(newCoverLetterEntity)
+            );
+            // TODO: If save somehow returns null, should cause an exception
+            // TODO: Should throw an exception so I can catch and return
+            //   null, which the frontend expects where there's an error
+        }
+
+        // --------------- 3.) Create the job -------------------
+
+        // Creating new entity
+        // - https://spring.io/guides/gs/accessin[[[[[[[[[[=g-data-jpa
+        // - https://docs.spring.io/spring-data/jpa/reference/jpa/entity-persistence.html
+        // Since we have just created a resume/cover letter, newJob won't have
+        //   a resumeId or coverLetterId, so we need to set it to the id
+        //   of the file metadata returned when we saved each file metadata
+        Job newJobEntity = JobMapper.createEntity(newJob, userId);
+        newJobEntity.setResumeId(
+            responseResumeDto != null ? responseResumeDto.getId() : null
+        );
+        newJobEntity.setCoverLetterId(
+            responseCoverLetterDto != null ?
+                responseCoverLetterDto.getId() : null
+        );
+
+        // Don't forget to attach the file metadata
+       ResponseJobDto responseJobDto = JobMapper.toResponseDtoWithFiles(
+            jobRepository.save(newJobEntity),
+            responseResumeDto,
+            responseCoverLetterDto
+        );
+        // TODO: If save somehow returns null, should cause an exception
+        // TODO: Should throw an exception so I can catch and return
+        //   null, which the frontend expects where there's an error
+
+       // --------------- TODO: 4.) Add files to S3 -------------------
+
+       return responseJobDto;
     }
 
     @Transactional
@@ -127,9 +181,15 @@ public class JobService {
 
         // -------------------- 1.) Get the job -------------------------------
         Job jobEntity = jobRepository.findByIdAndMemberId(id, userId).orElse(null);
+        // TODO: Should throw an exception so I can catch and return
+        //   null, which the frontend expects where there's an error
 
+        // Don't really need to throw an exception since we haven't edited
+        // anything in the transaction yet, but just do it since the
+        // exception will return null anyway
         if (jobEntity == null) { // Job not found
-            return null;
+//            return null;
+            throw new RuntimeException();
         }
 
         // Mismatch between resumeId from frontend job (editJob) and database
@@ -156,12 +216,13 @@ public class JobService {
         //   The stale frontend job can just update the db job
         //   If the job doesn't actually exist since it's deleted, then
         //   there'll simply be a Not Found error
-        // TODO: I should throw an exception instead, which is more informative
-        //  But this will work for now
         if (!Objects.equals(editJob.getResumeId(), jobEntity.getResumeId()) ||
             !Objects.equals(editJob.getCoverLetterId(), jobEntity.getCoverLetterId())
         ) {
-            return null;
+            // return null
+            // TODO: Should throw an exception so I can catch and return
+            //   null, which the frontend expects where there's an error
+            throw new RuntimeException();
         }
 
         // ---------------------- 2.) Query resume table ----------------------
@@ -213,6 +274,8 @@ public class JobService {
                         resumeId,
                         userId
                     ).map(ResumeMapper::toResponseDto).orElse(null);
+                    // TODO: Should throw an exception so I can catch and return
+                    //   null, which the frontend expects where there's an error
                     if (resume == null) { throw new RuntimeException(); }
                     // --------- IMPORTANT: Original Node version --------
                     // - It throws an exception if the resume isn't found
@@ -226,6 +289,8 @@ public class JobService {
                     // -------------------------------------------------------
                 } else { // keepResume is false (or is not set, which won't happen)
                     // Case 3: Delete the resume specified by editJob.
+                    // TODO: Should throw an exception so I can catch and return
+                    //   null, which the frontend expects where there's an error
                     if (resumeRepository.deleteByIdAndMemberId(resumeId, userId) < 1) {
                         // Original Node version doesn't do this
                         throw new RuntimeException();
@@ -240,6 +305,8 @@ public class JobService {
                     editJob.getResume(), userId
                 );
                 // TODO: If save somehow returns null, should cause an exception
+                // TODO: Should throw an exception so I can catch and return
+                //   null, which the frontend expects where there's an error
                 resume = ResumeMapper.toResponseDto(resumeRepository.save(newResumeEntity));
                 resumeAction = "put";
             } else {
@@ -249,13 +316,16 @@ public class JobService {
                     resumeId,
                     userId
                 ).orElse(null);
-
+                // TODO: Should throw an exception so I can catch and return
+                //   null, which the frontend expects where there's an error
                 if (resumeEntity == null) {
                     throw new RuntimeException();
                 } else {
                     resumeEntity.setFileName(editJob.getResume().getFileName());
                     resumeEntity.setMimeType(editJob.getResume().getMimeType());
                     // TODO: If save somehow returns null, should case an exception
+                    // TODO: Should throw an exception so I can catch and return
+                    //   null, which the frontend expects where there's an error
                     resume = ResumeMapper.toResponseDto(resumeRepository.save(resumeEntity));
                     resumeAction = "put";
                 }
@@ -278,9 +348,13 @@ public class JobService {
                         coverLetterId,
                         userId
                     ).map(CoverLetterMapper::toResponseDto).orElse(null);
+                    // TODO: Should throw an exception so I can catch and return
+                    //   null, which the frontend expects where there's an error
                     if (coverLetter == null) { throw new RuntimeException(); }
                 } else { // keepCoverLetter is false (or is not set, which won't happen)
                     // Case 3: Delete the cover letter specified by editJob.
+                    // TODO: Should throw an exception so I can catch and return
+                    //   null, which the frontend expects where there's an error
                     if (coverLetterRepository.deleteByIdAndMemberId(coverLetterId, userId) < 1) {
                         // Original Node version doesn't do this
                         throw new RuntimeException();
@@ -295,6 +369,8 @@ public class JobService {
                     editJob.getCoverLetter(), userId
                 );
                 // TODO: If save somehow returns null, should cause an exception
+                // TODO: Should throw an exception so I can catch and return
+                //   null, which the frontend expects where there's an error
                 coverLetter = CoverLetterMapper.toResponseDto(coverLetterRepository.save(newCoverLetterEntity));
                 coverLetterAction = "put";
             } else {
@@ -304,13 +380,16 @@ public class JobService {
                     coverLetterId,
                     userId
                 ).orElse(null);
-
+                // TODO: Should throw an exception so I can catch and return
+                //   null, which the frontend expects where there's an error
                 if (coverLetterEntity == null) {
                     throw new RuntimeException();
                 } else {
                     coverLetterEntity.setFileName(editJob.getCoverLetter().getFileName());
                     coverLetterEntity.setMimeType(editJob.getCoverLetter().getMimeType());
                     // TODO: If save somehow returns null, should case an exception
+                    // TODO: Should throw an exception so I can catch and return
+                    //   null, which the frontend expects where there's an error
                     coverLetter = CoverLetterMapper.toResponseDto(coverLetterRepository.save(coverLetterEntity));
                     coverLetterAction = "put";
                 }
@@ -371,8 +450,12 @@ public class JobService {
             resume,
             coverLetter
         );
+        // TODO: If save somehow returns null, should cause an exception
+        // TODO: Should throw an exception so I can catch and return
+        //   null, which the frontend expects where there's an error
 
         // TODO: 5.) S3 Calls
+        //  -
 
         // 6.) Return the job with resume and cover letter metadata attached
         return responseJobDtoWithFiles;
@@ -387,20 +470,97 @@ public class JobService {
         // 5.) Delete cover letter from S3 (if any)
         // 6.) Return deleted job with files
 
+        // ------------------ 1.) Delete job --------------------
+
         // Need to get job first, then delete so we can return the job later
         //   since modifying queries like delete can only return void, int, or
         //   Integer
-        ResponseJobDto job = jobRepository.findById(id).map(JobMapper::toResponseDto).orElse(null);
-        if (job != null) { // Job exists
-            Integer numDeleted = jobRepository.deleteByIdAndMemberId(id, userId);
-            if (numDeleted > 0) {
-                return job;
+//        ResponseJobDto job = jobRepository.findById(id).map(JobMapper::toResponseDto).orElse(null);
+        Job jobEntity = jobRepository.findByIdAndMemberId(id, userId).orElse(null);
+        // TODO: Should throw an exception so I can catch and return
+        //   null, which the frontend expects where there's an error
+        if (jobEntity == null) { // Job does not exist, even though it should
+            throw new RuntimeException();
+        }
+        // Could not delete job for some reason
+        // TODO: Should throw an exception so I can catch and return
+        //   null, which the frontend expects where there's an error
+        if (jobRepository.deleteByIdAndMemberId(id, userId) < 1) {
+            throw new RuntimeException();
+        }
+
+        // 2.) ------------ Delete resume from database -----------------
+        ResponseResumeDto resume = null;
+        if (jobEntity.getResumeId() != null) { // If resume exists, delete it
+            // First, find the resume so we can return it later
+            resume = resumeRepository.findByIdAndMemberId(
+                jobEntity.getResumeId(), userId
+            ).map(ResumeMapper::toResponseDto).orElse(null);
+            // TODO: Should throw an exception so I can catch and return
+            //   null, which the frontend expects where there's an error
+            if (resume == null) { // resume does not exist, even though it should
+                throw new RuntimeException();
+            }
+            // TODO: Should throw an exception so I can catch and return
+            //   null, which the frontend expects where there's an error
+            if (resumeRepository.deleteByIdAndMemberId(
+                jobEntity.getResumeId(), userId
+            ) < 1) {
+                throw new RuntimeException();
             }
         }
 
-        return null; // Job not found or not deleted
+        // 3.) ------------ Delete cover letter from database -----------------
+        ResponseCoverLetterDto coverLetter = null;
+        if (jobEntity.getCoverLetterId() != null) { // If cover letter exists, delete it
+            // First, find the cover letter so we can return it later
+            coverLetter = coverLetterRepository.findByIdAndMemberId(
+                jobEntity.getCoverLetterId(), userId
+            ).map(CoverLetterMapper::toResponseDto).orElse(null);
+            // TODO: Should throw an exception so I can catch and return
+            //   null, which the frontend expects where there's an error
+            if (coverLetter == null) { // cover letter does not exist, even though it should
+                throw new RuntimeException();
+            }
+            // TODO: Should throw an exception so I can catch and return
+            //   null, which the frontend expects where there's an error
+            if (coverLetterRepository.deleteByIdAndMemberId(
+                jobEntity.getCoverLetterId(), userId
+            ) < 1) {
+                throw new RuntimeException();
+            }
+        }
+
+        // TODO: 4.) and 5.) Delete files from S3
+
+
+        // ------------ 6.) Return deleted job with files -------------
+        return JobMapper.toResponseDtoWithFiles(
+            jobEntity,
+            resume,
+            coverLetter
+        );
     }
 }
+
+// TODO: (5/19/25)
+//  - The original Node version returns undefined when something
+//    goes wrong (other than cases that should return undefined such as a
+//    single job being "get" not existing). I didn't use transactions :(, but
+//    for this Java/Spring version I did :).
+//    -- I should throw an exception where appropriate, then just return
+//       null for those since that's what the frontend expects
+//  - Maybe I should update the logic so that modifying queries (at least for
+//    delete) doesn't return the job, resume, and cover letter.
+//    - IMPORTANT: I'm doing this since I need to lessen the number of requests
+//      to the database
+//  - Should I put a try catch for @Transactional or for Spring Data JPA
+//    queries?
+//    -- Or does Spring, Spring Boot, Spring MVC, and/or etc. do this for
+//       me automatically?
+//    -- IMPORTANT: I may want to do this still, then just return a general
+//       exception for everything. Since for now, I only care about being able
+//       to catch so I can return null when something fails.
 
 // Convert string to UUID
 //   UUID.fromString("1d27e3ee-1111-4e0d-ac0f-dadfcc420ce3"),
