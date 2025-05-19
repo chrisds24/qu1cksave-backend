@@ -1,7 +1,5 @@
 package com.qu1cksave.qu1cksave_backend.coverletter;
 
-import com.qu1cksave.qu1cksave_backend.resume.Resume;
-
 import java.util.UUID;
 
 public class CoverLetterMapper {

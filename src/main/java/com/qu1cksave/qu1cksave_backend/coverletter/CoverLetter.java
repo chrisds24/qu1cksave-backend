@@ -1,14 +1,18 @@
 package com.qu1cksave.qu1cksave_backend.coverletter;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
 
 import java.util.UUID;
 
+@Entity
+@Table(name = "cover_letter")
 public class CoverLetter {
     @Generated
     @Id

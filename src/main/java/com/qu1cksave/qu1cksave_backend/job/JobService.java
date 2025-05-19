@@ -1,6 +1,8 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetter;
+import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterMapper;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterRepository;
 import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
@@ -265,6 +267,55 @@ public class JobService {
         ResponseCoverLetterDto coverLetter = null;
         String coverLetterAction = null; // Used for S3 call
         UUID coverLetterId = jobEntity.getCoverLetterId();
+
+        if (editJob.getCoverLetter() == null) { // Cases 1, 2, and 3 (no uploaded cover letter)
+            if (coverLetterId != null) { // Cases 2 and 3
+                Boolean keepCoverLetter = editJob.getKeepCoverLetter();
+                if (keepCoverLetter != null && keepCoverLetter) {
+                    // Case 2: Keep the cover letter specified by editJob.coverLetterId
+                    // - Need to get it so we can attach metadata later
+                    coverLetter = coverLetterRepository.findByIdAndMemberId(
+                        coverLetterId,
+                        userId
+                    ).map(CoverLetterMapper::toResponseDto).orElse(null);
+                    if (coverLetter == null) { throw new RuntimeException(); }
+                } else { // keepCoverLetter is false (or is not set, which won't happen)
+                    // Case 3: Delete the cover letter specified by editJob.
+                    if (coverLetterRepository.deleteByIdAndMemberId(coverLetterId, userId) < 1) {
+                        // Original Node version doesn't do this
+                        throw new RuntimeException();
+                    }
+                    coverLetterAction = "delete";
+                }
+            } // else...Case 1: editJob has no cover letter id and no cover letter...So nothing to do
+        } else { // Cases 4 and 5
+            if (coverLetterId == null) {
+                // Case 4: Add cover Letter
+                CoverLetter newCoverLetterEntity = CoverLetterMapper.createEntity(
+                    editJob.getCoverLetter(), userId
+                );
+                // TODO: If save somehow returns null, should cause an exception
+                coverLetter = CoverLetterMapper.toResponseDto(coverLetterRepository.save(newCoverLetterEntity));
+                coverLetterAction = "put";
+            } else {
+                // Case 5: Update existing cover letter
+                // Need to get cover letter entity first, update fields, then save
+                CoverLetter coverLetterEntity = coverLetterRepository.findByIdAndMemberId(
+                    coverLetterId,
+                    userId
+                ).orElse(null);
+
+                if (coverLetterEntity == null) {
+                    throw new RuntimeException();
+                } else {
+                    coverLetterEntity.setFileName(editJob.getCoverLetter().getFileName());
+                    coverLetterEntity.setMimeType(editJob.getCoverLetter().getMimeType());
+                    // TODO: If save somehow returns null, should case an exception
+                    coverLetter = CoverLetterMapper.toResponseDto(coverLetterRepository.save(coverLetterEntity));
+                    coverLetterAction = "put";
+                }
+            }
+        }
 
         // --------------------------- 4.) Edit job ---------------------------
         // https://stackoverflow.com/questions/11881479/how-do-i-update-an-entity-using-spring-data-jpa

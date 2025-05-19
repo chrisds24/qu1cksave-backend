@@ -1,7 +1,6 @@
 package com.qu1cksave.qu1cksave_backend.coverletter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -14,9 +13,6 @@ public class ResponseCoverLetterDto {
     private final String fileName;
 
     private final String mimeType;
-
-    // TODO: Need an Integer[] byteArrayAsArray field
-    // - Have a separate CoverLetterWithFileDto
 
     // Constructors
     public ResponseCoverLetterDto(
@@ -44,18 +40,18 @@ public class ResponseCoverLetterDto {
             return true;
         }
 
-        // Not a ResponseResumeDto, can't be same object
-        if (!(comparedObject instanceof ResponseResumeDto)) {
+        // Not a ResponseCoverLetterDto, can't be same object
+        if (!(comparedObject instanceof ResponseCoverLetterDto)) {
             return false;
         }
 
-        ResponseResumeDto comparedResponseResumeDto =
-            (ResponseResumeDto) comparedObject;
+        ResponseCoverLetterDto comparedResponseCoverLetterDto =
+            (ResponseCoverLetterDto) comparedObject;
 
         // Compare instance variables
-        return Objects.equals(this.getId(), comparedResponseResumeDto.getId()) &&
-            Objects.equals(this.getMemberId(), comparedResponseResumeDto.getMemberId()) &&
-            Objects.equals(this.getFileName(), comparedResponseResumeDto.getFileName()) &&
-            Objects.equals(this.getMimeType(), comparedResponseResumeDto.getMimeType());
+        return Objects.equals(this.getId(), comparedResponseCoverLetterDto.getId()) &&
+            Objects.equals(this.getMemberId(), comparedResponseCoverLetterDto.getMemberId()) &&
+            Objects.equals(this.getFileName(), comparedResponseCoverLetterDto.getFileName()) &&
+            Objects.equals(this.getMimeType(), comparedResponseCoverLetterDto.getMimeType());
     }
 }

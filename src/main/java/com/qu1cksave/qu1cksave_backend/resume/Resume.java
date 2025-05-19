@@ -43,11 +43,6 @@ public class Resume {
     @Column(name = "mime_type", nullable = false)
     private String mimeType;
 
-    // TODO: Need another Resume-type class that has the equivalent of
-    //   bytearray_as_array?: number[] (TypeScript) in Java, which is part of
-    //   the Resume that will be returned when its downloaded.
-    //   - Or maybe there's a way to do this through annotations?
-
     // Constructors
 
     protected Resume() {}
