@@ -27,11 +27,6 @@ public class JobService {
     private final ResumeRepository resumeRepository;
     private final CoverLetterRepository coverLetterRepository;
 
-    // TODO: How does Spring, Spring MVC, Hibernate, and/or Spring Data JPA
-    //   handle exceptions?
-    //   - Since I want to return a JSON error object based on the error
-    //   - Look at @ControllerAdvice
-
     // If I need a property value, Ex:
     //   @Value("${postgres.host}") String postgresHost
     public JobService(
@@ -561,6 +556,148 @@ public class JobService {
 //    -- IMPORTANT: I may want to do this still, then just return a general
 //       exception for everything. Since for now, I only care about being able
 //       to catch so I can return null when something fails.
+
+// TODO: How does Spring, Spring MVC, Hibernate, and/or Spring Data JPA
+//   handle exceptions?
+//   - Since I want to return a JSON error object based on the error
+//     -- DO THAT LATER.
+//     -- For now, just return null and set the status code
+//   - Look at @ControllerAdvice
+
+// Exceptions:
+// - https://stackoverflow.com/questions/2683182/how-and-where-do-you-define-your-own-exception-hierarchy-in-java
+// - https://www.reddit.com/r/java/comments/198q4le/how_do_you_structure_your_exception_classes/
+// - https://www.reddit.com/r/learnjava/comments/1fbm2lm/does_every_custom_exception_need_its_own_class/
+// - https://java-programming.mooc.fi/part-11/3-exceptions
+//   -- GREAT READ
+
+// Checked vs Unchecked Exceptions:
+// - Java exceptions fall into two main categories: checked exceptions and unchecked exceptions.
+// - https://stackoverflow.com/questions/2190161/difference-between-java-lang-runtimeexception-and-java-lang-exception
+//   -- Good read
+// - https://www.baeldung.com/java-checked-unchecked-exceptions
+//   -- GREAT READ
+//   -- In general, checked exceptions represent errors outside the control of the program.
+//      For example, the constructor of FileInputStream throws FileNotFoundException if the input file does not exist.
+//      Java verifies checked exceptions at compile-time.
+//      Therefore, we should use the throws keyword to declare a checked exception
+//      We can also use a try-catch block to handle a checked exception
+//      Ex. IOException, SQLException and ParseException
+//      The Exception class is the superclass of checked exceptions, so we can create a custom checked exception by extending Exception
+//   -- If a program throws an unchecked exception, it reflects some error inside the program logic.
+//      For example, if we divide a number by 0, Java will throw ArithmeticException
+//      ME: NullPointerException, ArrayIndexOutOfBoundsException, IllegalArgumentException, etc.
+//      + So basically, some logic error within the code that we caused as the
+//        programmer by not handling it (Ex. not doing null checks, out of
+//        bounds checks, etc.)
+//      Java does not verify unchecked exceptions at compile-time. Furthermore,
+//        we don’t have to declare unchecked exceptions in a method with the
+//        throws keyword. And although the above code does not have any errors
+//        during compile-time, it will throw ArithmeticException at runtime
+//      The RuntimeException class is the superclass of all unchecked
+//        exceptions, so we can create a custom unchecked exception by
+//        extending RuntimeException
+//   -- The Oracle Java Documentation provides guidance on when to use checked
+//      exceptions and unchecked exceptions:
+//        “If a client can reasonably be expected to recover from an exception,
+//        make it a checked exception. If a client cannot do anything to
+//        recover from the exception, make it an unchecked exception.”
+//      + For example, before we open a file, we can first validate the input
+//        file name. If the user input file name is invalid, we can throw a
+//        custom checked exception (Instead of FileNotFound if the file with
+//        the given name doesn't exist, which is a checked exception)
+//      + However, if the input file name is a null pointer or it is an empty
+//        string, it means that we have some errors in the code. In this
+//        case, we should throw an unchecked exception:
+//   -- https://docs.oracle.com/javase/tutorial/essential/exceptions/runtime.html
+
+
+// Exceptions in Spring, Spring MVC, Spring Boot, etc.
+// - https://spring.io/blog/2013/11/01/exception-handling-in-spring-mvc
+//   -- Your users do not want to see web-pages containing Java exception
+//      details and stack-traces. You may have security policies that
+//      expressly forbid putting any exception information in the error page.
+//      Another reason to make sure you override the Spring Boot white-label
+//      error page
+//   -- If you aren't using server-side rendering 2.1 Define your own error
+//      View as a bean called error. 2.1 Or disable Spring boot's
+//      "Whitelabel" error page by setting the property:
+//        server.error.whitelabel.enabled to false.
+//          Your container's default error page is used instead
+//        Found in application.properties
+// - https://www.reddit.com/r/SpringBoot/comments/172urpj/what_is_the_standardized_way_to_handle_response/
+// - https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-exceptionhandler.html
+// - https://www.baeldung.com/exception-handling-for-rest-with-spring
+// - https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-advice.html
+// - https://www.baeldung.com/exception-handling-for-rest-with-spring
+
+
+// Exceptions w/ @Transactional
+// - https://www.marcobehler.com/guides/spring-transaction-management-transactional-in-depth
+//   -- IMPORTANT: You also do not have to catch SQLExceptions, as Spring converts these
+//      exceptions to runtime exceptions for you
+//   -- Comment by Marco Behler:
+//      Here, taken straight from the Spring documentation:
+//      By default, a transaction will be rolling back on RuntimeException and Error
+//        but not on checked exceptions (business exceptions).
+//      Now, you might be hinting at "checked" exceptions, but then again "using" the
+//        connection throws a SQLException inevitably, which Spring will internally
+//        wrap in its own (runtime) exception, which will result in a rollback as well
+//      TODO: (5/20/25) Read up on how checked exceptions don't cause rollbacks
+//       Some useful notes:
+//       You also do not have to catch SQLExceptions, as Spring converts these
+//         exceptions to runtime exceptions for you
+// - https://stackoverflow.com/questions/7125837/why-does-transaction-roll-back-on-runtimeexception-but-not-sqlexception
+//   -- Any RuntimeException triggers rollback, and any checked Exception does not
+//   -- The rationale behind this is that RuntimeException classes are
+//      generally taken by Spring to denote unrecoverable error conditions
+//   -- This behaviour can be changed from the default, if you wish to do so,
+//      but how to do this depends on how you use the Spring API, and how you
+//      set up your transaction manager
+//      + TODO: (5/20/25) I can probably just catch checked exceptions, then
+//         throw a runtime exception
+//         BUT, looking at https://www.reddit.com/r/SpringBoot/comments/16gubkp/if_transactional_throws_an_exception_can_this_try/
+//           Don't use try catch. Just do @Transactional(rollbackFor...
+//         We can also set @Transactional(rollbackFor=Exception.class)
+//         BUT, check if this makes it so that it only rolls back for
+//         Exception and its subclasses
+// - https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html
+//   -- Any RuntimeException or Error triggers rollback, and any checkedException does not
+//   -- As of 6.2, you can globally change the default rollback behavior – for example,
+//      through @EnableTransactionManagement(rollbackOn=ALL_EXCEPTIONS), leading to a rollback
+//      for all exceptions raised within a transaction, including any checked exception
+// - https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/rolling-back.html#transaction-declarative-rollback-rules
+// - https://www.reddit.com/r/SpringBoot/comments/16gubkp/if_transactional_throws_an_exception_can_this_try/
+//   -- GREAT INFO. Don't use try catch. Just do @Transactional(rollbackFor...
+//      + ME: I can actually try catch, but need to throw an exception instead of
+//        handling
+//   -- If you catch it @Transactional will not work. Because @Transactional
+//      generates a proxy which catches exceptions from the annotated method
+//      and the performs a rollback. If no exception is thrown by the annotated
+//      method no rollback will happen
+//   -- so if i want to catch it with a custom exception something like this i
+//      have to use rollbackFor attribute or handle the exception in a higher level right?
+//      + Yes
+// - https://medium.com/@Mohd_Aamir_17/the-transactional-dilemma-how-it-affects-exception-handling-in-your-spring-boot-applications-ea613c8d55b9
+//   -- How @Transactional affects Exception Handling
+//   -- Scenario 1: If an exception occurs and the transaction is rolled back,
+//      Spring will silently suppress the original exception and instead throw an UnexpectedRollbackException
+//   -- When a method annotated with @Transactional throws a checked or
+//      unchecked exception, Spring’s transaction manager marks the transaction
+//      for rollback. However, in certain cases, the rollback happens silently,
+//      and the transaction manager throws an UnexpectedRollbackException,
+//      obscuring the original cause of the error
+//   -- TODO: (5/20/15) For my RestControllerAdvice, I should include this as
+//       one of the classes one of the handlers deal with
+//   -- @Transactional(rollbackFor = {Exception.class})
+//      + To rollback checked exceptions
+//   -- Ensure your unit and integration tests cover scenarios where
+//      transactions are rolled back.This will help you catch unexpected
+//      behaviors early in development
+// - http://stackoverflow.com/questions/76063462/in-springboot-does-transactional-annotation-still-rollbacks-the-transaction-if
+
+
+
 
 // Convert string to UUID
 //   UUID.fromString("1d27e3ee-1111-4e0d-ac0f-dadfcc420ce3"),
