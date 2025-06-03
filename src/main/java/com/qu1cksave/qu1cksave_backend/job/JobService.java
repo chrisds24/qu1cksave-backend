@@ -1,24 +1,25 @@
 package com.qu1cksave.qu1cksave_backend.job;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetter;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterMapper;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterRepository;
 import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
-import com.qu1cksave.qu1cksave_backend.resume.RequestResumeDto;
+import com.qu1cksave.qu1cksave_backend.exceptions.SQLAddFailedException;
+import com.qu1cksave.qu1cksave_backend.exceptions.SQLDeleteFailedException;
+import com.qu1cksave.qu1cksave_backend.exceptions.SQLEditFailedException;
+import com.qu1cksave.qu1cksave_backend.exceptions.SQLGetFailedException;
+import com.qu1cksave.qu1cksave_backend.exceptions.SQLNotFoundException;
+import com.qu1cksave.qu1cksave_backend.exceptions.StaleFrontendJobException;
 import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 import com.qu1cksave.qu1cksave_backend.resume.Resume;
 import com.qu1cksave.qu1cksave_backend.resume.ResumeMapper;
 import com.qu1cksave.qu1cksave_backend.resume.ResumeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -50,17 +51,27 @@ public class JobService {
     //   -- Marco Behler also mentioned this
     @Transactional(readOnly = true)
     public List<ResponseJobDto> getJobs(UUID userId) {
-        // Saving this commented line for reference, where the repository
-        //   returns a List<Job>, which gets converted to List<JobDto>
-//        return jobRepository.findByMemberIdWithFiles(userId).stream().map(JobMapper::toDto).collect(Collectors.toList());
-        return jobRepository.findByMemberIdWithFiles(userId);
-        // TODO: Should throw an exception so I can catch and return
-        //   null, which the frontend expects where there's an error
+        try {
+            // Saving this commented line for reference, where the repository
+            //   returns a List<Job>, which gets converted to List<JobDto>
+            //        return jobRepository.findByMemberIdWithFiles(userId).stream().map(JobMapper::toDto).collect(Collectors.toList());
+            return jobRepository.findByMemberIdWithFiles(userId);
+        } catch (RuntimeException err) {
+            throw new SQLGetFailedException(
+                "Select multiple jobs with files failed", err
+            );
+        }
     }
 
     @Transactional(readOnly = true)
     public ResponseJobDto getJob(UUID id) {
-        return jobRepository.findById(id).map(JobMapper::toResponseDto).orElse(null);
+        try {
+            // If this returns null, won't throw an exception. But controller
+            //   should handle this to set status to 404 and return null
+            return jobRepository.findById(id).map(JobMapper::toResponseDto).orElse(null);
+        } catch (RuntimeException err) {
+            throw new SQLGetFailedException("Select one job failed", err);
+        }
     }
 
     // @Modifying annotation
@@ -84,12 +95,13 @@ public class JobService {
             Resume newResumeEntity = ResumeMapper.createEntity(
                 newJob.getResume(), userId
             );
-            responseResumeDto = ResumeMapper.toResponseDto(
-                resumeRepository.save(newResumeEntity)
-            );
-            // TODO: If save somehow returns null, should cause an exception
-            // TODO: Should throw an exception so I can catch and return
-            //   null, which the frontend expects where there's an error
+            try {
+                responseResumeDto = ResumeMapper.toResponseDto(
+                    resumeRepository.save(newResumeEntity)
+                );
+            } catch (RuntimeException err) {
+                throw new SQLAddFailedException("Save new resume failed", err);
+            }
         }
 
         // --------------- 2.) Create the cover letter -------------------
@@ -98,12 +110,15 @@ public class JobService {
             CoverLetter newCoverLetterEntity = CoverLetterMapper.createEntity(
                 newJob.getCoverLetter(), userId
             );
-            responseCoverLetterDto = CoverLetterMapper.toResponseDto(
-                coverLetterRepository.save(newCoverLetterEntity)
-            );
-            // TODO: If save somehow returns null, should cause an exception
-            // TODO: Should throw an exception so I can catch and return
-            //   null, which the frontend expects where there's an error
+            try {
+                responseCoverLetterDto = CoverLetterMapper.toResponseDto(
+                    coverLetterRepository.save(newCoverLetterEntity)
+                );
+            } catch (RuntimeException err) {
+                throw new SQLAddFailedException(
+                    "Save new cover letter failed", err
+                );
+            }
         }
 
         // --------------- 3.) Create the job -------------------
@@ -124,18 +139,20 @@ public class JobService {
         );
 
         // Don't forget to attach the file metadata
-       ResponseJobDto responseJobDto = JobMapper.toResponseDtoWithFiles(
-            jobRepository.save(newJobEntity),
-            responseResumeDto,
-            responseCoverLetterDto
-        );
-        // TODO: If save somehow returns null, should cause an exception
-        // TODO: Should throw an exception so I can catch and return
-        //   null, which the frontend expects where there's an error
+        ResponseJobDto responseJobDto = null;
+        try {
+            responseJobDto = JobMapper.toResponseDtoWithFiles(
+                jobRepository.save(newJobEntity),
+                responseResumeDto,
+                responseCoverLetterDto
+            );
+        } catch (RuntimeException err) {
+            throw new SQLAddFailedException("Save new job failed", err);
+        }
 
-       // --------------- TODO: 4.) Add files to S3 -------------------
+        // --------------- TODO: 4.) Add files to S3 -------------------
 
-       return responseJobDto;
+        return responseJobDto;
     }
 
     @Transactional
@@ -175,16 +192,21 @@ public class JobService {
         // 6.) Return the job with resume and cover letter metadata attached
 
         // -------------------- 1.) Get the job -------------------------------
-        Job jobEntity = jobRepository.findByIdAndMemberId(id, userId).orElse(null);
-        // TODO: Should throw an exception so I can catch and return
-        //   null, which the frontend expects where there's an error
+        Job jobEntity = null;
+        try {
+            jobEntity = jobRepository.findByIdAndMemberId(id, userId).orElse(null);
+        } catch (RuntimeException err) {
+            throw new SQLGetFailedException(
+                "Select job failed when editing job", err
+            );
+        }
 
         // Don't really need to throw an exception since we haven't edited
-        // anything in the transaction yet, but just do it since the
-        // exception will return null anyway
+        // anything in the transaction yet, but just do it for consistency
         if (jobEntity == null) { // Job not found
-//            return null;
-            throw new RuntimeException();
+            throw new SQLNotFoundException("Job not found when editing job " +
+                "even though we expect it to exist"
+            );
         }
 
         // Mismatch between resumeId from frontend job (editJob) and database
@@ -214,10 +236,11 @@ public class JobService {
         if (!Objects.equals(editJob.getResumeId(), jobEntity.getResumeId()) ||
             !Objects.equals(editJob.getCoverLetterId(), jobEntity.getCoverLetterId())
         ) {
-            // return null
-            // TODO: Should throw an exception so I can catch and return
-            //   null, which the frontend expects where there's an error
-            throw new RuntimeException();
+            throw new StaleFrontendJobException(
+                "Editing stale frontend job. Either one of or both the " +
+                    "resume/cover letter ids are inconsistent with the ones " +
+                    "found in the database"
+            );
         }
 
         // ---------------------- 2.) Query resume table ----------------------
@@ -265,13 +288,22 @@ public class JobService {
                 if (keepResume != null && keepResume) {
                     // Case 2: Keep the resume specified by editJob.resumeId
                     // - Need to get it so we can attach metadata later
-                    resume = resumeRepository.findByIdAndMemberId(
-                        resumeId,
-                        userId
-                    ).map(ResumeMapper::toResponseDto).orElse(null);
-                    // TODO: Should throw an exception so I can catch and return
-                    //   null, which the frontend expects where there's an error
-                    if (resume == null) { throw new RuntimeException(); }
+                    try {
+                        resume = resumeRepository.findByIdAndMemberId(
+                            resumeId,
+                            userId
+                        ).map(ResumeMapper::toResponseDto).orElse(null);
+                    } catch (RuntimeException err) {
+                        throw new SQLGetFailedException(
+                            "Select resume failed when editing job", err
+                        );
+                    }
+                    if (resume == null) {
+                        throw new SQLNotFoundException(
+                            "Resume not found when editing job, even though " +
+                                "we expect it to exist"
+                        );
+                    }
                     // --------- IMPORTANT: Original Node version --------
                     // - It throws an exception if the resume isn't found
                     //   -- Which is appropriate since the resume should exist
@@ -286,9 +318,20 @@ public class JobService {
                     // Case 3: Delete the resume specified by editJob.
                     // TODO: Should throw an exception so I can catch and return
                     //   null, which the frontend expects where there's an error
-                    if (resumeRepository.deleteByIdAndMemberId(resumeId, userId) < 1) {
+                    Integer count = 0;
+                    try {
+                        count = resumeRepository.deleteByIdAndMemberId(resumeId, userId);
+                    } catch(RuntimeException err) {
+                        throw new SQLDeleteFailedException(
+                            "Delete resume failed when editing job", err
+                        );
+                    }
+                    if (count < 1) {
                         // Original Node version doesn't do this
-                        throw new RuntimeException();
+                        throw new SQLDeleteFailedException(
+                            "Delete resume didn't delete anything during " +
+                                "edit job, but it should have"
+                        );
                     }
                     resumeAction = "delete";
                 }
@@ -302,26 +345,43 @@ public class JobService {
                 // TODO: If save somehow returns null, should cause an exception
                 // TODO: Should throw an exception so I can catch and return
                 //   null, which the frontend expects where there's an error
-                resume = ResumeMapper.toResponseDto(resumeRepository.save(newResumeEntity));
+                try {
+                    resume = ResumeMapper.toResponseDto(resumeRepository.save(newResumeEntity));
+                } catch(RuntimeException err) {
+                    throw new SQLAddFailedException(
+                        "Add new resume failed during edit job", err
+                    );
+                }
                 resumeAction = "put";
             } else {
                 // Case 5: Update existing resume
                 // Need to get resume entity first, update fields, then save
-                Resume resumeEntity = resumeRepository.findByIdAndMemberId(
-                    resumeId,
-                    userId
-                ).orElse(null);
-                // TODO: Should throw an exception so I can catch and return
-                //   null, which the frontend expects where there's an error
+                Resume resumeEntity = null;
+                try {
+                    resumeEntity = resumeRepository.findByIdAndMemberId(
+                        resumeId,
+                        userId
+                    ).orElse(null);
+                } catch (RuntimeException err) {
+                    throw new SQLGetFailedException(
+                        "Select resume failed during edit job", err
+                    );
+                }
                 if (resumeEntity == null) {
-                    throw new RuntimeException();
+                    throw new SQLNotFoundException(
+                        "Resume not found during edit job even though we " +
+                            "expect it to exist"
+                    );
                 } else {
                     resumeEntity.setFileName(editJob.getResume().getFileName());
                     resumeEntity.setMimeType(editJob.getResume().getMimeType());
-                    // TODO: If save somehow returns null, should case an exception
-                    // TODO: Should throw an exception so I can catch and return
-                    //   null, which the frontend expects where there's an error
-                    resume = ResumeMapper.toResponseDto(resumeRepository.save(resumeEntity));
+                    try {
+                        resume = ResumeMapper.toResponseDto(resumeRepository.save(resumeEntity));
+                    } catch(RuntimeException err) {
+                        throw new SQLEditFailedException(
+                            "Save edited resume failed during edit job", err
+                        );
+                    }
                     resumeAction = "put";
                 }
             }
@@ -538,6 +598,12 @@ public class JobService {
     }
 }
 
+// Convert string to UUID
+//   UUID.fromString("1d27e3ee-1111-4e0d-ac0f-dadfcc420ce3"),
+
+// ---------- Spring Data JPA Query Methods -------
+// https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html
+
 // TODO: (5/19/25)
 //  - The original Node version returns undefined when something
 //    goes wrong (other than cases that should return undefined such as a
@@ -548,7 +614,8 @@ public class JobService {
 //  - Maybe I should update the logic so that modifying queries (at least for
 //    delete) doesn't return the job, resume, and cover letter.
 //    - IMPORTANT: I'm doing this since I need to lessen the number of requests
-//      to the database
+//      to the database, since JPA doesn't return the entity for modifying
+//      queries
 //  - Should I put a try catch for @Transactional or for Spring Data JPA
 //    queries?
 //    -- Or does Spring, Spring Boot, Spring MVC, and/or etc. do this for
@@ -694,54 +761,38 @@ public class JobService {
 //   -- Ensure your unit and integration tests cover scenarios where
 //      transactions are rolled back.This will help you catch unexpected
 //      behaviors early in development
+// - https://stackoverflow.com/questions/52456783/cannot-catch-dataintegrityviolationexception
+//   -- Need to catch DataIntegrityViolationException outside the
+//      @Transactional (ex. In the controller) since the exception doesn't
+//      occur until the transaction commits
 // - http://stackoverflow.com/questions/76063462/in-springboot-does-transactional-annotation-still-rollbacks-the-transaction-if
 
+// Exceptions w/ JPA, Spring Data JPA, Hibernate
+// - https://stackoverflow.com/questions/23991596/do-i-have-to-try-catch-jparepository
+//   -- Repositories will always tell you something if a problem happens (i.e. they never swallow exceptions).
+//     You'll always get a runtime exception if that's the case
+// - https://www.reddit.com/r/javahelp/comments/1dsd1dx/do_you_guys_have_it_memorized_what_exceptions/
+// - https://www.reddit.com/r/learnjava/comments/12fbz71/jpa_trycatch/
+// - https://stackoverflow.com/questions/71300043/spring-data-jpa-how-to-implement-proper-exception-handling
 
+// Custom Exceptions
+// - https://www.baeldung.com/java-new-custom-exception
+// - https://stackify.com/java-custom-exceptions/
+//   -- https://stackify.com/best-practices-exceptions-java/
+// - *** The 3 above are really good
+// - https://www.reddit.com/r/java/comments/198q4le/how_do_you_structure_your_exception_classes/
+// - https://stackoverflow.com/questions/67284925/how-to-handle-a-custom-exception-with-errorhandler-for-httpclienterrorexception
+// - https://www.baeldung.com/java-common-exceptions
+//   -- List of common exceptions
 
-
-// Convert string to UUID
-//   UUID.fromString("1d27e3ee-1111-4e0d-ac0f-dadfcc420ce3"),
-
-// ---------- Spring Data JPA Query Methods -------
-// https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html
-
-// ------------ Testing resources --------------
-
-// TestRestTemplate vs. MockMvc vs RestAssured
-// - https://stackoverflow.com/questions/52051570/whats-the-difference-between-mockmvc-restassured-and-testresttemplate
-//   -- Seems like MockMvc only mocks the service and other layers
-//      + Primarily for unit testing
-//   -- TestRestTemplate and RestAssured are for integration testing
-//   -- https://medium.com/swlh/https-medium-com-jet-cabral-testing-spring-boot-restful-apis-b84ea031973d
-//      + Seems good
-// - https://stackoverflow.com/questions/46732371/why-are-there-different-types-of-integration-tests-in-spring-boot
-//   -- Also a good read
-// - https://rieckpil.de/spring-boot-testing-mockmvc-vs-webtestclient-vs-testresttemplate/
-//   -- The table is very helpful
-//   -- Good example on how to use TestRestTemplate TODO: (5/3/25) I can use this example
-
-// RestAssured
-// - I keep seeing this one too
-// - https://www.baeldung.com/rest-assured-tutorial
-
-// OpenAPI specification:
-// https://www.baeldung.com/spring-rest-openapi-documentation
-// https://github.com/springdoc/springdoc-openapi
-
-// Postman:
-// https://medium.com/turkcell/spring-boot-rest-api-testing-with-postman-bb283b124416
-
-// Swagger/OpenAPI vs Postman
-// https://www.reddit.com/r/explainlikeimfive/comments/mtwi2r/eli5_software_development_what_is_the_difference/
-
-// Controller tests, integration tests, and unit tests
-// https://www.reddit.com/r/SpringBoot/comments/fd1qbu/controller_unit_tests_vs_integration_tests_in/
-// https://www.reddit.com/r/rails/comments/iab5w3/what_is_the_difference_about_a_controller_test/
-// https://www.reddit.com/r/node/comments/xhe6kj/how_do_you_guys_deal_with_unit_testing_against_a/
-
-// TODO: (Later) Should AWS calls be mocked in integration tests?
-// - https://www.reddit.com/r/aws/comments/lyano4/integration_testing_aws_services/
-
-
-// Frontend/browser/end-to-end testing tools:
-// - Cypress, Selenium (GOVX asked me for this)
+// TODO: (6/2/25)
+//  Use these 4 resources mainly:
+//  - https://spring.io/blog/2013/11/01/exception-handling-in-spring-mvc
+//  - https://www.baeldung.com/exception-handling-for-rest-with-spring
+//  - https://www.baeldung.com/java-new-custom-exception
+//  - https://stackify.com/java-custom-exceptions/
+//  What custom exceptions do I need?
+//  - First, what errors could happen?
+//    -- In SQL: not found, edit failed, delete failed
+//    -- In S3: get, put, delete failed
+//    -- In code: some conversion failed, etc.

@@ -544,7 +544,7 @@ class Qu1cksaveBackendApplicationTests {
 //   A static @DynamicPropertySource method allows adding dynamic property values to the Spring Environment
 
 
-// ------------ Resources -------------
+// ------------ Main Resources Used -------------
 // https://spring.io/guides/gs/testing-web
 // https://www.baeldung.com/spring-boot-testing
 // https://medium.com/@mbanaee61/api-testing-in-spring-boot-2a6d69e5c3ce
@@ -555,6 +555,44 @@ class Qu1cksaveBackendApplicationTests {
 // https://dev.to/mspilari/integration-tests-on-spring-boot-with-postgresql-and-testcontainers-4dpc
 // https://rieckpil.de/howto-write-spring-boot-integration-tests-with-a-real-database/
 // https://testcontainers.com/guides/testing-spring-boot-rest-api-using-testcontainers/
+// Marco Behler JUnit 5 Tutorial: https://www.youtube.com/watch?v=6uSnF6IuWIw
 
-// If there's time, might be good to just see:
-//   https://www.youtube.com/watch?v=6uSnF6IuWIw
+
+
+
+// -------------- Other useful resources -------------------
+
+// TestRestTemplate vs. MockMvc vs RestAssured
+// - https://stackoverflow.com/questions/52051570/whats-the-difference-between-mockmvc-restassured-and-testresttemplate
+//   -- Seems like MockMvc only mocks the service and other layers
+//      + Primarily for unit testing
+//   -- TestRestTemplate and RestAssured are for integration testing
+//   -- https://medium.com/swlh/https-medium-com-jet-cabral-testing-spring-boot-restful-apis-b84ea031973d
+//      + Seems good
+// - https://stackoverflow.com/questions/46732371/why-are-there-different-types-of-integration-tests-in-spring-boot
+//   -- Also a good read
+// - https://rieckpil.de/spring-boot-testing-mockmvc-vs-webtestclient-vs-testresttemplate/
+//   -- The table is very helpful
+//   -- Good example on how to use TestRestTemplate TODO: (5/3/25) I can use this example
+
+// RestAssured
+// - I keep seeing this one too
+// - https://www.baeldung.com/rest-assured-tutorial
+
+// OpenAPI specification:
+// https://www.baeldung.com/spring-rest-openapi-documentation
+// https://github.com/springdoc/springdoc-openapi
+
+// Postman:
+// https://medium.com/turkcell/spring-boot-rest-api-testing-with-postman-bb283b124416
+
+// Swagger/OpenAPI vs Postman
+// https://www.reddit.com/r/explainlikeimfive/comments/mtwi2r/eli5_software_development_what_is_the_difference/
+
+// Controller tests, integration tests, and unit tests
+// https://www.reddit.com/r/SpringBoot/comments/fd1qbu/controller_unit_tests_vs_integration_tests_in/
+// https://www.reddit.com/r/rails/comments/iab5w3/what_is_the_difference_about_a_controller_test/
+// https://www.reddit.com/r/node/comments/xhe6kj/how_do_you_guys_deal_with_unit_testing_against_a/
+
+// TODO: (Later) Should AWS calls be mocked in integration tests?
+// - https://www.reddit.com/r/aws/comments/lyano4/integration_testing_aws_services/

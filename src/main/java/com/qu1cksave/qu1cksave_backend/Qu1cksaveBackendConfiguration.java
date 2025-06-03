@@ -9,9 +9,13 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import static org.springframework.transaction.annotation.RollbackOn.ALL_EXCEPTIONS;
+
 @Configuration
 @EnableJpaRepositories
-@EnableTransactionManagement
+// https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html
+// - To rollback on all exceptions, not just runtime
+@EnableTransactionManagement(rollbackOn=ALL_EXCEPTIONS)
 public class Qu1cksaveBackendConfiguration {
     // https://stackoverflow.com/questions/67970207/using-hibernate-sessionfactory-with-the-jpa-entitymanager-together
     // - Link has code to get a HibernateTransactionManager
