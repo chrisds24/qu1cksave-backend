@@ -139,7 +139,7 @@ public class JobService {
         );
 
         // Don't forget to attach the file metadata
-        ResponseJobDto responseJobDto = null;
+        ResponseJobDto responseJobDto;
         try {
             responseJobDto = JobMapper.toResponseDtoWithFiles(
                 jobRepository.save(newJobEntity),
@@ -192,7 +192,7 @@ public class JobService {
         // 6.) Return the job with resume and cover letter metadata attached
 
         // -------------------- 1.) Get the job -------------------------------
-        Job jobEntity = null;
+        Job jobEntity;
         try {
             jobEntity = jobRepository.findByIdAndMemberId(id, userId).orElse(null);
         } catch (RuntimeException err) {
@@ -586,7 +586,6 @@ public class JobService {
                 "Job not found during delete, even though it should exist"
             );
         }
-        // Could not delete job for some reason
         Integer count = 0;
         try {
             count = jobRepository.deleteByIdAndMemberId(id, userId);
@@ -893,3 +892,8 @@ public class JobService {
 //    -- Ex. A service might throw an exception that I didn't catch then
 //           rethrew as a custom exception (such as an exception in one of my
 //           custom mappers)
+//  (6/3/25)
+//  - Review the code
+//  - Edit the controllers. Look at parts where it was initially expecting
+//    null, since the RestControllerAdvice now handles most of these cases
+//    except in getJob when the job isn't found

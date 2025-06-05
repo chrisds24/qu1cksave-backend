@@ -1,4 +1,5 @@
 package com.qu1cksave.qu1cksave_backend.job;
+import com.qu1cksave.qu1cksave_backend.exceptions.ForbiddenResourceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,20 +38,19 @@ public class JobController {
     //   Also need OpenAPI schema validation (or something similar)
 
     @GetMapping()
-    // TODO: (5/12/25) I should try using UUID userId instead of String userId
-    public List<ResponseJobDto> getJobs(@RequestParam("id") String userId) {
+//    public List<ResponseJobDto> getJobs(@RequestParam("id") String userId) {
+    public List<ResponseJobDto> getJobs(@RequestParam("id") UUID userId) {
         // TODO: Replace mollyMemberId with user id obtained from auth header
         //  - I'll compare the one from the query and the auth header
-        String strAuthUserId = "269a3d55-4eee-4a2e-8c64-e1fe386b76f8";
+        UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
 
         // User wants jobs that don't belong to them, so return an error
-        if (!strAuthUserId.equals(userId)) {
-            // TODO: Return an appropriate JSON error object
-            //  Check out @ControllerAdvice
-            return null;
+        if (!authUserId.equals(userId)) {
+            throw new ForbiddenResourceException(
+                "Mismatch between auth header and query param user id"
+            );
         }
 
-        UUID authUserId = UUID.fromString(strAuthUserId);
         return jobService.getJobs(authUserId);
 
         // For testing: http://localhost:8080/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
@@ -80,20 +80,22 @@ public class JobController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseJobDto> editJob(
+    public ResponseJobDto editJob(
         @PathVariable UUID id,
         @RequestBody RequestJobDto editJob)
     {
         UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
-        ResponseJobDto job = jobService.editJob(id, authUserId, editJob);
-        return new ResponseEntity<ResponseJobDto>(job, job != null ? HttpStatus.OK : HttpStatus.NOT_FOUND);
+//        ResponseJobDto job = jobService.editJob(id, authUserId, editJob);
+//        return new ResponseEntity<ResponseJobDto>(job, job != null ? HttpStatus.OK : HttpStatus.NOT_FOUND);
+        return jobService.editJob(id, authUserId, editJob);
     }
 
     @DeleteMapping("/{id}")
     // 200 for delete if returning something
-    public ResponseEntity<ResponseJobDto> deleteJob(@PathVariable UUID id) {
+    public ResponseJobDto deleteJob(@PathVariable UUID id) {
         UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
-        ResponseJobDto job = jobService.deleteJobByIdAndUserId(id, authUserId);
-        return new ResponseEntity<ResponseJobDto>(job, job != null ? HttpStatus.OK : HttpStatus.NOT_FOUND);
+//        ResponseJobDto job = jobService.deleteJobByIdAndUserId(id, authUserId);
+//        return new ResponseEntity<ResponseJobDto>(job, job != null ? HttpStatus.OK : HttpStatus.NOT_FOUND);
+        return jobService.deleteJobByIdAndUserId(id, authUserId);
     }
 }
