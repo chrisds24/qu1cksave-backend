@@ -283,32 +283,45 @@ class Qu1cksaveBackendApplicationTests {
 	//  but check the return value of the post request using
 	//  asserts (assertEquals, assertNotNull, etc.)
 	//  - https://stackoverflow.com/questions/19389723/can-not-deserialize-instance-of-java-lang-string-out-of-start-object-token
-//	@Test
-//	void createJobNoFilesThenGetThatJob() {
-//		// Create the job
+	@Test
+	@Order(6)
+	void createJobNoFilesThenGetThatJob() {
+		// Create the job
 //		ResponseJobDto responseJobDto = this.webTestClient
-//			.post()
-//			.uri("/jobs")
-//			.contentType(MediaType.APPLICATION_JSON)
-//			// No resume and cover letter
-//			.bodyValue(testJob)
-//			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-//			.exchange()
-//			.expectStatus()
-//			.isCreated()
-//			.expectHeader()
-//			.contentType(MediaType.APPLICATION_JSON)
-//			.expectBody(ResponseJobDto.class)
+		this.webTestClient
+			.post()
+			.uri("/jobs")
+			.contentType(MediaType.APPLICATION_JSON)
+			// No resume and cover letter
+			.bodyValue(testJob)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isCreated()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody(ResponseJobDto.class)
 //			.returnResult()
-//			.getResponseBody();
-//
-//		// Note: I think it's the expectBody(ResponseJobDto.class) that's causing:
-//		// com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.String` from Object value (token `JsonToken.START_OBJECT`)
-//		//         at [Source: UNKNOWN; line: 1, column: 429] (through reference chain: com.qu1cksave.qu1cksave_backend.job.ResponseJobDto["date_applied"])
-//
+//			.getResponseBody()
+		;
+
+		// IMPORTANT:
+		// - It's the expectBody(ResponseJobDto.class) that's causing:
+		// com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.String` from Object value (token `JsonToken.START_OBJECT`)
+		//         at [Source: UNKNOWN; line: 1, column: 429] (through reference chain: com.qu1cksave.qu1cksave_backend.job.ResponseJobDto["date_applied"])
+		// - https://stackoverflow.com/questions/19389723/can-not-deserialize-instance-of-java-lang-string-out-of-start-object-token
+		//   -- Has a good explanation on why this happens. Something about the
+		//      setter seeing a JSON_OBJECT instead of String. In my case, the
+		//      dto constructor is probably getting passed a JSON_OBJECT
+		// TODO: (6/7/25) Change the other nested json in ResponseJobDto to Object
+		//  Also read:
+		//  - https://stackoverflow.com/questions/73283874/error-can-not-deserialize-instance-of-java-lang-string-out-of-start-object-toke
+		//  - https://www.baeldung.com/jackson-object-mapper-tutorial
+		//  Search: "deserialize nested json jackson"
+
 //		assertNotNull(responseJobDto);
-//
-//		// Get the job
+
+		// Get the job
 //		this.webTestClient
 //			.get()
 //			.uri("/jobs/" + responseJobDto.getId())
@@ -321,10 +334,10 @@ class Qu1cksaveBackendApplicationTests {
 //			.consumeWith(result -> {
 //				assertEquals(responseJobDto, result.getResponseBody());
 //			});
-//	}
+	}
 
 	@Test
-	@Order(6)
+	@Order(7)
 	void deleteOneJobThenGetThatJob() {
 		// Delete job
 		this.webTestClient
@@ -356,7 +369,7 @@ class Qu1cksaveBackendApplicationTests {
 	}
 
 	@Test
-	@Order(7)
+	@Order(8)
 	void shouldEditJobThenGetThatJob() {
 		// Original before edit
 		// '018ead6b-d160-772d-a001-2606322ebd1c'

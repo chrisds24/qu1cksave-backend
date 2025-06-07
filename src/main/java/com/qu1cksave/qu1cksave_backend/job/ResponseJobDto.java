@@ -86,9 +86,14 @@ public class ResponseJobDto {
         @JsonProperty("us_state") String usState,
         @JsonProperty("city") String city,
         @JsonProperty("date_saved") Instant dateSaved,
-//        Map<String, Object> dateApplied,
-//        Map<String, Object> datePosted,
-        @JsonProperty("date_applied") String dateApplied,
+        // IMPORTANT: dateApplied and datePosted are originally String here,
+        //   but needed to change to object to get rid of the error below when
+        //   testing:
+        // com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.String` from Object value (token `JsonToken.START_OBJECT`)
+        //         at [Source: UNKNOWN; line: 1, column: 463] (through reference chain: com.qu1cksave.qu1cksave_backend.job.ResponseJobDto["date_posted"])
+        //
+//        @JsonProperty("date_applied") String dateApplied,
+        @JsonProperty("date_applied") Object dateApplied,
         @JsonProperty("date_posted") String datePosted,
         @JsonProperty("job_status") String jobStatus,
 // Needs to be a string since no automatic conversion from JSON array
@@ -126,7 +131,7 @@ public class ResponseJobDto {
 //            this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied, new TypeReference<Map<String, Object>>(){}) : null;
 //            this.datePosted = datePosted != null ? objectMapper.readValue(datePosted, new TypeReference<Map<String, Object>>(){}) : null;
             // Otherwise, use these
-            this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied, YearMonthDateDto.class) : null;
+            this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied.toString(), YearMonthDateDto.class) : null;
             this.datePosted = datePosted != null ? objectMapper.readValue(datePosted, YearMonthDateDto.class) : null;
             this.jobStatus = jobStatus;
             // readValue has an error without the try-catch. Intellij suggested
