@@ -314,10 +314,20 @@ class Qu1cksaveBackendApplicationTests {
 		//      setter seeing a JSON_OBJECT instead of String. In my case, the
 		//      dto constructor is probably getting passed a JSON_OBJECT
 		// TODO: (6/7/25) Change the other nested json in ResponseJobDto to Object
-		//  Also read:
-		//  - https://stackoverflow.com/questions/73283874/error-can-not-deserialize-instance-of-java-lang-string-out-of-start-object-toke
-		//  - https://www.baeldung.com/jackson-object-mapper-tutorial
+
+		// TODO: IMPORTANT for good code
 		//  Search: "deserialize nested json jackson"
+		//  - https://www.baeldung.com/jackson-nested-values
+		//    -- @JsonDeserialize could be useful. More proper way of doing it
+		//  ME:
+		//  - When I call the JPA method using my custom native query, it
+		//    fills the fields accordingly but it's not doing deserialization,
+		//    which is why having String dateApplied in the constructor works
+		//    -- Reminder: I needed to use String for dateApplied since that's
+		//       what the native query is returning for that field
+		//  - But when deserializing during the tests, it seems that the dto
+		//    constructor is getting passed a JSON_OBJECT, even though it's
+		//    expecting a String (before I changed it to Object)
 
 //		assertNotNull(responseJobDto);
 
