@@ -65,10 +65,11 @@ public class JobController {
     // TODO: (5/12/25) I should also use authUserId to get the job
     @GetMapping("/{id}") // NOTE: For now, this is used for testing only
     public ResponseEntity<ResponseJobDto> getJob(@PathVariable UUID id) {
+        UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
         // Use this job's id for testing:
         // '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
         // Expected: 'Software Engineer', 'Microsoft', very long description
-        ResponseJobDto job = jobService.getJob(id);
+        ResponseJobDto job = jobService.getJob(id, authUserId);
         return new ResponseEntity<ResponseJobDto>(job, job != null ? HttpStatus.OK : HttpStatus.NOT_FOUND);
     }
 

@@ -1,7 +1,10 @@
 package com.qu1cksave.qu1cksave_backend;
 
 import com.qu1cksave.qu1cksave_backend.job.ResponseJobDto;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +29,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 	locations = "classpath:application-product-integrationtest.properties"
 )
 @Testcontainers
+// Run tests in a specific order: https://www.baeldung.com/junit-5-test-order
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class Qu1cksaveBackendApplicationTests {
 	// Not needed
 //    @LocalServerPort
@@ -176,6 +181,7 @@ class Qu1cksaveBackendApplicationTests {
 		""";
 
 	@Test
+	@Order(1)
 	void contextLoads() {
 	}
 
@@ -192,6 +198,7 @@ class Qu1cksaveBackendApplicationTests {
 	// - Response: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.ResponseSpec.html
  	// - Body Content: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.BodyContentSpec.html
 	@Test
+	@Order(2)
 	void getOneJob() { // Get one job, job exists
 		// '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
 		// Expected: 'Software Engineer', 'Microsoft', very long description
@@ -210,6 +217,7 @@ class Qu1cksaveBackendApplicationTests {
 
 	// Get one job, job doesn't exist
 	@Test
+	@Order(3)
 	void getNonExistentJob() {
 		this.webTestClient
 			.get()
@@ -228,6 +236,7 @@ class Qu1cksaveBackendApplicationTests {
 	// Should return 404 instead of 403, since single jobs are obtained by id
 	//   and userId. I also don't want to give away the existence of a job's id
 	@Test
+	@Order(4)
 	void getForbiddenJob() {
 		this.webTestClient
 			.get()
@@ -243,6 +252,7 @@ class Qu1cksaveBackendApplicationTests {
 	// - Need to do different cases if there's a resume/cover letter or not
 
 	@Test
+	@Order(5)
     void createJobNoFiles() {
 		// Remote, Hybrid, On-site for isRemote
 		this.webTestClient
@@ -274,42 +284,14 @@ class Qu1cksaveBackendApplicationTests {
 	//  asserts (assertEquals, assertNotNull, etc.)
 	//  - https://stackoverflow.com/questions/19389723/can-not-deserialize-instance-of-java-lang-string-out-of-start-object-token
 //	@Test
-//	void shouldCreateNewJobNoFilesThenGetThatJob() {
-//		String newJob = """
-//			{
-//				"title": "test swe 2",
-//				"company_name": "test company 2",
-//				"job_description": "test job description 2",
-//				"notes": "test notes 2",
-//				"is_remote": "Hybrid",
-//				"salary_min": 100000,
-//				"salary_max": 150000,
-//				"country": "US",
-//				"us_state": "CA",
-//				"city": "San Francisco",
-//				"date_applied": {
-//					"year": 2025,
-//					"month": 4,
-//					"date": 10
-//				},
-//				"date_posted": {
-//					"year": 2025,
-//					"month": 4,
-//					"date": 9
-//				},
-//				"job_status": "Applied",
-//				"links": ["https://www.linkedin.com/jobs/view/4195258183/?alternateChannel=search&refId=7N512OAV%2BcMGdOAvxeHftg%3D%3D&trackingId=F%2BYRBlchvepimqrWqryNSA%3D%3D", "https://job-boards.greenhouse.io/gleanwork/jobs/4006733005", "https://job-boards.greenhouse.io/gleanwork"],
-//				"found_from": "LinkedIn"
-//			}
-//		""";
-//
+//	void createJobNoFilesThenGetThatJob() {
 //		// Create the job
 //		ResponseJobDto responseJobDto = this.webTestClient
 //			.post()
 //			.uri("/jobs")
 //			.contentType(MediaType.APPLICATION_JSON)
 //			// No resume and cover letter
-//			.bodyValue(newJob)
+//			.bodyValue(testJob)
 //			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
 //			.exchange()
 //			.expectStatus()
@@ -318,8 +300,7 @@ class Qu1cksaveBackendApplicationTests {
 //			.contentType(MediaType.APPLICATION_JSON)
 //			.expectBody(ResponseJobDto.class)
 //			.returnResult()
-//			.getResponseBody()
-//		;
+//			.getResponseBody();
 //
 //		// Note: I think it's the expectBody(ResponseJobDto.class) that's causing:
 //		// com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.String` from Object value (token `JsonToken.START_OBJECT`)
@@ -342,9 +323,9 @@ class Qu1cksaveBackendApplicationTests {
 //			});
 //	}
 
-	// TODO: Uncomment this after adding delete route
 	@Test
-	void shouldDeleteOneJobThenGetThatJob() {
+	@Order(6)
+	void deleteOneJobThenGetThatJob() {
 		// Delete job
 		this.webTestClient
 			.delete()
@@ -375,7 +356,9 @@ class Qu1cksaveBackendApplicationTests {
 	}
 
 	@Test
+	@Order(7)
 	void shouldEditJobThenGetThatJob() {
+		// Original before edit
 		// '018ead6b-d160-772d-a001-2606322ebd1c'
 		// 'Software Engineer, Quantum Error Correction, Quantum AI'
 		// 'Google'
@@ -417,11 +400,11 @@ class Qu1cksaveBackendApplicationTests {
 			// This member_id is hardcoded for now (Molly Member's id)
 			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
 			.jsonPath("$.title").isEqualTo("test swe")
+			// Should not be this
 //			.jsonPath("$.title").isEqualTo("Software Engineer, Quantum Error Correction, Quantum AI")
 			.jsonPath("$.date_applied.month").isEqualTo(4)
 			.jsonPath("$.date_posted.date").isEqualTo(8)
 			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
-
 	}
 
 	// TODO: (5/11/25) Need a test when a Resume is included
