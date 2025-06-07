@@ -75,8 +75,8 @@ class Qu1cksaveBackendApplicationTests {
 	private WebTestClient webTestClient;
 
 	// TODO: (6/4/25) Tests I need
-	//  - Get multiple jobs, userId query param is logged in user's id
-	//  - Get multiple jobs, userId query param is NOT logged in user's id
+	//  - Get multiple jobs, userId query param is the logged in user's id
+	//  - Get multiple jobs, userId query param is NOT the logged in user's id
 	//  - ??? Get multiple jobs, no userId query param provided
 	//    -- Spring/Java should throw out an error for this. Wonder what it
 	//       exactly is?
@@ -86,6 +86,7 @@ class Qu1cksaveBackendApplicationTests {
 	//    -- Covers case when user specifies an id of a job that doesn't belong
 	//       to them (since single jobs are found by id and userId)
 	//  - ??? Get one job, no id provided
+	//    -- Just goes to regular /jobs route but without a query
 	//  --------------------------
 	//  - Create job w/o files, then get that job
 	//  - Create job w/ files, then get that job
@@ -94,15 +95,18 @@ class Qu1cksaveBackendApplicationTests {
 	//   * For the last 2, I could use some kind of API validation, filters,
 	//     or custom code. API validation would be ideal, but custom code could
 	//     be enough for now
+	//     -- Need to manually check not having required fields
+	//        + Having the wrong type just causes an error in Java
+	//     -- The extra fields one would actually just cause an error in Java
 	//  ---------------------------
 	//  - Edit job w/o files, then get that job
 	//  - Edit job w/ resume and cover letter added, then get that job
 	//  - Edit job w/ resume and cover letter edited, then get that job
 	//  - Edit job w/ resume and cover letter deleted, then get that job
 	//  - Stale job tests
-	//    *** Note, a job where its resume id and cover letter id are the same
+	//    +++ Note, a job where its resume id and cover letter id are the same
 	//        as the latest version is not considered stale
-	//    *** How does a job become stale? Let's say there's tab A and tab B,
+	//    +++ How does a job become stale? Let's say there's tab A and tab B,
 	//        where tab A contains the stale job. The job is then edited in tab
 	//        B so that at least one of the files' id's are now different from
 	//        what tab A has
@@ -115,7 +119,7 @@ class Qu1cksaveBackendApplicationTests {
 	//    3.) Job has a resume, then edited to have a different resume id (by
 	//       removing the resume, then adding one again). Edit job again,
 	//       but using the old job w/ the old resume id
-	//    *** Other possible issues:
+	//    +++ Other possible issues:
 	//    -- Same resume id. User then attempts to edit resume by editing the
 	//       stale job
 	//       + Resume gets updated to this new resume, which is appropriate
@@ -125,7 +129,7 @@ class Qu1cksaveBackendApplicationTests {
 	//    -- Same resume id. User then attempts to remove resume by editing the
 	//       stale job.
 	//       + Resume gets removed from S3 and database, as expected
-	//    *** IMPORTANT: I went with just leaving it to the user to not do
+	//    +++ IMPORTANT: I went with just leaving it to the user to not do
 	//        their work in stale tabs, then just having checks where errors
 	//        could occur.
 	//        - An alternative would have been to have a timestamp for the
@@ -133,7 +137,7 @@ class Qu1cksaveBackendApplicationTests {
 	//          using a stale job (aka an outdated update timestamp)
 	//  ---------------------------
 	//  - Delete job, job exists
-	//  - Delete job, job doesn't exist (Stale list)
+	//  - Delete job, job doesn't exist (due to stale list)
 	//    -- Here, stale refers to the list not having up to date jobs
 	//  - Delete job, but job is stale (see description in edit job tests)
 	//    -- The job and the up to date files get deleted since the delete uses
@@ -143,7 +147,7 @@ class Qu1cksaveBackendApplicationTests {
 	//  +++++++++++++++++++++++++++
 	//  The ??? in front means I'm not sure if I even need this test
 
-	private static final String testJob = """
+	private String testJob = """
 			{
 				"title": "test swe",
 				"company_name": "test company",
@@ -175,6 +179,8 @@ class Qu1cksaveBackendApplicationTests {
 	void contextLoads() {
 	}
 
+	// ------------------- GET ONE JOB TESTS -------------------
+
 	// https://docs.spring.io/spring-framework/reference/testing/webtestclient.html
 	// - Has useful methods/assertions
 	// https://www.javadoc.io/doc/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.html
@@ -185,9 +191,8 @@ class Qu1cksaveBackendApplicationTests {
 	// - Request Body: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.RequestBodySpec.html
 	// - Response: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.ResponseSpec.html
  	// - Body Content: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.BodyContentSpec.html
- 	// -
 	@Test
-	void shouldGetOneJob() {
+	void getOneJob() { // Get one job, job exists
 		// '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
 		// Expected: 'Software Engineer', 'Microsoft', very long description
 		this.webTestClient
@@ -200,10 +205,10 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.expectBody()
 			.jsonPath("$.title").isEqualTo("Software Engineer")
-			.jsonPath("$.company_name").isEqualTo("Microsoft")
-		;
+			.jsonPath("$.company_name").isEqualTo("Microsoft");
 	}
 
+	// Get one job, job doesn't exist
 	@Test
 	void getNonExistentJob() {
 		this.webTestClient
@@ -213,15 +218,32 @@ class Qu1cksaveBackendApplicationTests {
 			.expectStatus()
 			.isNotFound()
 			.expectBody()
-//			.isEmpty() // Alternative to consumeWith then asserting
 			.consumeWith(result -> {
                 assertNull(result.getResponseBody());
 			});
-		;
 	}
 
+	// When user specifies an id of a job that doesn't belong
+	//   to them (since single jobs are found by id and userId)
+	// Should return 404 instead of 403, since single jobs are obtained by id
+	//   and userId. I also don't want to give away the existence of a job's id
 	@Test
-    void shouldCreateNewJobNoFiles() {
+	void getForbiddenJob() {
+		this.webTestClient
+			.get()
+			.uri("/jobs/a14ead6c-d173-1111-a001-2717322ebd12")
+			.exchange()
+			.expectStatus()
+			.isNotFound()
+			.expectBody()
+			.isEmpty(); // Alternative to consumeWith then asserting
+	}
+
+	// ----------------- CREATE JOB TESTS ---------------------
+	// - Need to do different cases if there's a resume/cover letter or not
+
+	@Test
+    void createJobNoFiles() {
 		// Remote, Hybrid, On-site for isRemote
 		this.webTestClient
             .post()
