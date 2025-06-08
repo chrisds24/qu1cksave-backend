@@ -62,10 +62,13 @@ public class GlobalExceptionHandler {
         S3GetFailedException.class,
         S3PutFailedException.class
     })
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR) // TODO: Is 500 appropriate?
     public Object handleS3Exceptions() {
         return null;
     }
+
+    // TODO: Add a handler for Exception and RuntimeException
+    //  - Does most general go to the bottom?
 }
 
 // Useful resources:

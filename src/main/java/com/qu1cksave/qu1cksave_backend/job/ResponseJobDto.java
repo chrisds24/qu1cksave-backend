@@ -2,17 +2,19 @@ package com.qu1cksave.qu1cksave_backend.job;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+// https://www.baeldung.com/jackson-nested-values
+// - Register deserializer to class
+@JsonDeserialize(using = ResponseJobDtoDeserializer.class)
 public class ResponseJobDto {
     // TODO: Search for:
     //  - How to specify not nullable?
@@ -86,20 +88,23 @@ public class ResponseJobDto {
         @JsonProperty("us_state") String usState,
         @JsonProperty("city") String city,
         @JsonProperty("date_saved") Instant dateSaved,
-        // IMPORTANT: dateApplied and datePosted are originally String here,
+        // IMPORTANT: dateApplied, datePosted, links are originally String here,
         //   but needed to change to object to get rid of the error below when
         //   testing:
         // com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.String` from Object value (token `JsonToken.START_OBJECT`)
         //         at [Source: UNKNOWN; line: 1, column: 463] (through reference chain: com.qu1cksave.qu1cksave_backend.job.ResponseJobDto["date_posted"])
-        //
-//        @JsonProperty("date_applied") String dateApplied,
-        @JsonProperty("date_applied") Object dateApplied,
+        // UPDATE: (6/7/25) I undid these changes. Will use a custom
+        //   deserializer instead
+        @JsonProperty("date_applied") String dateApplied,
+//        @JsonProperty("date_applied") Object dateApplied,
         @JsonProperty("date_posted") String datePosted,
+//        @JsonProperty("date_posted") Object datePosted,
         @JsonProperty("job_status") String jobStatus,
 // Needs to be a string since no automatic conversion from JSON array
 //   to a String array
-//        String[] links,
+//        @JsonProperty("links") String[] links,
         @JsonProperty("links") String links,
+//        @JsonProperty("links") Object links,
         @JsonProperty("found_from") String foundFrom,
         // This doesn't automatically convert to ResponseResumeDto since it
         //   can't cast String to this
@@ -127,11 +132,33 @@ public class ResponseJobDto {
 
             // https://www.baeldung.com/jackson-object-mapper-tutorial
             ObjectMapper objectMapper = new ObjectMapper();
-            // If using Map<String, Object> for dateApplied/Posted
+//            objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true); // NOT NEEDED
+            // ------------ OLD (Keep for reference) -------------
+            // If using Map<String, Object> for dateApplied/Posted. Otherwise,
+            //   use the ones after
 //            this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied, new TypeReference<Map<String, Object>>(){}) : null;
 //            this.datePosted = datePosted != null ? objectMapper.readValue(datePosted, new TypeReference<Map<String, Object>>(){}) : null;
-            // Otherwise, use these
-            this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied.toString(), YearMonthDateDto.class) : null;
+            // ------------------------------
+            // dateApplied.toString() inside the objectMapper.readValue causes
+//            com.fasterxml.jackson.core.JsonParseException: Unexpected character ('y' (code 121)): was expecting double-quote to start field name
+//            at [Source: UNKNOWN; line: 1, column: 2]
+            // This happens in this line. It seems like "year": ... in
+            //   dateApplied is year w/o quotations. The link below provides a
+            //   solution to allow reading no quotations as JSON, converting
+            //   that to another string, then converting the string to actual
+            //   valid JSON
+            // - https://stackoverflow.com/questions/69345216/jsonparseexception-unexpected-character-s-code-115-was-expecting-double
+            //   -- Configure objectMapper to ALLOW_UNQUOTED_FIELD_NAMES to be true
+            // UPDATE: (6/7/25) I UNDID THESE CHANGES. Will just use a custom
+            //   deserializer instead.
+
+            // TODO:
+            //  WON'T USE (Keep for now for reference. Then delete later once
+            //    custom deserializer works.
+//            this.dateApplied = dateApplied != null ? objectMapper.readValue( // WRONG
+//                dateApplied.toString(),
+//                YearMonthDateDto.class) : null;
+            this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied, YearMonthDateDto.class) : null;
             this.datePosted = datePosted != null ? objectMapper.readValue(datePosted, YearMonthDateDto.class) : null;
             this.jobStatus = jobStatus;
             // readValue has an error without the try-catch. Intellij suggested

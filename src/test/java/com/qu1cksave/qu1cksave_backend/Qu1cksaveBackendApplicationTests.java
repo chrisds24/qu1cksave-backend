@@ -313,7 +313,7 @@ class Qu1cksaveBackendApplicationTests {
 		//   -- Has a good explanation on why this happens. Something about the
 		//      setter seeing a JSON_OBJECT instead of String. In my case, the
 		//      dto constructor is probably getting passed a JSON_OBJECT
-		// TODO: (6/7/25) Change the other nested json in ResponseJobDto to Object
+		// UPDATE: (6/7/25) I'm just using a custom json deserializer
 
 		// TODO: IMPORTANT for good code
 		//  Search: "deserialize nested json jackson"
