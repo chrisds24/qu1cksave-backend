@@ -20,7 +20,6 @@ public class GlobalExceptionHandler {
         SQLGetFailedException.class
     })
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-//    public Object handleCustomSQLExceptions(RuntimeException ex) {
     public Object handleSQLExceptions() {
         return null;
     }

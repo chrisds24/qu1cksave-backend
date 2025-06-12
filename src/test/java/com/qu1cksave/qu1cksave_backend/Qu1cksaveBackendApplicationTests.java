@@ -279,16 +279,11 @@ class Qu1cksaveBackendApplicationTests {
 			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
     }
 
-	// TODO: Use this test instead once I've solved the deserialization error
-	//  but check the return value of the post request using
-	//  asserts (assertEquals, assertNotNull, etc.)
-	//  - https://stackoverflow.com/questions/19389723/can-not-deserialize-instance-of-java-lang-string-out-of-start-object-token
 	@Test
-	@Order(6)
+	@Order(3)
 	void createJobNoFilesThenGetThatJob() {
 		// Create the job
-//		ResponseJobDto responseJobDto = this.webTestClient
-		this.webTestClient
+		ResponseJobDto responseJobDto = this.webTestClient
 			.post()
 			.uri("/jobs")
 			.contentType(MediaType.APPLICATION_JSON)
@@ -301,49 +296,25 @@ class Qu1cksaveBackendApplicationTests {
 			.expectHeader()
 			.contentType(MediaType.APPLICATION_JSON)
 			.expectBody(ResponseJobDto.class)
-//			.returnResult()
-//			.getResponseBody()
+			.returnResult()
+			.getResponseBody()
 		;
 
-		// IMPORTANT:
-		// - It's the expectBody(ResponseJobDto.class) that's causing:
-		// com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.String` from Object value (token `JsonToken.START_OBJECT`)
-		//         at [Source: UNKNOWN; line: 1, column: 429] (through reference chain: com.qu1cksave.qu1cksave_backend.job.ResponseJobDto["date_applied"])
-		// - https://stackoverflow.com/questions/19389723/can-not-deserialize-instance-of-java-lang-string-out-of-start-object-token
-		//   -- Has a good explanation on why this happens. Something about the
-		//      setter seeing a JSON_OBJECT instead of String. In my case, the
-		//      dto constructor is probably getting passed a JSON_OBJECT
-		// UPDATE: (6/7/25) I'm just using a custom json deserializer
-
-		// TODO: IMPORTANT for good code
-		//  Search: "deserialize nested json jackson"
-		//  - https://www.baeldung.com/jackson-nested-values
-		//    -- @JsonDeserialize could be useful. More proper way of doing it
-		//  ME:
-		//  - When I call the JPA method using my custom native query, it
-		//    fills the fields accordingly but it's not doing deserialization,
-		//    which is why having String dateApplied in the constructor works
-		//    -- Reminder: I needed to use String for dateApplied since that's
-		//       what the native query is returning for that field
-		//  - But when deserializing during the tests, it seems that the dto
-		//    constructor is getting passed a JSON_OBJECT, even though it's
-		//    expecting a String (before I changed it to Object)
-
-//		assertNotNull(responseJobDto);
+		assertNotNull(responseJobDto);
 
 		// Get the job
-//		this.webTestClient
-//			.get()
-//			.uri("/jobs/" + responseJobDto.getId())
-//			.exchange()
-//			.expectStatus()
-//			.isOk()
-//			.expectHeader()
-//			.contentType(MediaType.APPLICATION_JSON)
-//			.expectBody(ResponseJobDto.class)
-//			.consumeWith(result -> {
-//				assertEquals(responseJobDto, result.getResponseBody());
-//			});
+		this.webTestClient
+			.get()
+			.uri("/jobs/" + responseJobDto.getId())
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody(ResponseJobDto.class)
+			.consumeWith(result -> {
+				assertEquals(responseJobDto, result.getResponseBody());
+			});
 	}
 
 	@Test
@@ -372,9 +343,6 @@ class Qu1cksaveBackendApplicationTests {
 			.isNotFound()
 			.expectBody()
 			.isEmpty()
-//			.consumeWith(result -> { // Alternative to isEmpty
-//				assertNull(result.getResponseBody());
-//			});
 		;
 	}
 
@@ -429,13 +397,6 @@ class Qu1cksaveBackendApplicationTests {
 			.jsonPath("$.date_posted.date").isEqualTo(8)
 			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
 	}
-
-	// TODO: (5/11/25) Need a test when a Resume is included
-	//  So update service to handle if there's a Resume
-	//  - Will Jackson be able to convert the RequestResumeDto? Or should I
-	//    use String?
-	//    -- Jackson is able to convert String[] links and also dateApplied/Posted
-	//  Then work on delete, then edit
 }
 
 // NOTE: (5/10/25) What I did for container setup

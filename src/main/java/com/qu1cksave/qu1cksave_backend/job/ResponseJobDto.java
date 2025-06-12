@@ -3,7 +3,6 @@ package com.qu1cksave.qu1cksave_backend.job;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 
@@ -14,7 +13,9 @@ import java.util.UUID;
 
 // https://www.baeldung.com/jackson-nested-values
 // - Register deserializer to class
-@JsonDeserialize(using = ResponseJobDtoDeserializer.class)
+// NOTE: (6/12/25) Not using custom deserializer since Jackson seems to keep
+//   trying to use my constructor
+//@JsonDeserialize(using = ResponseJobDtoDeserializer.class)
 public class ResponseJobDto {
     // TODO: Search for:
     //  - How to specify not nullable?
@@ -39,30 +40,35 @@ public class ResponseJobDto {
     //  - ME: I can use this if I want to not return null fields as part of the
     //    JSON response
 
-    private final UUID id; // NOT NULLABLE                          // 1
-    private final UUID memberId; // NOT NULLABLE                    // 2
-    private final UUID resumeId;                                    // 3
-    private final UUID coverLetterId;                               // 5
-    private final String title; // NOT NULLABLE                     // 7
-    private final String companyName; // NOT NULLABLE               // 8
-    private final String jobDescription;                            // 9
-    private final String notes;                                     // 10
-    private final String isRemote; // NOT NULLABLE                  // 11
-    private final Integer salaryMin;                                // 12
-    private final Integer salaryMax;                                // 13
-    private final String country;                                   // 14
-    private final String usState;                                   // 15
-    private final String city;                                      // 16
-    private final String dateSaved; // NOT NULLABLE                 // 17
+    private UUID id; // NOT NULLABLE                          // 1
+    private UUID memberId; // NOT NULLABLE                    // 2
+    private UUID resumeId;                                    // 3
+    private UUID coverLetterId;                               // 5
+    private String title; // NOT NULLABLE                     // 7
+    private String companyName; // NOT NULLABLE               // 8
+    private String jobDescription;                            // 9
+    private String notes;                                     // 10
+    private String isRemote; // NOT NULLABLE                  // 11
+    private Integer salaryMin;                                // 12
+    private Integer salaryMax;                                // 13
+    private String country;                                   // 14
+    private String usState;                                   // 15
+    private String city;                                      // 16
+    private String dateSaved; // NOT NULLABLE                 // 17
 //    private final Map<String, Object> dateApplied;                        // 18
 //    private final Map<String, Object> datePosted;                         // 19
-    private final YearMonthDateDto dateApplied;                        // 18
-    private final YearMonthDateDto datePosted;                         // 19
-    private final String jobStatus; // NOT NULLABLE                 // 20
-    private final String[] links;                                   // 21
-    private final String foundFrom;                                 // 22
-    private final ResponseResumeDto resume;                                 // 4
-    private final ResponseCoverLetterDto coverLetter;                       // 6
+    private YearMonthDateDto dateApplied;                        // 18
+    private YearMonthDateDto datePosted;                         // 19
+    private String jobStatus; // NOT NULLABLE                 // 20
+    private String[] links;                                   // 21
+    private String foundFrom;                                 // 22
+    private ResponseResumeDto resume;                                 // 4
+    private ResponseCoverLetterDto coverLetter;                       // 6
+
+    // No arg constructor
+//    public ResponseJobDto() {
+//
+//    }
 
     // Constructors
     // https://docs.spring.io/spring-data/jpa/reference/repositories/projections.html#projections.dtos
@@ -70,6 +76,10 @@ public class ResponseJobDto {
     //   constructor, need further hints for DTO projections such as
     //   @PersistenceCreator
     // - I didn't end up needing to use projections
+    // https://www.baeldung.com/jackson-annotations
+    // - JsonCreator used when deserializing. Need to mark fields with
+    //   JsonProperty
+//    @JsonCreator // Not needed. I read Java 8? does this automatically
     public ResponseJobDto(
         @JsonProperty("id") UUID id,
         @JsonProperty("member_id") UUID memberId,
@@ -88,30 +98,30 @@ public class ResponseJobDto {
         @JsonProperty("us_state") String usState,
         @JsonProperty("city") String city,
         @JsonProperty("date_saved") Instant dateSaved,
-        // IMPORTANT: dateApplied, datePosted, links are originally String here,
-        //   but needed to change to object to get rid of the error below when
-        //   testing:
-        // com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.String` from Object value (token `JsonToken.START_OBJECT`)
-        //         at [Source: UNKNOWN; line: 1, column: 463] (through reference chain: com.qu1cksave.qu1cksave_backend.job.ResponseJobDto["date_posted"])
-        // UPDATE: (6/7/25) I undid these changes. Will use a custom
-        //   deserializer instead
-        @JsonProperty("date_applied") String dateApplied,
-//        @JsonProperty("date_applied") Object dateApplied,
-        @JsonProperty("date_posted") String datePosted,
-//        @JsonProperty("date_posted") Object datePosted,
+        // IMPORTANT: date_applied, date_posted, links, resume, and coverLetter
+        //   are originally String. But I switched to Object since Jackson
+        //   sees Object (which is actually a YearMonthDateDto) for dateApplied
+        //   and datePosted, String[] for links, and ResponseResumeDto (or
+        //   cover letter) for the files when deserializing in the tests
+//        @JsonProperty("date_applied") String dateApplied,
+        @JsonProperty("date_applied") Object dateApplied,
+//        @JsonProperty("date_posted") String datePosted,
+        @JsonProperty("date_posted") Object datePosted,
         @JsonProperty("job_status") String jobStatus,
 // Needs to be a string since no automatic conversion from JSON array
 //   to a String array
 //        @JsonProperty("links") String[] links,
-        @JsonProperty("links") String links,
-//        @JsonProperty("links") Object links,
+//        @JsonProperty("links") String links,
+        @JsonProperty("links") Object links,
         @JsonProperty("found_from") String foundFrom,
         // This doesn't automatically convert to ResponseResumeDto since it
-        //   can't cast String to this
+        //   can't cast String to this. So using String instead
 //        @JsonProperty("resume") ResponseResumeDto resume,
 //        @JsonProperty("cover_letter") ResponseCoverLetterDto coverLetter
-        @JsonProperty("resume") String resume,
-        @JsonProperty("cover_letter") String coverLetter
+//        @JsonProperty("resume") String resume,
+//        @JsonProperty("cover_letter") String coverLetter
+        @JsonProperty("resume") Object resume,
+        @JsonProperty("cover_letter") Object coverLetter
     ) {
         try {
             this.id = id;
@@ -132,41 +142,58 @@ public class ResponseJobDto {
 
             // https://www.baeldung.com/jackson-object-mapper-tutorial
             ObjectMapper objectMapper = new ObjectMapper();
-//            objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true); // NOT NEEDED
             // ------------ OLD (Keep for reference) -------------
             // If using Map<String, Object> for dateApplied/Posted. Otherwise,
             //   use the ones after
 //            this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied, new TypeReference<Map<String, Object>>(){}) : null;
 //            this.datePosted = datePosted != null ? objectMapper.readValue(datePosted, new TypeReference<Map<String, Object>>(){}) : null;
             // ------------------------------
-            // dateApplied.toString() inside the objectMapper.readValue causes
-//            com.fasterxml.jackson.core.JsonParseException: Unexpected character ('y' (code 121)): was expecting double-quote to start field name
-//            at [Source: UNKNOWN; line: 1, column: 2]
-            // This happens in this line. It seems like "year": ... in
-            //   dateApplied is year w/o quotations. The link below provides a
-            //   solution to allow reading no quotations as JSON, converting
-            //   that to another string, then converting the string to actual
-            //   valid JSON
-            // - https://stackoverflow.com/questions/69345216/jsonparseexception-unexpected-character-s-code-115-was-expecting-double
-            //   -- Configure objectMapper to ALLOW_UNQUOTED_FIELD_NAMES to be true
-            // UPDATE: (6/7/25) I UNDID THESE CHANGES. Will just use a custom
-            //   deserializer instead.
+            if (dateApplied != null) {
+                if (dateApplied instanceof String) {
+                    this.dateApplied = objectMapper.readValue((String) dateApplied, YearMonthDateDto.class);
+                } else if (dateApplied instanceof YearMonthDateDto) { // Object so it must be a YearMonthDateDto
+                    this.dateApplied = (YearMonthDateDto) dateApplied;
+                }
+            }
+            if (datePosted != null) {
+                if (datePosted instanceof String) {
+                    this.datePosted = objectMapper.readValue((String) datePosted, YearMonthDateDto.class);
+                } else if (datePosted instanceof YearMonthDateDto) { // Object so it must be a YearMonthDateDto
+                    this.datePosted = (YearMonthDateDto) datePosted;
+                }
+            }
+//            this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied, YearMonthDateDto.class) : null;
+//            this.datePosted = datePosted != null ? objectMapper.readValue(datePosted, YearMonthDateDto.class) : null;
 
-            // TODO:
-            //  WON'T USE (Keep for now for reference. Then delete later once
-            //    custom deserializer works.
-//            this.dateApplied = dateApplied != null ? objectMapper.readValue( // WRONG
-//                dateApplied.toString(),
-//                YearMonthDateDto.class) : null;
-            this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied, YearMonthDateDto.class) : null;
-            this.datePosted = datePosted != null ? objectMapper.readValue(datePosted, YearMonthDateDto.class) : null;
             this.jobStatus = jobStatus;
-            // readValue has an error without the try-catch. Intellij suggested
-            //   the try-catch as a solution, which removed the error
-            this.links = links != null ? objectMapper.readValue(links, String[].class) : null;
+
+            if (links != null) {
+                if (links instanceof String) {
+                    this.links = objectMapper.readValue((String) links, String[].class);
+                } else if (links instanceof String[]) {
+                    this.links = (String[]) links;
+                }
+            }
+//            this.links = links != null ? objectMapper.readValue(links, String[].class) : null;
             this.foundFrom = foundFrom;
-            this.resume = resume != null ? objectMapper.readValue(resume, ResponseResumeDto.class) : null;
-            this.coverLetter = coverLetter != null ? objectMapper.readValue(coverLetter, ResponseCoverLetterDto.class) : null;
+
+            // TODO: Double-check later if this works using tests
+            if (resume != null) {
+                if (resume instanceof String) {
+                    this.resume = objectMapper.readValue((String) resume, ResponseResumeDto.class);
+                } else if (resume instanceof ResponseResumeDto) {
+                    this.resume = (ResponseResumeDto) resume;
+                }
+            }
+            if (coverLetter != null) {
+                if (coverLetter instanceof String) {
+                    this.coverLetter = objectMapper.readValue((String) coverLetter, ResponseCoverLetterDto.class);
+                } else if (coverLetter instanceof ResponseCoverLetterDto) {
+                    this.coverLetter = (ResponseCoverLetterDto) coverLetter;
+                }
+            }
+//            this.resume = resume != null ? objectMapper.readValue(resume, ResponseResumeDto.class) : null;
+//            this.coverLetter = coverLetter != null ? objectMapper.readValue(coverLetter, ResponseCoverLetterDto.class) : null;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -240,31 +267,43 @@ public class ResponseJobDto {
     }
 }
 
-// Just keep for now for printing values inside constructor
-//        System.out.printf("id: %s\n", id);
-//        System.out.printf("memberId: %s\n", memberId);
-//        System.out.printf("resumeId: %s\n", resumeId);
-//        System.out.printf("coverLetterId: %s\n", coverLetterId);
-//        System.out.printf("title: %s\n", title);
-//        System.out.printf("companyName: %s\n", companyName);
-//        System.out.printf("jobDescription: %s\n", jobDescription);
-//        System.out.printf("notes: %s\n", notes);
-//        System.out.printf("isRemote: %s\n", isRemote);
-//        System.out.printf("salaryMin: %d\n", salaryMin);
-//        System.out.printf("salaryMin: %d\n", salaryMax);
-//        System.out.printf("country: %s\n", country);
-//        System.out.printf("usState: %s\n", usState);
-//        System.out.printf("city: %s\n", city);
-//        System.out.printf("dateSaved: %s\n", dateSaved);
-//        System.out.printf("dateApplied: {\n\tyear: %s,\n\tmonth: %s,\n\tdate: %s\n}\n", dateApplied.get("year"), dateApplied.get("month"), dateApplied.get("date"));
-//        System.out.printf("datePosted: {\n\tyear: %s,\n\tmonth: %s,\n\tdate: %s\n}\n", datePosted.get("year"), datePosted.get("month"), datePosted.get("date"));
-//        System.out.printf("jobStatus: %s\n", jobStatus);
-//        // Links
-//        System.out.println("Printing links:");
-//        for (int i = 0; i < links.length; i++) {
-//            System.out.printf("link %d: %s\n", i, links[i]);
-//        }
-//        System.out.println("DONE printing links:");
-//        System.out.printf("foundFrom: %s\n", foundFrom);
-//        System.out.printf("resume: %s\n", resume);
-//        System.out.printf("resume: %s\n", coverLetter);
+// ------------------------ Deserialization notes --------------------
+//  Jackson private setters when deserializing fields
+//  - https://stackoverflow.com/questions/43821319/how-does-jackson-set-private-properties-without-setters
+//    -- Very good read
+//   https://stackoverflow.com/questions/58556027/how-does-jackson-deserializer-work-by-default
+//   - Good info
+//  Does Jackson have a way to indicate which constructor to use?
+//  - There can only be one creator :(
+//    -- From https://stackoverflow.com/questions/15931082/how-to-deserialize-a-class-with-overloaded-constructors-using-jsoncreator
+//       + From searching: Failed to evaluate Jackson serialization for type com.fasterxml.jackson.databind.exc.InvalidDefinitionException: Conflicting property-based creators: already had implicit creator [constructor for site:stackoverflow.com
+//         * Note: I removed some parts of the error message to search for it
+//
+//
+// It's the expectBody(ResponseJobDto.class) that's causing:
+//   com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.String` from Object value (token `JsonToken.START_OBJECT`)
+//         at [Source: UNKNOWN; line: 1, column: 429] (through reference chain: com.qu1cksave.qu1cksave_backend.job.ResponseJobDto["date_applied"])
+// - https://stackoverflow.com/questions/19389723/can-not-deserialize-instance-of-java-lang-string-out-of-start-object-token
+//   -- Has a good explanation on why this happens. Something about the
+//      setter seeing a JSON_OBJECT instead of String. In my case, the
+//      dto constructor is probably getting passed a JSON_OBJECT
+// - UPDATE: (6/12/25) If I try to check jsonPath date_applied, it is
+//   indeed passing an Object of format {year=2020, month=2, date=5}
+//
+//
+//  Search: "deserialize nested json jackson"
+//  - https://www.baeldung.com/jackson-nested-values
+//    -- @JsonDeserialize could be useful. More proper way of doing it
+//  ME:
+//  - When I call the JPA method using my custom native query, it
+//    fills the fields accordingly but it's not doing deserialization,
+//    which is why having String dateApplied in the constructor works
+//    -- Reminder: I needed to use String for dateApplied since that's
+//       what the native query is returning for that field
+//  - But when deserializing during the tests, it seems that the dto
+//    constructor is getting passed a JSON_OBJECT, even though it's
+//    expecting a String (before I changed it to Object)
+//
+// Error after adding deserializer:
+//    java.lang.RuntimeException: com.fasterxml.jackson.databind.exc.MismatchedInputException: No content to map due to end-of-input at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1]
+// - https://stackoverflow.com/questions/26925058/no-content-to-map-due-to-end-of-input-jackson-parser
