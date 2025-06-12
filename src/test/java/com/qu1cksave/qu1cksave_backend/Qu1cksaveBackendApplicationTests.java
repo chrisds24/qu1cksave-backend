@@ -280,7 +280,7 @@ class Qu1cksaveBackendApplicationTests {
     }
 
 	@Test
-	@Order(3)
+	@Order(6)
 	void createJobNoFilesThenGetThatJob() {
 		// Create the job
 		ResponseJobDto responseJobDto = this.webTestClient
