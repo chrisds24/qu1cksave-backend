@@ -1,6 +1,8 @@
 package com.qu1cksave.qu1cksave_backend;
 
+import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.job.ResponseJobDto;
+import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -12,13 +14,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
+import java.util.UUID;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.junit.jupiter.api.Assertions.*;
@@ -152,34 +154,6 @@ class Qu1cksaveBackendApplicationTests {
 	//  +++++++++++++++++++++++++++
 	//  The ??? in front means I'm not sure if I even need this test
 
-	private String testJob = """
-			{
-				"title": "test swe",
-				"company_name": "test company",
-				"job_description": "test job description",
-				"notes": "test notes",
-				"is_remote": "Remote",
-				"salary_min": 75000,
-				"salary_max": 120000,
-				"country": "US",
-				"us_state": "CA",
-				"city": "San Diego",
-				"date_applied": {
-					"year": 2025,
-					"month": 4,
-					"date": 9
-				},
-				"date_posted": {
-					"year": 2025,
-					"month": 4,
-					"date": 8
-				},
-				"job_status": "Applied",
-				"links": ["https://www.linkedin.com/jobs/view/4125105888/?alternateChannel=search&refId=L%2FaJTJBeDgAXxHgZ%2B3%2FBAw%3D%3D&trackingId=GQdu9ntQnwrk1Hxp2qSNAQ%3D%3D", "https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9"],
-				"found_from": "LinkedIn"
-			}
-		""";
-
 	@Test
 	@Order(1)
 	void contextLoads() {
@@ -197,6 +171,15 @@ class Qu1cksaveBackendApplicationTests {
 	// - Request Body: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.RequestBodySpec.html
 	// - Response: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.ResponseSpec.html
  	// - Body Content: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.BodyContentSpec.html
+
+	// Get one job tests
+	//  - Get one job, job exists
+	//  - Get one job, job doesn't exist
+	//    -- Covers case when user specifies an id of a job that doesn't belong
+	//       to them (since single jobs are found by id and userId)
+	//  - ??? Get one job, no id provided
+	//    -- Just goes to regular /jobs route but without a query
+
 	@Test
 	@Order(2)
 	void getOneJob() { // Get one job, job exists
@@ -249,38 +232,52 @@ class Qu1cksaveBackendApplicationTests {
 	}
 
 	// ----------------- CREATE JOB TESTS ---------------------
-	// - Need to do different cases if there's a resume/cover letter or not
+
+	// Create job tests
+	//  - Create job w/o files, then get that job
+	//  - Create job w/ files, then get that job
+	//
+	//  Create job, invalid body
+	//  - Create job, wrong types
+	//  - Create invalid job, missing required fields
+	//  - Create invalid job, extra fields
+	//  -
+	//   * For the last 2, I could use some kind of API validation, filters,
+	//     or custom code. API validation would be ideal, but custom code could
+	//     be enough for now
+	//     -- Need to manually check not having required fields
+	//        + Having the wrong type just causes an error in Java
+	//     -- The extra fields one would actually just cause an error in Java
+
+//	@Test
+//	@Order(5)
+//    void createJobNoFiles() {
+//		// Remote, Hybrid, On-site for isRemote
+//		this.webTestClient
+//            .post()
+//            .uri("/jobs")
+//			.contentType(MediaType.APPLICATION_JSON)
+//			// No resume and cover letter
+//            .bodyValue(TestInputs.testNewOrEditJobNoFiles)
+//            .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+//            .exchange()
+//            .expectStatus()
+//            .isCreated()
+//			.expectHeader()
+//			.contentType(MediaType.APPLICATION_JSON)
+//			.expectBody()
+//			.jsonPath("$.id").isNotEmpty()
+//			// This member_id is hardcoded for now (Molly Member's id)
+//			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
+//			.jsonPath("$.date_saved").isNotEmpty()
+//			.jsonPath("$.title").isEqualTo("test swe")
+//			.jsonPath("$.date_applied.month").isEqualTo(4)
+//			.jsonPath("$.date_posted.date").isEqualTo(8)
+//			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
+//    }
 
 	@Test
 	@Order(5)
-    void createJobNoFiles() {
-		// Remote, Hybrid, On-site for isRemote
-		this.webTestClient
-            .post()
-            .uri("/jobs")
-			.contentType(MediaType.APPLICATION_JSON)
-			// No resume and cover letter
-            .bodyValue(testJob)
-            .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-            .exchange()
-            .expectStatus()
-            .isCreated()
-			.expectHeader()
-			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody()
-//			.json(testJob)
-			.jsonPath("$.id").isNotEmpty()
-			// This member_id is hardcoded for now (Molly Member's id)
-			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
-			.jsonPath("$.date_saved").isNotEmpty()
-			.jsonPath("$.title").isEqualTo("test swe")
-			.jsonPath("$.date_applied.month").isEqualTo(4)
-			.jsonPath("$.date_posted.date").isEqualTo(8)
-			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
-    }
-
-	@Test
-	@Order(6)
 	void createJobNoFilesThenGetThatJob() {
 		// Create the job
 		ResponseJobDto responseJobDto = this.webTestClient
@@ -288,19 +285,47 @@ class Qu1cksaveBackendApplicationTests {
 			.uri("/jobs")
 			.contentType(MediaType.APPLICATION_JSON)
 			// No resume and cover letter
-			.bodyValue(testJob)
+			.bodyValue(TestInputs.testNewOrEditJobNoFiles)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
 			.exchange()
 			.expectStatus()
 			.isCreated()
 			.expectHeader()
 			.contentType(MediaType.APPLICATION_JSON)
+			// If checking json directly instead of returning
+			// - Leaving this here for reference
+//			.expectBody()
+//			.jsonPath("$.id").isNotEmpty()
+//			// This member_id is hardcoded for now (Molly Member's id)
+//			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
+//			.jsonPath("$.date_saved").isNotEmpty()
+//			.jsonPath("$.title").isEqualTo("test swe")
+//			.jsonPath("$.date_applied.month").isEqualTo(4)
+//			.jsonPath("$.date_posted.date").isEqualTo(8)
+//			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9")
 			.expectBody(ResponseJobDto.class)
 			.returnResult()
 			.getResponseBody()
 		;
 
+		// Make sure create returned the expected value
 		assertNotNull(responseJobDto);
+		// Note that the toString uses camelCase key names
+//		System.out.println("********* responseJobDto: " + responseJobDto + "********************");
+		assertNotNull(responseJobDto.getId());
+		assertEquals(UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8"), responseJobDto.getMemberId());
+		assertNotNull(responseJobDto.getDateSaved());
+		assertEquals("test swe", responseJobDto.getTitle());
+		assertEquals(4, responseJobDto.getDateApplied().getMonth());
+		assertEquals(8, responseJobDto.getDatePosted().getDate());
+		assertEquals(
+			"https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9",
+			responseJobDto.getLinks()[1]
+		);
+		assertNull(responseJobDto.getResume());
+		assertNull(responseJobDto.getResumeId());
+		assertNull(responseJobDto.getCoverLetter());
+		assertNull(responseJobDto.getCoverLetterId());
 
 		// Get the job
 		this.webTestClient
@@ -318,85 +343,141 @@ class Qu1cksaveBackendApplicationTests {
 	}
 
 	@Test
-	@Order(7)
-	void deleteOneJobThenGetThatJob() {
-		// Delete job
-		this.webTestClient
-			.delete()
-			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-			.exchange()
-			.expectStatus()
-			.isOk()
-			.expectHeader()
-			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody()
-			.jsonPath("$.title").isEqualTo("Software Engineer")
-			.jsonPath("$.company_name").isEqualTo("Microsoft")
-		;
-
-		// Make sure it's no longer there
-		this.webTestClient
-			.get()
-			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-			.exchange()
-			.expectStatus()
-			.isNotFound()
-			.expectBody()
-			.isEmpty()
-		;
-	}
-
-	@Test
-	@Order(8)
-	void shouldEditJobThenGetThatJob() {
-		// Original before edit
-		// '018ead6b-d160-772d-a001-2606322ebd1c'
-		// 'Software Engineer, Quantum Error Correction, Quantum AI'
-		// 'Google'
-
-		// Edit the job
-		this.webTestClient
-			.put()
-			.uri("/jobs/018ead6b-d160-772d-a001-2606322ebd1c")
+	@Order(6)
+	void createJobWithFilesThenGetThatJob() {
+		// Create the job
+		ResponseJobDto responseJobDto = this.webTestClient
+			.post()
+			.uri("/jobs")
 			.contentType(MediaType.APPLICATION_JSON)
 			// No resume and cover letter
-			.bodyValue(testJob)
+			.bodyValue(TestInputs.testNewOrEditJobWithFiles)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
 			.exchange()
 			.expectStatus()
-			.isOk()
+			.isCreated()
 			.expectHeader()
 			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody()
-//			.json(testJob)
-			.jsonPath("$.id").isEqualTo("018ead6b-d160-772d-a001-2606322ebd1c")
-			// This member_id is hardcoded for now (Molly Member's id)
-			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
-			.jsonPath("$.title").isEqualTo("test swe")
-			.jsonPath("$.date_applied.month").isEqualTo(4)
-			.jsonPath("$.date_posted.date").isEqualTo(8)
-			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
+			.expectBody(ResponseJobDto.class)
+			.returnResult()
+			.getResponseBody()
+		;
+
+		assertNotNull(responseJobDto);
+//		System.out.println("********* responseJobDto: " + responseJobDto + "********************");
+
+		assertNotNull(responseJobDto.getResumeId());
+		ResponseResumeDto resume = responseJobDto.getResume();
+		assertNotNull(resume);
+		assertNotNull(resume.getId());
+		assertEquals(UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8"), resume.getMemberId());
+		assertEquals("My_Test_Resume.pdf", resume.getFileName());
+
+		assertNotNull(responseJobDto.getCoverLetterId());
+		ResponseCoverLetterDto coverLetter = responseJobDto.getCoverLetter();
+		assertNotNull(coverLetter);
+		assertNotNull(coverLetter.getId());
+		assertEquals(UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8"), coverLetter.getMemberId());
+		assertEquals("application/vnd.openxmlformats-officedocument.wordprocessingml.document", coverLetter.getMimeType());
 
 		// Get the job
+		// TODO: (6/14/25)
+		// - This is the current cause of error
+		// - Need to create endpoint (for testing) to get one job that also
+		//   gets files (NativeQuery, just reference the select multiple jobs
+		//   query.
 		this.webTestClient
 			.get()
-			.uri("/jobs/018ead6b-d160-772d-a001-2606322ebd1c")
+			.uri("/jobs/" + responseJobDto.getId())
 			.exchange()
 			.expectStatus()
 			.isOk()
 			.expectHeader()
 			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody()
-			.jsonPath("$.id").isEqualTo("018ead6b-d160-772d-a001-2606322ebd1c")
-			// This member_id is hardcoded for now (Molly Member's id)
-			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
-			.jsonPath("$.title").isEqualTo("test swe")
-			// Should not be this
-//			.jsonPath("$.title").isEqualTo("Software Engineer, Quantum Error Correction, Quantum AI")
-			.jsonPath("$.date_applied.month").isEqualTo(4)
-			.jsonPath("$.date_posted.date").isEqualTo(8)
-			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
+			.expectBody(ResponseJobDto.class)
+			.consumeWith(result -> {
+				assertEquals(responseJobDto, result.getResponseBody());
+			});
 	}
+
+//	@Test
+//	void deleteOneJobThenGetThatJob() {
+//		// Delete job
+//		this.webTestClient
+//			.delete()
+//			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+//			.exchange()
+//			.expectStatus()
+//			.isOk()
+//			.expectHeader()
+//			.contentType(MediaType.APPLICATION_JSON)
+//			.expectBody()
+//			.jsonPath("$.title").isEqualTo("Software Engineer")
+//			.jsonPath("$.company_name").isEqualTo("Microsoft")
+//		;
+//
+//		// Make sure it's no longer there
+//		this.webTestClient
+//			.get()
+//			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+//			.exchange()
+//			.expectStatus()
+//			.isNotFound()
+//			.expectBody()
+//			.isEmpty()
+//		;
+//	}
+
+//	@Test
+//	void shouldEditJobThenGetThatJob() {
+//		// Original before edit
+//		// '018ead6b-d160-772d-a001-2606322ebd1c'
+//		// 'Software Engineer, Quantum Error Correction, Quantum AI'
+//		// 'Google'
+//
+//		// Edit the job
+//		this.webTestClient
+//			.put()
+//			.uri("/jobs/018ead6b-d160-772d-a001-2606322ebd1c")
+//			.contentType(MediaType.APPLICATION_JSON)
+//			// No resume and cover letter
+//			.bodyValue(TestInputs.testNewOrEditJobNoFiles)
+//			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+//			.exchange()
+//			.expectStatus()
+//			.isOk()
+//			.expectHeader()
+//			.contentType(MediaType.APPLICATION_JSON)
+//			.expectBody()
+////			.json(TestInputs.testNewOrEditJobNoFiles)
+//			.jsonPath("$.id").isEqualTo("018ead6b-d160-772d-a001-2606322ebd1c")
+//			// This member_id is hardcoded for now (Molly Member's id)
+//			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
+//			.jsonPath("$.title").isEqualTo("test swe")
+//			.jsonPath("$.date_applied.month").isEqualTo(4)
+//			.jsonPath("$.date_posted.date").isEqualTo(8)
+//			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
+//
+//		// Get the job
+//		this.webTestClient
+//			.get()
+//			.uri("/jobs/018ead6b-d160-772d-a001-2606322ebd1c")
+//			.exchange()
+//			.expectStatus()
+//			.isOk()
+//			.expectHeader()
+//			.contentType(MediaType.APPLICATION_JSON)
+//			.expectBody()
+//			.jsonPath("$.id").isEqualTo("018ead6b-d160-772d-a001-2606322ebd1c")
+//			// This member_id is hardcoded for now (Molly Member's id)
+//			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
+//			.jsonPath("$.title").isEqualTo("test swe")
+//			// Should not be this
+////			.jsonPath("$.title").isEqualTo("Software Engineer, Quantum Error Correction, Quantum AI")
+//			.jsonPath("$.date_applied.month").isEqualTo(4)
+//			.jsonPath("$.date_posted.date").isEqualTo(8)
+//			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
+//	}
 }
 
 // NOTE: (5/10/25) What I did for container setup

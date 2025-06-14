@@ -66,8 +66,23 @@ public class GlobalExceptionHandler {
         return null;
     }
 
+    // TODO: Need to include exceptions for when a bad request body is included
+    //  - Missing required fields
+    //  - Extra fields
+    //  - Fields with wrong type
+
+    @ExceptionHandler({
+        RuntimeException.class,
+        Exception.class
+    })
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Object handleOtherExceptions() {
+        return null;
+    }
+
     // TODO: Add a handler for Exception and RuntimeException
     //  - Does most general go to the bottom?
+    //  - https://stackoverflow.com/questions/19498378/setting-precedence-of-multiple-controlleradvice-exceptionhandlers
 }
 
 // Useful resources:

@@ -7,7 +7,9 @@ import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -151,15 +153,29 @@ public class ResponseJobDto {
             if (dateApplied != null) {
                 if (dateApplied instanceof String) {
                     this.dateApplied = objectMapper.readValue((String) dateApplied, YearMonthDateDto.class);
-                } else if (dateApplied instanceof YearMonthDateDto) { // Object so it must be a YearMonthDateDto
-                    this.dateApplied = (YearMonthDateDto) dateApplied;
+                } else {
+                    // When I do:
+                    //   this.dateApplied = (YearMonthDateDto) dateApplied;
+                    // I get:
+                    //   java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class com.qu1cksave.qu1cksave_backend.job.YearMonthDateDto (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; com.qu1cksave.qu1cksave_backend.job.YearMonthDateDto is in unnamed module of loader 'app')
+                    LinkedHashMap dateAppliedMap = (LinkedHashMap) dateApplied;
+                    this.dateApplied = new YearMonthDateDto(
+                        (Integer) dateAppliedMap.get("year"),
+                        (Integer) dateAppliedMap.get("month"),
+                        (Integer) dateAppliedMap.get("date")
+                    );
                 }
             }
             if (datePosted != null) {
                 if (datePosted instanceof String) {
                     this.datePosted = objectMapper.readValue((String) datePosted, YearMonthDateDto.class);
-                } else if (datePosted instanceof YearMonthDateDto) { // Object so it must be a YearMonthDateDto
-                    this.datePosted = (YearMonthDateDto) datePosted;
+                } else {
+                    LinkedHashMap datePostedMap = (LinkedHashMap) datePosted;
+                    this.datePosted = new YearMonthDateDto(
+                        (Integer) datePostedMap.get("year"),
+                        (Integer) datePostedMap.get("month"),
+                        (Integer) datePostedMap.get("date")
+                    );
                 }
             }
 //            this.dateApplied = dateApplied != null ? objectMapper.readValue(dateApplied, YearMonthDateDto.class) : null;
@@ -170,26 +186,44 @@ public class ResponseJobDto {
             if (links != null) {
                 if (links instanceof String) {
                     this.links = objectMapper.readValue((String) links, String[].class);
-                } else if (links instanceof String[]) {
-                    this.links = (String[]) links;
+                } else {
+                    //  java.lang.ClassCastException: class java.util.ArrayList cannot be cast to class [Ljava.lang.String; (java.util.ArrayList and [Ljava.lang.String; are in module java.base of loader 'bootstrap')
+                    // this.links = (String[]) links;
+                    // https://www.baeldung.com/java-convert-string-arraylist-array\
+                    ArrayList arrLstLinks = (ArrayList) links;
+                    String[] linksArr = new String[arrLstLinks.size()];
+                    arrLstLinks.toArray(linksArr);
+                    this.links = linksArr;
                 }
             }
 //            this.links = links != null ? objectMapper.readValue(links, String[].class) : null;
+
             this.foundFrom = foundFrom;
 
-            // TODO: Double-check later if this works using tests
             if (resume != null) {
                 if (resume instanceof String) {
                     this.resume = objectMapper.readValue((String) resume, ResponseResumeDto.class);
-                } else if (resume instanceof ResponseResumeDto) {
-                    this.resume = (ResponseResumeDto) resume;
+                } else {
+                    LinkedHashMap resumeMap = (LinkedHashMap) resume;
+                    this.resume = new ResponseResumeDto(
+                        UUID.fromString((String) resumeMap.get("id")),
+                        UUID.fromString((String) resumeMap.get("member_id")),
+                        (String) resumeMap.get("file_name"),
+                        (String) resumeMap.get("mime_type")
+                    );
                 }
             }
             if (coverLetter != null) {
                 if (coverLetter instanceof String) {
                     this.coverLetter = objectMapper.readValue((String) coverLetter, ResponseCoverLetterDto.class);
-                } else if (coverLetter instanceof ResponseCoverLetterDto) {
-                    this.coverLetter = (ResponseCoverLetterDto) coverLetter;
+                } else {
+                    LinkedHashMap coverLetterMap = (LinkedHashMap) coverLetter;
+                    this.coverLetter = new ResponseCoverLetterDto(
+                        UUID.fromString((String) coverLetterMap.get("id")),
+                        UUID.fromString((String) coverLetterMap.get("member_id")),
+                        (String) coverLetterMap.get("file_name"),
+                        (String) coverLetterMap.get("mime_type")
+                    );
                 }
             }
 //            this.resume = resume != null ? objectMapper.readValue(resume, ResponseResumeDto.class) : null;
@@ -222,6 +256,17 @@ public class ResponseJobDto {
     public String getFoundFrom() { return foundFrom; }
     public ResponseResumeDto getResume() { return resume; }
     public ResponseCoverLetterDto getCoverLetter() { return coverLetter; }
+
+    @Override
+    public String toString() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            // Note that this uses camelCase key names
+            return objectMapper.writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public boolean equals(Object comparedObject) {

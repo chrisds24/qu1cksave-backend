@@ -62,7 +62,7 @@ public class JobController {
     // - Pass HttpServletResponse to controller to set status code
     // https://stackoverflow.com/questions/56008051/difference-between-httpservletresponse-and-a-responseentityspring
     // - HttpServletResponse is from Java. ResponseEntity is from Spring
-    // TODO: (5/12/25) I should also use authUserId to get the job
+    // NOTE: getJob is only used for testing.
     @GetMapping("/{id}") // NOTE: For now, this is used for testing only
     public ResponseEntity<ResponseJobDto> getJob(@PathVariable UUID id) {
         UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
