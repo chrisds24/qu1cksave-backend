@@ -154,6 +154,23 @@ class Qu1cksaveBackendApplicationTests {
 	//  +++++++++++++++++++++++++++
 	//  The ??? in front means I'm not sure if I even need this test
 
+	private void invalidRequestBodyTypeCreateTest(String json) {
+		// Create the job
+		this.webTestClient
+			.post()
+			.uri("/jobs")
+			.contentType(MediaType.APPLICATION_JSON)
+			// No resume and cover letter
+			.bodyValue(json)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isBadRequest()
+			.expectBody()
+			.isEmpty()
+		;
+	}
+
 	@Test
 	@Order(1)
 	void contextLoads() {
@@ -182,7 +199,7 @@ class Qu1cksaveBackendApplicationTests {
 
 	@Test
 	@Order(2)
-	void getOneJob() { // Get one job, job exists
+	void getOneJobNoFiles() { // Get one job, job exists
 		// '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
 		// Expected: 'Software Engineer', 'Microsoft', very long description
 		this.webTestClient
@@ -195,12 +212,44 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.expectBody()
 			.jsonPath("$.title").isEqualTo("Software Engineer")
-			.jsonPath("$.company_name").isEqualTo("Microsoft");
+			.jsonPath("$.company_name").isEqualTo("Microsoft")
+			.jsonPath("$.resume.id").isEmpty()
+			.jsonPath("$.resume").isNotEmpty()
+			.jsonPath("$.resume.member_id").isEmpty()
+			.jsonPath("$.resume.file_name").isEmpty()
+			.jsonPath("$.resume.mime_type").isEmpty()
+			.jsonPath("$.cover_letter").isNotEmpty()
+			.jsonPath("$.cover_letter.id").isEmpty()
+			.jsonPath("$.cover_letter.member_id").isEmpty()
+			.jsonPath("$.cover_letter.file_name").isEmpty()
+			.jsonPath("$.cover_letter.mime_type").isEmpty()
+		;
+	}
+
+	@Test
+	@Order(3)
+	void getOneJobWithFiles() { // Get one job, job exists
+		// '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
+		// Expected: 'Software Engineer', 'Microsoft', very long description
+		this.webTestClient
+			.get()
+			.uri("/jobs/018eae28-8323-7918-b93a-6cdb9d189686")
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody()
+			.jsonPath("$.title").isEqualTo("Software Engineer")
+			.jsonPath("$.company_name").isEqualTo("Fake Company")
+			.jsonPath("$.resume.file_name").isEqualTo("ChristianDelosSantos_Resume.pdf")
+			.jsonPath("$.cover_letter.file_name").isEqualTo("ChristianDelosSantos_CoverLetter.pdf")
+		;
 	}
 
 	// Get one job, job doesn't exist
 	@Test
-	@Order(3)
+	@Order(4)
 	void getNonExistentJob() {
 		this.webTestClient
 			.get()
@@ -219,7 +268,7 @@ class Qu1cksaveBackendApplicationTests {
 	// Should return 404 instead of 403, since single jobs are obtained by id
 	//   and userId. I also don't want to give away the existence of a job's id
 	@Test
-	@Order(4)
+	@Order(5)
 	void getForbiddenJob() {
 		this.webTestClient
 			.get()
@@ -249,6 +298,7 @@ class Qu1cksaveBackendApplicationTests {
 	//        + Having the wrong type just causes an error in Java
 	//     -- The extra fields one would actually just cause an error in Java
 
+	// Won't use this one. Leaving it here for reference
 //	@Test
 //	@Order(5)
 //    void createJobNoFiles() {
@@ -277,7 +327,7 @@ class Qu1cksaveBackendApplicationTests {
 //    }
 
 	@Test
-	@Order(5)
+	@Order(6)
 	void createJobNoFilesThenGetThatJob() {
 		// Create the job
 		ResponseJobDto responseJobDto = this.webTestClient
@@ -292,17 +342,6 @@ class Qu1cksaveBackendApplicationTests {
 			.isCreated()
 			.expectHeader()
 			.contentType(MediaType.APPLICATION_JSON)
-			// If checking json directly instead of returning
-			// - Leaving this here for reference
-//			.expectBody()
-//			.jsonPath("$.id").isNotEmpty()
-//			// This member_id is hardcoded for now (Molly Member's id)
-//			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
-//			.jsonPath("$.date_saved").isNotEmpty()
-//			.jsonPath("$.title").isEqualTo("test swe")
-//			.jsonPath("$.date_applied.month").isEqualTo(4)
-//			.jsonPath("$.date_posted.date").isEqualTo(8)
-//			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9")
 			.expectBody(ResponseJobDto.class)
 			.returnResult()
 			.getResponseBody()
@@ -322,10 +361,13 @@ class Qu1cksaveBackendApplicationTests {
 			"https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9",
 			responseJobDto.getLinks()[1]
 		);
-		assertNull(responseJobDto.getResume());
+
+		// It's the native query used by getJob(get one job) that returns
+		//   a file with empty fields if the job doesn't that file
 		assertNull(responseJobDto.getResumeId());
-		assertNull(responseJobDto.getCoverLetter());
+		assertNull(responseJobDto.getResume());
 		assertNull(responseJobDto.getCoverLetterId());
+		assertNull(responseJobDto.getCoverLetter());
 
 		// Get the job
 		this.webTestClient
@@ -338,12 +380,18 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.expectBody(ResponseJobDto.class)
 			.consumeWith(result -> {
-				assertEquals(responseJobDto, result.getResponseBody());
+				ResponseJobDto res = result.getResponseBody();
+				assertNotNull(res);
+				// The native query used by getJob(get one job) returns a file
+				//   with empty fields if the job doesn't that file. Need to
+				//   set those to null so comparison could work properly
+				res.nullifyEmptyFiles();
+				assertEquals(responseJobDto, res);
 			});
 	}
 
 	@Test
-	@Order(6)
+	@Order(7)
 	void createJobWithFilesThenGetThatJob() {
 		// Create the job
 		ResponseJobDto responseJobDto = this.webTestClient
@@ -364,7 +412,6 @@ class Qu1cksaveBackendApplicationTests {
 		;
 
 		assertNotNull(responseJobDto);
-//		System.out.println("********* responseJobDto: " + responseJobDto + "********************");
 
 		assertNotNull(responseJobDto.getResumeId());
 		ResponseResumeDto resume = responseJobDto.getResume();
@@ -380,12 +427,6 @@ class Qu1cksaveBackendApplicationTests {
 		assertEquals(UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8"), coverLetter.getMemberId());
 		assertEquals("application/vnd.openxmlformats-officedocument.wordprocessingml.document", coverLetter.getMimeType());
 
-		// Get the job
-		// TODO: (6/14/25)
-		// - This is the current cause of error
-		// - Need to create endpoint (for testing) to get one job that also
-		//   gets files (NativeQuery, just reference the select multiple jobs
-		//   query.
 		this.webTestClient
 			.get()
 			.uri("/jobs/" + responseJobDto.getId())
@@ -397,7 +438,41 @@ class Qu1cksaveBackendApplicationTests {
 			.expectBody(ResponseJobDto.class)
 			.consumeWith(result -> {
 				assertEquals(responseJobDto, result.getResponseBody());
-			});
+			})
+		;
+	}
+
+	@Test
+	@Order(8)
+	void createJobWithFilesWrongTypes() {
+		// Integer title
+		invalidRequestBodyTypeCreateTest(TestInputs.testNewJobWithFilesWrongType1);
+		// String salary_min
+		invalidRequestBodyTypeCreateTest(TestInputs.testNewJobWithFilesWrongType2);
+		// Boolean date_applied.year
+		invalidRequestBodyTypeCreateTest(TestInputs.testNewJobWithFilesWrongType3);
+		// links 2nd element is a string
+		invalidRequestBodyTypeCreateTest(TestInputs.testNewJobWithFilesWrongType4);
+		// resume is a Boolean
+		invalidRequestBodyTypeCreateTest(TestInputs.testNewJobWithFilesWrongType5);
+		// resume.byte_array_as_array has String elements
+		invalidRequestBodyTypeCreateTest(TestInputs.testNewJobWithFilesWrongType6);
+		// cover_letter byte_array_as_array is a String
+		invalidRequestBodyTypeCreateTest(TestInputs.testNewJobWithFilesWrongType7);
+
+		// TODO: 6/15/25
+		// - Search "how to validate request body in spring boot"
+		//   -- "how to validate parameters spring boot"
+		//   -- https://www.baeldung.com/spring-boot-bean-validation
+		//      + @Valid on request body
+		//      + When the target argument fails to pass the validation, Spring Boot throws a MethodArgumentNotValidException exception
+		//   -- https://stackoverflow.com/questions/64517537/springboot-validate-requestbody
+		//      + Add spring-boot-starter-validation dependency
+		//   -- https://medium.com/@tericcabrel/validate-request-body-and-parameter-in-spring-boot-53ca77f97fe9
+		//      + @Validated on controller
+		//   -- https://www.reddit.com/r/SpringBoot/comments/11t5yes/how_to_validate_incoming_request_body_json_fields/
+		//   -- https://hibernate.org/validator/documentation/
+		//      + Refer to if needed
 	}
 
 //	@Test

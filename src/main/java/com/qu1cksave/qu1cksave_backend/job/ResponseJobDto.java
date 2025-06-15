@@ -67,11 +67,6 @@ public class ResponseJobDto {
     private ResponseResumeDto resume;                                 // 4
     private ResponseCoverLetterDto coverLetter;                       // 6
 
-    // No arg constructor
-//    public ResponseJobDto() {
-//
-//    }
-
     // Constructors
     // https://docs.spring.io/spring-data/jpa/reference/repositories/projections.html#projections.dtos
     // - When using class-based projections and there's more than one
@@ -205,22 +200,43 @@ public class ResponseJobDto {
                     this.resume = objectMapper.readValue((String) resume, ResponseResumeDto.class);
                 } else {
                     LinkedHashMap resumeMap = (LinkedHashMap) resume;
+
+                    String fileId = (String) resumeMap.get("id");
+                    String fileMemberId = (String) resumeMap.get("member_id");
+
+                    // Important: There could be cases where resume != null but
+                    //   the job doesn't actually have a resume. One example is
+                    //   when using query that has a left join and builds the
+                    //   object from that other table via json_build_object.
+                    // - This returns a resume where all the fields are null
+                    //   if the job doesn't have a resume
+                    // - I can just check if fileId and fileMemberId are null
+                    //   since UUID.fromString throws an exception if given a
+                    //   null value
+                    // IMPORTANT: When resume instanceof String, the
+                    //   objectMapper creates a ResponseResumeDto with null
+                    //   fields, so this one should do the same
                     this.resume = new ResponseResumeDto(
-                        UUID.fromString((String) resumeMap.get("id")),
-                        UUID.fromString((String) resumeMap.get("member_id")),
+                        fileId != null ? UUID.fromString(fileId): null,
+                        fileMemberId != null ? UUID.fromString(fileMemberId): null,
                         (String) resumeMap.get("file_name"),
                         (String) resumeMap.get("mime_type")
                     );
+
                 }
             }
+
             if (coverLetter != null) {
                 if (coverLetter instanceof String) {
                     this.coverLetter = objectMapper.readValue((String) coverLetter, ResponseCoverLetterDto.class);
                 } else {
                     LinkedHashMap coverLetterMap = (LinkedHashMap) coverLetter;
+                    String fileId = (String) coverLetterMap.get("id");
+                    String fileMemberId = (String) coverLetterMap.get("member_id");
+
                     this.coverLetter = new ResponseCoverLetterDto(
-                        UUID.fromString((String) coverLetterMap.get("id")),
-                        UUID.fromString((String) coverLetterMap.get("member_id")),
+                        fileId != null ? UUID.fromString(fileId): null,
+                        fileMemberId != null ? UUID.fromString(fileMemberId): null,
                         (String) coverLetterMap.get("file_name"),
                         (String) coverLetterMap.get("mime_type")
                     );
@@ -309,6 +325,31 @@ public class ResponseJobDto {
             Objects.equals(this.getFoundFrom(), comparedResponseJobDto.getFoundFrom()) &&
             Objects.equals(this.getResume(), comparedResponseJobDto.getResume()) &&
             Objects.equals(this.getCoverLetter(), comparedResponseJobDto.getCoverLetter());
+    }
+
+    // The native query with a left join and json_build_object fills jobs
+    //   with no resume/cover letter with a resume/cover letter with empty
+    //   fields. Ex. "resume": { "id": null, "member_id": null, ...
+    public void nullifyEmptyFiles() {
+        // If resume has is not null but has empty fields, just set it to null
+        if (resume != null &&
+            resume.getId() == null &&
+            resume.getMemberId() == null &&
+            resume.getFileName() == null &&
+            resume.getMimeType() == null
+        ) {
+            resume = null;
+        }
+
+        // If coverLetter has empty fields, just set it to null
+        if (coverLetter != null &&
+            coverLetter.getId() == null &&
+            coverLetter.getMemberId() == null &&
+            coverLetter.getFileName() == null &&
+            coverLetter.getMimeType() == null
+        ) {
+            coverLetter = null;
+        }
     }
 }
 

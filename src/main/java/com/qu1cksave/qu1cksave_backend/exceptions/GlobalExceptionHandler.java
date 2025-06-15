@@ -71,6 +71,15 @@ public class GlobalExceptionHandler {
     //  - Extra fields
     //  - Fields with wrong type
 
+    // https://stackoverflow.com/questions/17201072/using-spring-mvc-accepting-post-requests-with-bad-json-leads-to-a-default-400-e
+    // - If bad request (wrong types, etc.) is received, this is supposed to
+    //   be called APPARENTLY (NEED TO TEST)
+    @ExceptionHandler({org.springframework.http.converter.HttpMessageNotReadableException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Object handleRequestBodyWrongTypes() {
+        return null;
+    }
+
     @ExceptionHandler({
         RuntimeException.class,
         Exception.class

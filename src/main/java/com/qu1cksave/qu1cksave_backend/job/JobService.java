@@ -68,7 +68,8 @@ public class JobService {
         try {
             // If this returns null, won't throw an exception. But controller
             //   should handle this to set status to 404 and return null
-            return jobRepository.findByIdAndMemberId(id, userId).map(JobMapper::toResponseDto).orElse(null);
+//            return jobRepository.findByIdAndMemberIdWithFiles(id, userId).map(JobMapper::toResponseDto).orElse(null);
+            return jobRepository.findByIdAndMemberIdWithFiles(id, userId);
         } catch (RuntimeException err) {
             throw new SQLGetFailedException("Select one job failed", err);
         }

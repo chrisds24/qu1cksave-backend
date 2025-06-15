@@ -44,6 +44,29 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
 
     Optional<Job> findByIdAndMemberId(UUID id, UUID memberId);
 
+    @NativeQuery(value = """ 
+        SELECT
+            j.*,
+            json_build_object(
+              'id', r.id,
+              'member_id', r.member_id,
+              'file_name', r.file_name,
+              'mime_type', r.mime_type
+            ) AS resume,
+            json_build_object(
+              'id', c.id,
+              'member_id', c.member_id,
+              'file_name', c.file_name,
+              'mime_type', c.mime_type
+            ) AS cover_letter
+        FROM
+            job j
+            LEFT JOIN resume r ON j.resume_id = r.id AND j.member_id = r.member_id
+            LEFT JOIN cover_letter c ON j.cover_letter_id = c.id AND j.member_id = c.member_id
+        WHERE j.id = ?1 AND j.member_id = ?2
+    """)
+    ResponseJobDto findByIdAndMemberIdWithFiles(UUID id, UUID memberId);
+
     // IMPORTANT: https://courses.baeldung.com/courses/1295711/lectures/30603968
     // - Modifying queries have caveats
     //   -- Ex. Deleting, then retrieving that same object in the same
