@@ -1,11 +1,14 @@
 package com.qu1cksave.qu1cksave_backend.resume;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
 
 
 public class RequestResumeDto {
-    private final String fileName; // NOT NULLABLE
-    private final String mimeType; // NOT NULLABLE
+    @NotNull
+    private final String fileName;
+    @NotNull
+    private final String mimeType;
 
     // From qu1cksave backend Express-version:
     // - bytearray_as_array: number[];  // Changed from Uint8Array to number[]
@@ -15,6 +18,7 @@ public class RequestResumeDto {
     //  Though, there's also byte[]
     //  I'm using double temporarily for now
     //  long can also work
+    @NotNull
     private final double[] byteArrayAsArray;
 
     // Constructors

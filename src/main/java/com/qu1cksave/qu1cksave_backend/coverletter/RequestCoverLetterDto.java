@@ -1,15 +1,19 @@
 package com.qu1cksave.qu1cksave_backend.coverletter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
 
 public class RequestCoverLetterDto {
-    private final String fileName; // NOT NULLABLE
-    private final String mimeType; // NOT NULLABLE
+    @NotNull
+    private final String fileName;
+    @NotNull
+    private final String mimeType;
 
     // From qu1cksave backend Express-version:
     // - bytearray_as_array: number[];  // Changed from Uint8Array to number[]
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number
     // - The JavaScript Number type is a double-precision 64-bit binary format IEEE 754 value, like double in Java or C#.
+    @NotNull
     private final double[] byteArrayAsArray;
 
     // Constructors

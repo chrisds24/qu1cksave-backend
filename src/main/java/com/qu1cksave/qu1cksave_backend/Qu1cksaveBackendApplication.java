@@ -83,7 +83,6 @@ public class Qu1cksaveBackendApplication {
 //       -- Different transaction managers take different parameters
 //       -- Ex. JpaTransactionManager takes an EntityManagerFactory
 //              HibernateTransactionManager takes a SessionFactory
-//
 // 3.) Spring Boot automatically sets the @EnableTransactionManagement
 //     annotation and creates a PlatformTransactionManager for you - with its
 //     JDBC auto-configurations

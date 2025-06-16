@@ -21,6 +21,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-webflux") // To be able to use WebTestClient
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.postgresql:postgresql")
 	// Needed for error:
 	//   com.fasterxml.jackson.databind.exc.InvalidDefinitionException: Java 8 date/time type `java.time.Instant` not supported by default: add Module "com.fasterxml.jackson.datatype:jackson-datatype-jsr310" to enable handling

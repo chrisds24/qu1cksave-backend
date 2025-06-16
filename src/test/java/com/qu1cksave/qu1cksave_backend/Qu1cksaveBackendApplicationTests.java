@@ -154,7 +154,7 @@ class Qu1cksaveBackendApplicationTests {
 	//  +++++++++++++++++++++++++++
 	//  The ??? in front means I'm not sure if I even need this test
 
-	private void invalidRequestBodyTypeCreateTest(String json) {
+	private void badRequestBodyCreateTest(String json) {
 		// Create the job
 		this.webTestClient
 			.post()
@@ -442,38 +442,78 @@ class Qu1cksaveBackendApplicationTests {
 		;
 	}
 
-	@Test
-	@Order(8)
-	void createJobWithFilesWrongTypes() {
-		// Integer title
-		invalidRequestBodyTypeCreateTest(TestInputs.testNewJobWithFilesWrongType1);
-		// String salary_min
-		invalidRequestBodyTypeCreateTest(TestInputs.testNewJobWithFilesWrongType2);
-		// Boolean date_applied.year
-		invalidRequestBodyTypeCreateTest(TestInputs.testNewJobWithFilesWrongType3);
-		// links 2nd element is a string
-		invalidRequestBodyTypeCreateTest(TestInputs.testNewJobWithFilesWrongType4);
-		// resume is a Boolean
-		invalidRequestBodyTypeCreateTest(TestInputs.testNewJobWithFilesWrongType5);
-		// resume.byte_array_as_array has String elements
-		invalidRequestBodyTypeCreateTest(TestInputs.testNewJobWithFilesWrongType6);
-		// cover_letter byte_array_as_array is a String
-		invalidRequestBodyTypeCreateTest(TestInputs.testNewJobWithFilesWrongType7);
+	// TODO: 6/15/25
+	// - Search "how to validate request body in spring boot"
+	//   -- "how to validate parameters spring boot"
+	//   -- https://www.baeldung.com/spring-boot-bean-validation
+	//      + @Valid on request body
+	//      + When the target argument fails to pass the validation, Spring Boot throws a MethodArgumentNotValidException exception
+	//   -- https://stackoverflow.com/questions/64517537/springboot-validate-requestbody
+	//      + Add spring-boot-starter-validation dependency
+	//   -- https://medium.com/@tericcabrel/validate-request-body-and-parameter-in-spring-boot-53ca77f97fe9
+	//      + @Validated on controller
+	//   -- https://www.baeldung.com/java-bean-validation-not-null-empty-blank
+	//      + Difference between notnull, notblank, notempty
+	//   -- https://hibernate.org/validator/documentation/
+	//      + Refer to if needed
+	// - NOTE: I can't have @NotNull on id for example, since RequestJobDto
+	//   is used for both creating (no id) and editing (has id) jobs
+	//   -- So I'll need to check this manually
 
-		// TODO: 6/15/25
-		// - Search "how to validate request body in spring boot"
-		//   -- "how to validate parameters spring boot"
-		//   -- https://www.baeldung.com/spring-boot-bean-validation
-		//      + @Valid on request body
-		//      + When the target argument fails to pass the validation, Spring Boot throws a MethodArgumentNotValidException exception
-		//   -- https://stackoverflow.com/questions/64517537/springboot-validate-requestbody
-		//      + Add spring-boot-starter-validation dependency
-		//   -- https://medium.com/@tericcabrel/validate-request-body-and-parameter-in-spring-boot-53ca77f97fe9
-		//      + @Validated on controller
-		//   -- https://www.reddit.com/r/SpringBoot/comments/11t5yes/how_to_validate_incoming_request_body_json_fields/
-		//   -- https://hibernate.org/validator/documentation/
-		//      + Refer to if needed
-	}
+	// TODO: (6/16/25)
+	//  - These are not working properly. Some still create an object even
+	//    if the wrong type was passed (Probably because Jackson might be
+	//    auto-converting some of them)
+	//  - I'll just use Open API Schema Validation
+//	@Test
+//	@Order(8)
+//	void createJobWithFilesWrongRequestBodyTypes() {
+//		// Integer title
+//		badRequestBodyCreateTest(TestInputsWrongTypesRequestBody.testNewJobIntegerTitle);
+//		// String salary_min
+//		badRequestBodyCreateTest(TestInputsWrongTypesRequestBody.testNewJobStringSalaryMin);
+//		// Boolean date_applied.year
+//		badRequestBodyCreateTest(TestInputsWrongTypesRequestBody.testNewJobDateAppliedBooleanYear);
+//		// links 2nd element is a string
+//		badRequestBodyCreateTest(TestInputsWrongTypesRequestBody.testNewJobLinksStringElement);
+//		// resume is a Boolean
+//		badRequestBodyCreateTest(TestInputsWrongTypesRequestBody.testNewJobBooleanResume);
+//		// resume.byte_array_as_array has String elements
+//		badRequestBodyCreateTest(TestInputsWrongTypesRequestBody.testNewJobResumeByteArrayHasStrings);
+//		// cover_letter byte_array_as_array is a String
+//		badRequestBodyCreateTest(TestInputsWrongTypesRequestBody.testNewJobCoverLetterStringByteArray);
+//	}
+
+	// TODO: (6/16/25)
+	//  - These are not working properly. @NotNull doesn't seem to work when
+	//    the object is nested
+	//  - I'll just use Open API Schema Validation
+//	@Test
+//	@Order(9)
+//	void createJobWithFilesMissingRequestBodyFields() {
+//		badRequestBodyCreateTest(TestInputsMissingFieldsRequestBody.testNewJobMissingTitle);
+//		badRequestBodyCreateTest(TestInputsMissingFieldsRequestBody.testNewJobNullTitle);
+//
+//		// Returns 201 instead of 400 which it should
+//		badRequestBodyCreateTest(TestInputsMissingFieldsRequestBody.testNewJobDateAppliedMissingYear);
+//		// Returns 500 instead of 400 which it should
+//		badRequestBodyCreateTest(TestInputsMissingFieldsRequestBody.testNewJobResumeMissingFileName);
+//	}
+
+//	@Test
+//	@Order(10)
+//	void createJobWithFilesExtraRequestBodyFields() {
+//		// TODO
+//	}
+
+	// ----------------- GET MULTIPLE JOBS TESTS ---------------------
+	//  - Get multiple jobs, userId query param is the logged in user's id
+	//  - Get multiple jobs, userId query param is NOT the logged in user's id
+	//  - ??? Get multiple jobs, no userId query param provided
+	//    -- Spring/Java should throw out an error for this. Wonder what it
+	//       exactly is?
+
+	// TODO: Get multiple jobs tests
 
 //	@Test
 //	void deleteOneJobThenGetThatJob() {

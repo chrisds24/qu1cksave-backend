@@ -3,19 +3,25 @@ package com.qu1cksave.qu1cksave_backend.job;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qu1cksave.qu1cksave_backend.coverletter.RequestCoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.resume.RequestResumeDto;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
 public class RequestJobDto {
-    // TODO: (3/29/25) How to specify which fields can be omitted?
+    // TODO:
+    //  - (6/16/25) I haven't added @NotNull constraints to the response
+    //    dtos. The entities have @Column(...nullable=false)
     private final UUID resumeId;
     private final RequestResumeDto resume;
     private final UUID coverLetterId;
     private final RequestCoverLetterDto coverLetter;
+    @NotNull
     private final String title; // NOT NULLABLE
+    @NotNull
     private final String companyName; // NOT NULLABLE
     private final String jobDescription;
     private final String notes;
+    @NotNull
     private final String isRemote; // NOT NULLABLE
     private final Integer salaryMin;
     private final Integer salaryMax;
@@ -24,6 +30,7 @@ public class RequestJobDto {
     private final String city;
     private final YearMonthDateDto dateApplied;
     private final YearMonthDateDto datePosted;
+    @NotNull
     private final String jobStatus; // NOT NULLABLE
     private final String[] links;
     private final String foundFrom;

@@ -1,8 +1,10 @@
 package com.qu1cksave.qu1cksave_backend.job;
 import com.qu1cksave.qu1cksave_backend.exceptions.ForbiddenResourceException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,6 +12,9 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/jobs")
+// https://medium.com/@tericcabrel/validate-request-body-and-parameter-in-spring-boot-53ca77f97fe9
+// - @Validated on controller
+@Validated
 public class JobController {
     // https://stackoverflow.com/questions/63259116/what-is-the-difference-between-using-autowired-annotation-and-private-final
     // - The above is regarding service and repos, but the same idea may apply
@@ -75,7 +80,9 @@ public class JobController {
 
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseJobDto createJob(@RequestBody RequestJobDto newJob) {
+    // https://www.baeldung.com/spring-boot-bean-validation
+    // - @Valid on request body
+    public ResponseJobDto createJob(@Valid @RequestBody RequestJobDto newJob) {
         UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
         return jobService.createJob(newJob, authUserId);
     }
@@ -83,7 +90,7 @@ public class JobController {
     @PutMapping("/{id}")
     public ResponseJobDto editJob(
         @PathVariable UUID id,
-        @RequestBody RequestJobDto editJob)
+        @Valid @RequestBody RequestJobDto editJob)
     {
         UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
 //        ResponseJobDto job = jobService.editJob(id, authUserId, editJob);

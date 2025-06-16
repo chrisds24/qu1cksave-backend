@@ -4,12 +4,18 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.Objects;
 
 public class YearMonthDateDto {
+    // Originally didn't have @NotNull, but the Node.js version also doesn't
+    //   allow this to be null
+    @NotNull
     private final Integer year;
+    @NotNull
     private final Integer month;
+    @NotNull
     private final Integer date;
 
     public YearMonthDateDto(
