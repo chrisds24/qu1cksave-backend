@@ -205,8 +205,8 @@ public class JobService {
         // Don't really need to throw an exception since we haven't edited
         // anything in the transaction yet, but just do it for consistency
         if (jobEntity == null) { // Job not found
-            throw new SQLNotFoundException("Job not found when editing job " +
-                "even though it should exist"
+            throw new SQLNotFoundException("Job not found when editing job, " +
+                "meaning that the user has a stale/outdated jobs list"
             );
         }
 
@@ -584,7 +584,8 @@ public class JobService {
         }
         if (jobEntity == null) { // Job does not exist, even though it should
             throw new SQLNotFoundException(
-                "Job not found during delete, even though it should exist"
+                "Job not found during delete, meaning that the user has a " +
+                    "stale/outdated jobs list"
             );
         }
         Integer count = 0;

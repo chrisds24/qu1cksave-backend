@@ -20,9 +20,11 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -82,12 +84,6 @@ class Qu1cksaveBackendApplicationTests {
 	private WebTestClient webTestClient;
 
 	// TODO: (6/4/25) Tests I need
-	//  - Get multiple jobs, userId query param is the logged in user's id
-	//  - Get multiple jobs, userId query param is NOT the logged in user's id
-	//  - ??? Get multiple jobs, no userId query param provided
-	//    -- Spring/Java should throw out an error for this. Wonder what it
-	//       exactly is?
-	//  --------------------------
 	//  - Get one job, job exists
 	//  - Get one job, job doesn't exist
 	//    -- Covers case when user specifies an id of a job that doesn't belong
@@ -105,6 +101,19 @@ class Qu1cksaveBackendApplicationTests {
 	//     -- Need to manually check not having required fields
 	//        + Having the wrong type just causes an error in Java
 	//     -- The extra fields one would actually just cause an error in Java
+	//  --------------------------
+	//  - Get multiple jobs, userId query param is the logged in user's id
+	//  - Get multiple jobs, userId query param is NOT the logged in user's id
+	//  - ??? Get multiple jobs, no userId query param provided
+	//    -- Spring/Java should throw out an error for this. Wonder what it
+	//       exactly is?
+	//  ---------------------------
+	//  - Delete job, job exists
+	//  - Delete job, job doesn't exist (due to stale list)
+	//    -- Here, stale refers to the list not having up to date jobs
+	//  - Delete job, but job is stale (see description in edit job tests)
+	//    -- The job and the up to date files get deleted since the delete uses
+	//       the file ids from the job obtained from the database
 	//  ---------------------------
 	//  - Edit job w/o files, then get that job
 	//  - Edit job w/ resume and cover letter added, then get that job
@@ -142,13 +151,6 @@ class Qu1cksaveBackendApplicationTests {
 	//        - An alternative would have been to have a timestamp for the
 	//          most recent update timestamp, and not allow edits/deletes if
 	//          using a stale job (aka an outdated update timestamp)
-	//  ---------------------------
-	//  - Delete job, job exists
-	//  - Delete job, job doesn't exist (due to stale list)
-	//    -- Here, stale refers to the list not having up to date jobs
-	//  - Delete job, but job is stale (see description in edit job tests)
-	//    -- The job and the up to date files get deleted since the delete uses
-	//       the file ids from the job obtained from the database
  	//  ---------------------------
 	//  LATER: Not logged in tests for each endpoint
 	//  +++++++++++++++++++++++++++
@@ -513,86 +515,260 @@ class Qu1cksaveBackendApplicationTests {
 	//    -- Spring/Java should throw out an error for this. Wonder what it
 	//       exactly is?
 
-	// TODO: Get multiple jobs tests
+	@Test
+	@Order(11)
+	void getMultipleJobsNonEmptyList() {
+		this.webTestClient
+			.get()
+			// Molly Member's id
+			.uri("/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBodyList(ResponseJobDto.class)
+			.consumeWith(result -> {
+				List<ResponseJobDto> jobs = result.getResponseBody();
+				assertNotNull(jobs);
+				assertThat(jobs).isNotEmpty(); // Did I make the correct import?
 
+				// Find one without a resume
+				ResponseJobDto job1 = ResponseJobDto.findById(
+					jobs,
+					UUID.fromString("018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+				);
+				assertNotNull(job1);
+				assertEquals("Software Engineer", job1.getTitle());
+				assertEquals("Microsoft", job1.getCompanyName());
+				assertNull(job1.getResumeId());
+				// If a job doesn't have a file, get multiple jobs endpoint
+				//   returns that job with that file but with all null fields
+				assertNotNull(job1.getResume());
+				job1.nullifyEmptyFiles(); // If all fields are null, resume = null
+				assertNull(job1.getResume());
+
+				// Find one with a resume
+				ResponseJobDto job2 = ResponseJobDto.findById(
+					jobs,
+					UUID.fromString("018eae28-8323-7918-b93a-6cdb9d189686")
+				);
+				assertNotNull(job2);
+				assertEquals("Software Engineer", job2.getTitle());
+				assertEquals("Fake Company", job2.getCompanyName());
+				assertEquals(UUID.fromString(
+					"2bbb76f8-46c8-e2a4-2bbb-3d55e1fe386b"),
+					job2.getResumeId()
+				);
+				ResponseResumeDto job2Resume = job2.getResume();
+				assertNotNull(job2Resume);
+				assertEquals(UUID.fromString(
+					"2bbb76f8-46c8-e2a4-2bbb-3d55e1fe386b"),
+					job2Resume.getId()
+				);
+				assertEquals(
+					"ChristianDelosSantos_Resume.pdf",
+					job2Resume.getFileName()
+				);
+			});
+	}
+
+	// TODO: Uncomment this once Spring Security authentication added
 //	@Test
-//	void deleteOneJobThenGetThatJob() {
-//		// Delete job
-//		this.webTestClient
-//			.delete()
-//			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-//			.exchange()
-//			.expectStatus()
-//			.isOk()
-//			.expectHeader()
-//			.contentType(MediaType.APPLICATION_JSON)
-//			.expectBody()
-//			.jsonPath("$.title").isEqualTo("Software Engineer")
-//			.jsonPath("$.company_name").isEqualTo("Microsoft")
-//		;
-//
-//		// Make sure it's no longer there
+//	@Order(12)
+//	void getMultipleJobsEmptyList() {
 //		this.webTestClient
 //			.get()
-//			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+//			// Anna Admin's id
+//			.uri("/jobs?id=4604289c-b8fe-4560-8960-4da47fdfef94")
 //			.exchange()
 //			.expectStatus()
-//			.isNotFound()
-//			.expectBody()
-//			.isEmpty()
-//		;
+//			.isOk()
+//			.expectHeader()
+//			.contentType(MediaType.APPLICATION_JSON)
+//			.expectBodyList(ResponseJobDto.class)
+//			.consumeWith(result -> {
+//				List<ResponseJobDto> jobs = result.getResponseBody();
+//				assertNotNull(jobs);
+//				assertEquals(0, jobs.size());
+//			});
 //	}
 
+	@Test
+	@Order(13)
+	void getMultipleJobsWrongUser() {
+		this.webTestClient
+			.get()
+			.uri("/jobs?id=4604289c-b8fe-4560-8960-4da47fdfef94")
+			.exchange()
+			.expectStatus()
+			// Wrong user returns not found for security reasons
+			.isNotFound()
+			.expectBody()
+			.isEmpty()
+		;
+	}
+
+	@Test
+	@Order(14)
+	void getMultipleJobsNonExistentUser() {
+		this.webTestClient
+			.get()
+			.uri("/jobs?id=1234abcd-dead-beef-daed-11112323aaaa")
+			.exchange()
+			.expectStatus()
+			// Although the query returns a non-empty list if given a non-
+			//   existent user id, this endpoint would return 404 since the
+			//   check for if the provided user id and logged in id matches
+			//   fails, which returns a 404
+			.isNotFound()
+			.expectBody()
+			.isEmpty()
+		;
+	}
+
+	@Test
+	@Order(15)
+	void getMultipleJobsNoUserIdProvided() {
+		this.webTestClient
+			.get()
+			.uri("/jobs")
+			.exchange()
+			.expectStatus()
+			.isBadRequest()
+			.expectBody()
+			.isEmpty()
+		;
+	}
+
+	// -------------------------- DELETE JOB TESTS ----------------------------
+	//  - Delete job, job exists
+	//  - Delete job, job doesn't exist (due to stale list)
+	//    -- Here, stale refers to the list not having up to date jobs
+	//  - Delete job, but job is stale (see description in edit job tests)
+	//    -- The job and the up to date files get deleted since the delete uses
+	//       the file ids from the job obtained from the database
+
+	@Test
+	@Order(16)
+	void deleteOneJobThenGetThatJob() {
+		// Delete job
+		this.webTestClient
+			.delete()
+			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody()
+			.jsonPath("$.title").isEqualTo("Software Engineer")
+			.jsonPath("$.company_name").isEqualTo("Microsoft")
+		;
+
+		// Make sure it's no longer there
+		this.webTestClient
+			.get()
+			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+			.exchange()
+			.expectStatus()
+			.isNotFound()
+			.expectBody()
+			.isEmpty()
+		;
+	}
+
+	@Test
+	@Order(17)
+	// Delete a job that doesn't exist
+	// In real life, this happens if a user's job list is stale and
+	//   they click delete on a job that no longer exists
+	void deleteNonExistentJob() {
+		// Delete job
+		this.webTestClient
+			.delete()
+			// This job has already been deleted in the previous test
+			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+			.exchange()
+			.expectStatus()
+			.isNotFound()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody()
+			.isEmpty()
+		;
+	}
+
+	// NOT NEEDED
+//	// Delete job, but job is stale (see description in edit job tests)
+//	// - The job and the up to date files get deleted since the delete uses
+//	//   the file ids from the job obtained from the database
+//	// NOTE: Can't really test this one here since there's no point to.
+//	//   Even if I create a stale job, I'm only sending the id in the uri.
+//	//   So, the job being stale does not matter.
 //	@Test
-//	void shouldEditJobThenGetThatJob() {
-//		// Original before edit
-//		// '018ead6b-d160-772d-a001-2606322ebd1c'
-//		// 'Software Engineer, Quantum Error Correction, Quantum AI'
-//		// 'Google'
-//
-//		// Edit the job
-//		this.webTestClient
-//			.put()
-//			.uri("/jobs/018ead6b-d160-772d-a001-2606322ebd1c")
-//			.contentType(MediaType.APPLICATION_JSON)
-//			// No resume and cover letter
-//			.bodyValue(TestInputs.testNewOrEditJobNoFiles)
-//			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-//			.exchange()
-//			.expectStatus()
-//			.isOk()
-//			.expectHeader()
-//			.contentType(MediaType.APPLICATION_JSON)
-//			.expectBody()
-////			.json(TestInputs.testNewOrEditJobNoFiles)
-//			.jsonPath("$.id").isEqualTo("018ead6b-d160-772d-a001-2606322ebd1c")
-//			// This member_id is hardcoded for now (Molly Member's id)
-//			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
-//			.jsonPath("$.title").isEqualTo("test swe")
-//			.jsonPath("$.date_applied.month").isEqualTo(4)
-//			.jsonPath("$.date_posted.date").isEqualTo(8)
-//			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
-//
-//		// Get the job
-//		this.webTestClient
-//			.get()
-//			.uri("/jobs/018ead6b-d160-772d-a001-2606322ebd1c")
-//			.exchange()
-//			.expectStatus()
-//			.isOk()
-//			.expectHeader()
-//			.contentType(MediaType.APPLICATION_JSON)
-//			.expectBody()
-//			.jsonPath("$.id").isEqualTo("018ead6b-d160-772d-a001-2606322ebd1c")
-//			// This member_id is hardcoded for now (Molly Member's id)
-//			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
-//			.jsonPath("$.title").isEqualTo("test swe")
-//			// Should not be this
-////			.jsonPath("$.title").isEqualTo("Software Engineer, Quantum Error Correction, Quantum AI")
-//			.jsonPath("$.date_applied.month").isEqualTo(4)
-//			.jsonPath("$.date_posted.date").isEqualTo(8)
-//			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
+//	void deleteStaleJob() {
+//		// NOT NEEDED
 //	}
+
+	// ------------------------- EDIT JOB TESTS -------------------------------
+	//  - Edit job w/o files, then get that job
+	//  - Edit job w/ resume and cover letter added, then get that job
+	//  - Edit job w/ resume and cover letter edited, then get that job
+	//  - Edit job w/ resume and cover letter deleted, then get that job
+	//  - Stale job tests
+
+	@Test
+	@Order(18)
+	void shouldEditJobThenGetThatJob() {
+		// Original before edit
+		// '018ead6b-d160-772d-a001-2606322ebd1c'
+		// 'Software Engineer, Quantum Error Correction, Quantum AI'
+		// 'Google'
+
+		// Edit the job
+		this.webTestClient
+			.put()
+			.uri("/jobs/018ead6b-d160-772d-a001-2606322ebd1c")
+			.contentType(MediaType.APPLICATION_JSON)
+			// No resume and cover letter
+			.bodyValue(TestInputs.testNewOrEditJobNoFiles)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody()
+//			.json(TestInputs.testNewOrEditJobNoFiles)
+			.jsonPath("$.id").isEqualTo("018ead6b-d160-772d-a001-2606322ebd1c")
+			// This member_id is hardcoded for now (Molly Member's id)
+			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
+			.jsonPath("$.title").isEqualTo("test swe")
+			.jsonPath("$.date_applied.month").isEqualTo(4)
+			.jsonPath("$.date_posted.date").isEqualTo(8)
+			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
+
+		// Get the job
+		this.webTestClient
+			.get()
+			.uri("/jobs/018ead6b-d160-772d-a001-2606322ebd1c")
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody()
+			.jsonPath("$.id").isEqualTo("018ead6b-d160-772d-a001-2606322ebd1c")
+			// This member_id is hardcoded for now (Molly Member's id)
+			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
+			.jsonPath("$.title").isEqualTo("test swe")
+			// Should not be this
+//			.jsonPath("$.title").isEqualTo("Software Engineer, Quantum Error Correction, Quantum AI")
+			.jsonPath("$.date_applied.month").isEqualTo(4)
+			.jsonPath("$.date_posted.date").isEqualTo(8)
+			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
+	}
 }
 
 // NOTE: (5/10/25) What I did for container setup

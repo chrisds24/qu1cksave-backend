@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -350,6 +351,26 @@ public class ResponseJobDto {
         ) {
             coverLetter = null;
         }
+    }
+
+    // https://stackoverflow.com/questions/56810827/find-indexof-of-an-object-in-custom-list-using-one-attribute
+    // - Using indexOf is an option, but would need to implement equals and
+    //   hashCode. ME: I'm just creating a static method instead
+    // Returns the first job from the given list that matches the given id
+    // Returns null if job can't be found
+    // I won't add null list check, wrong type, etc.
+    public static ResponseJobDto findById(
+        List<ResponseJobDto> jobs,
+        UUID id
+    ) {
+        for (ResponseJobDto job : jobs) {
+            // IMPORTANT: Use .equals instead of ==
+            if (job.getId().equals(id)) {
+                return job;
+            }
+        }
+
+        return null;
     }
 }
 

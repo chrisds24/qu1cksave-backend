@@ -43,8 +43,12 @@ public class JobController {
     //   Also need OpenAPI schema validation (or something similar)
 
     @GetMapping()
-//    public List<ResponseJobDto> getJobs(@RequestParam("id") String userId) {
+    // https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RequestParam.html
+    // - RequestParams are required by default
     public List<ResponseJobDto> getJobs(@RequestParam("id") UUID userId) {
+        // UPDATE: When no userId is provided, a
+        //   MissingServletRequestParameterException is thrown
+
         // TODO: Replace mollyMemberId with user id obtained from auth header
         //  - I'll compare the one from the query and the auth header
         UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
