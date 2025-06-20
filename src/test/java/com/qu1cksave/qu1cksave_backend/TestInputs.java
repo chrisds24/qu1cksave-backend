@@ -119,6 +119,92 @@ public class TestInputs {
 		""".formatted(resumeId, coverLetterId);
 	}
 
+	// NOTE: I didn't bother setting keep_resume and keep_cover_letter for the
+	//   previous test inputs, but it shouldn't be a problem since none of them
+	//   would go to the case where:
+	//   - (resume == null) but (resume_id != null)
+	//   - Here, there's no uploaded resume but there's a resume id meaning that
+	//     the job has a resume
+	//   - So we'll need to have keep_resume to indicate if we should keep that
+	//     resume or delete it
+	//   - Same thing applies for cover letters
+
+	public static String testEditJobWithFilesNotEdited(
+		String resumeId,
+		String coverLetterId
+	) {
+		// https://stackoverflow.com/questions/21232185/simple-way-templating-multiline-strings-in-java-code
+		return """
+			{
+				"resume_id": "%s",
+				"cover_letter_id": "%s",
+				"title": "test swe with files edited",
+				"company_name": "test company",
+				"job_description": "test job description",
+				"notes": "test notes",
+				"is_remote": "Remote",
+				"salary_min": 75000,
+				"salary_max": 120000,
+				"country": "US",
+				"us_state": "CA",
+				"city": "San Diego",
+				"date_applied": {
+					"year": 2025,
+					"month": 4,
+					"date": 9
+				},
+				"date_posted": {
+					"year": 2025,
+					"month": 4,
+					"date": 8
+				},
+				"job_status": "Applied",
+				"links": ["https://www.linkedin.com/jobs/view/4125105888/?alternateChannel=search&refId=L%%2FaJTJBeDgAXxHgZ%%2B3%%2FBAw%%3D%%3D&trackingId=GQdu9ntQnwrk1Hxp2qSNAQ%%3D%%3D", "https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9"],
+				"found_from": "LinkedIn",
+				"keep_resume": true,
+				"keep_cover_letter": true
+			}
+		""".formatted(resumeId, coverLetterId);
+	}
+
+	// This one doesn't have the keepResume and keepCoverLetter
+	// Sanity check to ensure that
+	public static String testEditJobWithFilesNotEditedSanityCheck(
+		String resumeId,
+		String coverLetterId
+	) {
+		// https://stackoverflow.com/questions/21232185/simple-way-templating-multiline-strings-in-java-code
+		return """
+			{
+				"resume_id": "%s",
+				"cover_letter_id": "%s",
+				"title": "test swe with files edited",
+				"company_name": "test company",
+				"job_description": "test job description",
+				"notes": "test notes",
+				"is_remote": "Remote",
+				"salary_min": 75000,
+				"salary_max": 120000,
+				"country": "US",
+				"us_state": "CA",
+				"city": "San Diego",
+				"date_applied": {
+					"year": 2025,
+					"month": 4,
+					"date": 9
+				},
+				"date_posted": {
+					"year": 2025,
+					"month": 4,
+					"date": 8
+				},
+				"job_status": "Applied",
+				"links": ["https://www.linkedin.com/jobs/view/4125105888/?alternateChannel=search&refId=L%%2FaJTJBeDgAXxHgZ%%2B3%%2FBAw%%3D%%3D&trackingId=GQdu9ntQnwrk1Hxp2qSNAQ%%3D%%3D", "https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9"],
+				"found_from": "LinkedIn"
+			}
+		""".formatted(resumeId, coverLetterId);
+	}
+
 	public static String testEditJobWithFilesDeleted(
 		String resumeId,
 		String coverLetterId

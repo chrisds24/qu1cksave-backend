@@ -292,6 +292,10 @@ public class JobService {
                 //   condition that deletes the object, which could be
                 //   unintended (though keepResume == null shouldn't really
                 //   happen.
+                //   - Actually, it's important that I made this change since
+                //     the frontend could change how it sets keepResume
+                //     -- The backend should not need to change its behavior
+                //        based on that change
                 if ((keepResume != null && keepResume) || keepResume == null) {
                     // Case 2: Keep the resume specified by editJob.resumeId
                     // - Need to get it so we can attach metadata later

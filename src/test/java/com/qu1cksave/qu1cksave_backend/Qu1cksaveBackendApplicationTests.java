@@ -834,15 +834,9 @@ class Qu1cksaveBackendApplicationTests {
 		// TODO: Get the resume and cover letter to ensure they are added
 	}
 
-	@Test
-	@Order(21)
-	void editJobWithFilesNotEditedThenGetThatJob() {
-		// TODO
-	}
-
 	// Job edited has files, which are edited
 	@Test
-	@Order(22)
+	@Order(21)
 	void editJobWithFilesEditedThenGetThatJob() {
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
@@ -886,8 +880,102 @@ class Qu1cksaveBackendApplicationTests {
 		// TODO: Get the resume and cover letter to ensure they are edited
 	}
 
+	// Here, I'm editing the job (clicking submit) even though I didn't really
+	//   make any changes
+	@Test
+	@Order(22)
+	void editJobWithFilesNotEditedThenGetThatJob() {
+		// First, get the job to be edited to obtain its file ids
+		ResponseJobDto origJob = getJobRequestReturningBodySpec(
+			"018ead6b-d160-772d-a001-2606322ebd1c")
+			.returnResult()
+			.getResponseBody();
+
+		assertNotNull(origJob);
+
+		// Edit the job
+		ResponseJobDto job = editJobRequestReturningJob(
+			"018ead6b-d160-772d-a001-2606322ebd1c",
+			TestInputs.testEditJobWithFilesNotEdited(
+				origJob.getResumeId().toString(),
+				origJob.getCoverLetterId().toString()
+			)
+		);
+
+		assertNotNull(job);
+		assertEquals("test swe with files edited", job.getTitle());
+		// Ensure files are edited with the correct data
+		assertEquals(job.getResumeId(), job.getResume().getId());
+		assertEquals(job.getCoverLetterId(), job.getCoverLetter().getId());
+		assertEquals("My_Edited_Test_Resume.docx", job.getResume().getFileName());
+		assertEquals(
+			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			job.getResume().getMimeType()
+		);
+		assertEquals("My_Edited_Test_CoverLetter.pdf", job.getCoverLetter().getFileName());
+		assertEquals(
+			"application/pdf",
+			job.getCoverLetter().getMimeType()
+		);
+
+		// Get the job
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+			.consumeWith(result -> {
+				assertEquals(job, result.getResponseBody());
+			});
+
+		// TODO: Get the resume and cover letter to ensure they are NOT EDITED
+	}
+
+	// Same as editJobWithFilesNotEditedThenGetThatJob, but keepResume and
+	//   keepCoverLetter are null (which shouldn't happen in the real app)
 	@Test
 	@Order(23)
+	void editJobWithFilesNotEditedThenGetThatJobSanityCheck() {
+		// First, get the job to be edited to obtain its file ids
+		ResponseJobDto origJob = getJobRequestReturningBodySpec(
+			"018ead6b-d160-772d-a001-2606322ebd1c")
+			.returnResult()
+			.getResponseBody();
+
+		assertNotNull(origJob);
+
+		// Edit the job
+		ResponseJobDto job = editJobRequestReturningJob(
+			"018ead6b-d160-772d-a001-2606322ebd1c",
+			TestInputs.testEditJobWithFilesNotEditedSanityCheck(
+				origJob.getResumeId().toString(),
+				origJob.getCoverLetterId().toString()
+			)
+		);
+
+		assertNotNull(job);
+		assertEquals("test swe with files edited", job.getTitle());
+		// Ensure files are edited with the correct data
+		assertEquals(job.getResumeId(), job.getResume().getId());
+		assertEquals(job.getCoverLetterId(), job.getCoverLetter().getId());
+		assertEquals("My_Edited_Test_Resume.docx", job.getResume().getFileName());
+		assertEquals(
+			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			job.getResume().getMimeType()
+		);
+		assertEquals("My_Edited_Test_CoverLetter.pdf", job.getCoverLetter().getFileName());
+		assertEquals(
+			"application/pdf",
+			job.getCoverLetter().getMimeType()
+		);
+
+		// Get the job
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+			.consumeWith(result -> {
+				assertEquals(job, result.getResponseBody());
+			});
+
+		// TODO: Get the resume and cover letter to ensure they are NOT EDITED
+	}
+
+	@Test
+	@Order(24)
 	void editJobWithFilesDeletedThenGetThatJob() {
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
@@ -928,6 +1016,35 @@ class Qu1cksaveBackendApplicationTests {
 
 		// TODO: Get the resume and cover letter to ensure they are deleted
 	}
+
+	// --------------------- EDIT STALE JOB TESTS -----------------------------
+	// TODO
+	//  - Stale job tests
+	//    +++ Note, a job where its resume id and cover letter id are the same
+	//        as the latest version is not considered stale
+	//    +++ How does a job become stale? Let's say there's tab A and tab B,
+	//        where tab A contains the stale job. The job is then edited in tab
+	//        B so that at least one of the files' id's are now different from
+	//        what tab A has
+	//        * Note that the following also applies to cover letter
+	//        * MAKE TESTS FOR THESE 3
+	//    1.) Job has no resume, then edited to have a resume. Edit job again,
+	//       but using the old job w/o the resume
+	//    2.) Job has a resume, then edited to have no resume. Edit job again,
+	//       but using the old job w/ the resume
+	//    3.) Job has a resume, then edited to have a different resume id (by
+	//       removing the resume, then adding one again). Edit job again,
+	//       but using the old job w/ the old resume id
+	//    +++ Other possible issues:
+	//    -- Same resume id. User then attempts to edit resume by editing the
+	//       stale job
+	//       + Resume gets updated to this new resume, which is appropriate
+	//         * Note that both the metadata and the file in S3 would get
+	//           updated accordingly. The job also gets updated using the
+	//           updates made to the stale job
+	//    -- Same resume id. User then attempts to remove resume by editing the
+	//       stale job.
+	//       + Resume gets removed from S3 and database, as expected
 }
 
 // NOTE: (5/10/25) What I did for container setup
