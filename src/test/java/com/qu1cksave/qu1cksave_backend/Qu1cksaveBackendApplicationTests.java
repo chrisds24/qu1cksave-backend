@@ -156,6 +156,7 @@ class Qu1cksaveBackendApplicationTests {
 	//  +++++++++++++++++++++++++++
 	//  The ??? in front means I'm not sure if I even need this test
 
+	// Used by some create job tests
 	private void badRequestBodyCreateTest(String json) {
 		// Create the job
 		this.webTestClient
@@ -170,6 +171,41 @@ class Qu1cksaveBackendApplicationTests {
 			.isBadRequest()
 			.expectBody()
 			.isEmpty()
+		;
+	}
+
+	// Used by some edit job tests
+	private WebTestClient.BodySpec<ResponseJobDto, ?> getJobRequestReturningBodySpec(String id) {
+		return this.webTestClient
+			.get()
+			.uri("/jobs/" + id)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody(ResponseJobDto.class);
+	}
+
+	// Used by some edit job tests
+	private ResponseJobDto editJobRequestReturningJob(
+		String jobId,
+		String jobJson
+	) {
+		return this.webTestClient
+			.put()
+			.uri("/jobs/" + jobId)
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(jobJson)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody(ResponseJobDto.class)
+			.returnResult()
+			.getResponseBody()
 		;
 	}
 
@@ -231,8 +267,6 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(3)
 	void getOneJobWithFiles() { // Get one job, job exists
-		// '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
-		// Expected: 'Software Engineer', 'Microsoft', very long description
 		this.webTestClient
 			.get()
 			.uri("/jobs/018eae28-8323-7918-b93a-6cdb9d189686")
@@ -299,34 +333,6 @@ class Qu1cksaveBackendApplicationTests {
 	//     -- Need to manually check not having required fields
 	//        + Having the wrong type just causes an error in Java
 	//     -- The extra fields one would actually just cause an error in Java
-
-	// Won't use this one. Leaving it here for reference
-//	@Test
-//	@Order(5)
-//    void createJobNoFiles() {
-//		// Remote, Hybrid, On-site for isRemote
-//		this.webTestClient
-//            .post()
-//            .uri("/jobs")
-//			.contentType(MediaType.APPLICATION_JSON)
-//			// No resume and cover letter
-//            .bodyValue(TestInputs.testNewOrEditJobNoFiles)
-//            .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-//            .exchange()
-//            .expectStatus()
-//            .isCreated()
-//			.expectHeader()
-//			.contentType(MediaType.APPLICATION_JSON)
-//			.expectBody()
-//			.jsonPath("$.id").isNotEmpty()
-//			// This member_id is hardcoded for now (Molly Member's id)
-//			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
-//			.jsonPath("$.date_saved").isNotEmpty()
-//			.jsonPath("$.title").isEqualTo("test swe")
-//			.jsonPath("$.date_applied.month").isEqualTo(4)
-//			.jsonPath("$.date_posted.date").isEqualTo(8)
-//			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
-//    }
 
 	@Test
 	@Order(6)
@@ -442,6 +448,10 @@ class Qu1cksaveBackendApplicationTests {
 				assertEquals(responseJobDto, result.getResponseBody());
 			})
 		;
+
+		// TODO: Get the resume and cover letter to make sure they're there
+		//  ...
+		//  ...
 	}
 
 	// TODO: 6/15/25
@@ -651,7 +661,7 @@ class Qu1cksaveBackendApplicationTests {
 
 	@Test
 	@Order(16)
-	void deleteOneJobThenGetThatJob() {
+	void deleteJobWithoutFilesThenGetThatJob() {
 		// Delete job
 		this.webTestClient
 			.delete()
@@ -680,6 +690,13 @@ class Qu1cksaveBackendApplicationTests {
 
 	@Test
 	@Order(17)
+	void deleteJobWithFilesThenGetThatJob() {
+		// TODO: Create resume and cover letter endpoint
+		//  Ensure that file metadata are deleted from database
+	}
+
+	@Test
+	@Order(18)
 	// Delete a job that doesn't exist
 	// In real life, this happens if a user's job list is stale and
 	//   they click delete on a job that no longer exists
@@ -692,8 +709,6 @@ class Qu1cksaveBackendApplicationTests {
 			.exchange()
 			.expectStatus()
 			.isNotFound()
-			.expectHeader()
-			.contentType(MediaType.APPLICATION_JSON)
 			.expectBody()
 			.isEmpty()
 		;
@@ -718,13 +733,17 @@ class Qu1cksaveBackendApplicationTests {
 	//  - Edit job w/ resume and cover letter deleted, then get that job
 	//  - Stale job tests
 
+	// Job edited has no files, and no files have been added during edit
 	@Test
-	@Order(18)
-	void shouldEditJobThenGetThatJob() {
+	@Order(19)
+	void editJobWithNoFilesThenGetThatJob() {
 		// Original before edit
-		// '018ead6b-d160-772d-a001-2606322ebd1c'
-		// 'Software Engineer, Quantum Error Correction, Quantum AI'
-		// 'Google'
+		// id: '018ead6b-d160-772d-a001-2606322ebd1c'
+		// member_id: '269a3d55-4eee-4a2e-8c64-e1fe386b76f8'
+		// title: 'Software Engineer, Quantum Error Correction, Quantum AI'
+		// date_applied.month: 3
+		// date_posted.date: 29
+		// links[1]: N/A
 
 		// Edit the job
 		this.webTestClient
@@ -740,9 +759,7 @@ class Qu1cksaveBackendApplicationTests {
 			.expectHeader()
 			.contentType(MediaType.APPLICATION_JSON)
 			.expectBody()
-//			.json(TestInputs.testNewOrEditJobNoFiles)
 			.jsonPath("$.id").isEqualTo("018ead6b-d160-772d-a001-2606322ebd1c")
-			// This member_id is hardcoded for now (Molly Member's id)
 			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
 			.jsonPath("$.title").isEqualTo("test swe")
 			.jsonPath("$.date_applied.month").isEqualTo(4)
@@ -760,7 +777,6 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.expectBody()
 			.jsonPath("$.id").isEqualTo("018ead6b-d160-772d-a001-2606322ebd1c")
-			// This member_id is hardcoded for now (Molly Member's id)
 			.jsonPath("$.member_id").isEqualTo("269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
 			.jsonPath("$.title").isEqualTo("test swe")
 			// Should not be this
@@ -768,6 +784,149 @@ class Qu1cksaveBackendApplicationTests {
 			.jsonPath("$.date_applied.month").isEqualTo(4)
 			.jsonPath("$.date_posted.date").isEqualTo(8)
 			.jsonPath("$.links[1]").isEqualTo("https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9");
+	}
+
+	// Job edited has no files, but files are added during edit
+	@Test
+	@Order(20)
+	void editJobWithFilesAddedThenGetThatJob() {
+		// Original before edit
+		// id: "018ead6b-d160-772d-a001-2606322ebd1c"
+		// member_id: "269a3d55-4eee-4a2e-8c64-e1fe386b76f8"
+		// title: "test swe"
+		// date_applied.month: 4
+		// date_posted.date: 8
+		// links[1]: "https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9"
+
+		ResponseJobDto job = editJobRequestReturningJob(
+			"018ead6b-d160-772d-a001-2606322ebd1c",
+			TestInputs.testNewOrEditJobWithFiles
+		);
+
+		// Ensure that changed data have changed and unchanged data haven't
+		assertNotNull(job);
+		assertEquals(UUID.fromString("018ead6b-d160-772d-a001-2606322ebd1c"), job.getId());
+		assertEquals(UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8"), job.getMemberId());
+		assertEquals("test swe with files", job.getTitle());
+		assertEquals(4, job.getDateApplied().getMonth());
+		assertEquals(8, job.getDatePosted().getDate());
+		assertEquals(
+			"https://jobs.ashbyhq.com/clinical-notes-ai/3d10314e-9af5-4ec3-8cb7-9edd8e32a3e9",
+			job.getLinks()[1]
+		);
+		// Ensure files are added with the correct data
+		assertNotNull(job.getResumeId());
+		assertNotNull(job.getCoverLetterId());
+		assertEquals(job.getResumeId(), job.getResume().getId());
+		assertEquals(job.getCoverLetterId(), job.getCoverLetter().getId());
+		assertEquals("My_Test_Resume.pdf", job.getResume().getFileName());
+		assertEquals(
+			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			job.getCoverLetter().getMimeType()
+		);
+
+		// Get the job
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+			.consumeWith(result -> {
+				assertEquals(job, result.getResponseBody());
+			});
+
+		// TODO: Get the resume and cover letter to ensure they are added
+	}
+
+	@Test
+	@Order(21)
+	void editJobWithFilesNotEditedThenGetThatJob() {
+		// TODO
+	}
+
+	// Job edited has files, which are edited
+	@Test
+	@Order(22)
+	void editJobWithFilesEditedThenGetThatJob() {
+		// First, get the job to be edited to obtain its file ids
+		ResponseJobDto origJob = getJobRequestReturningBodySpec(
+			"018ead6b-d160-772d-a001-2606322ebd1c")
+			.returnResult()
+			.getResponseBody();
+
+		assertNotNull(origJob);
+
+		// Edit the job
+		ResponseJobDto job = editJobRequestReturningJob(
+			"018ead6b-d160-772d-a001-2606322ebd1c",
+			TestInputs.testEditJobWithFilesEdited(
+				origJob.getResumeId().toString(),
+				origJob.getCoverLetterId().toString()
+			)
+		);
+
+		assertNotNull(job);
+		assertEquals("test swe with files edited", job.getTitle());
+		// Ensure files are edited with the correct data
+		assertEquals(job.getResumeId(), job.getResume().getId());
+		assertEquals(job.getCoverLetterId(), job.getCoverLetter().getId());
+		assertEquals("My_Edited_Test_Resume.docx", job.getResume().getFileName());
+		assertEquals(
+			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			job.getResume().getMimeType()
+		);
+		assertEquals("My_Edited_Test_CoverLetter.pdf", job.getCoverLetter().getFileName());
+		assertEquals(
+			"application/pdf",
+			job.getCoverLetter().getMimeType()
+		);
+
+		// Get the job
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+			.consumeWith(result -> {
+				assertEquals(job, result.getResponseBody());
+			});
+
+		// TODO: Get the resume and cover letter to ensure they are edited
+	}
+
+	@Test
+	@Order(23)
+	void editJobWithFilesDeletedThenGetThatJob() {
+		// First, get the job to be edited to obtain its file ids
+		ResponseJobDto origJob = getJobRequestReturningBodySpec(
+			"018ead6b-d160-772d-a001-2606322ebd1c")
+			.returnResult()
+			.getResponseBody();
+
+		assertNotNull(origJob);
+
+		// Edit the job
+		ResponseJobDto job = editJobRequestReturningJob(
+			"018ead6b-d160-772d-a001-2606322ebd1c",
+			TestInputs.testEditJobWithFilesDeleted(
+				origJob.getResumeId().toString(),
+				origJob.getCoverLetterId().toString()
+			)
+		);
+
+		assertNotNull(job);
+		assertEquals("test swe with files edited", job.getTitle());
+		// Ensure files are deleted
+		assertNull(job.getResumeId());
+		assertNull(job.getResume());
+		assertNull(job.getCoverLetterId());
+		assertNull(job.getCoverLetter());
+
+		// Get the job
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+			.consumeWith(result -> {
+				ResponseJobDto res = result.getResponseBody();
+				assertNotNull(res);
+				// The native query used by getJob(get one job) returns a file
+				//   with empty fields if the job doesn't that file. Need to
+				//   set those to null so comparison could work properly
+				res.nullifyEmptyFiles();
+				assertEquals(job, res);
+			});
+
+		// TODO: Get the resume and cover letter to ensure they are deleted
 	}
 }
 

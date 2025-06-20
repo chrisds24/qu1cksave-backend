@@ -286,7 +286,13 @@ public class JobService {
         if (editJob.getResume() == null) { // Cases 1, 2, and 3 (no uploaded resume)
             if (resumeId != null) { // Cases 2 and 3
                 Boolean keepResume = editJob.getKeepResume();
-                if (keepResume != null && keepResume) {
+//                if (keepResume != null && keepResume) { ORIGINAL JAVA VERSION
+                // Note: If keepResume is null, I'm defaulting to just keeping
+                //   the resume. Originally, keepResume == null leads to the
+                //   condition that deletes the object, which could be
+                //   unintended (though keepResume == null shouldn't really
+                //   happen.
+                if ((keepResume != null && keepResume) || keepResume == null) {
                     // Case 2: Keep the resume specified by editJob.resumeId
                     // - Need to get it so we can attach metadata later
                     try {
@@ -315,7 +321,10 @@ public class JobService {
 //                    return undefined;
 //                }
                     // -------------------------------------------------------
-                } else { // keepResume is false (or is not set, which won't happen)
+//                } else { // keepResume is false (or is not set, which won't happen) ORIGINAL JAVA VERSION
+                // Note: I changed this so that keepResume == null leads to
+                //   keeping the file
+                } else { // keepResume != null && !keepResume
                     // Case 3: Delete the resume specified by editJob.
                     // TODO: Should throw an exception so I can catch and return
                     //   null, which the frontend expects where there's an error
@@ -397,7 +406,8 @@ public class JobService {
         if (editJob.getCoverLetter() == null) { // Cases 1, 2, and 3 (no uploaded cover letter)
             if (coverLetterId != null) { // Cases 2 and 3
                 Boolean keepCoverLetter = editJob.getKeepCoverLetter();
-                if (keepCoverLetter != null && keepCoverLetter) {
+//                if (keepCoverLetter != null && keepCoverLetter) {  // ORIGINAL JAVA VERSION
+                if ((keepCoverLetter != null && keepCoverLetter) || keepCoverLetter == null) {
                     // Case 2: Keep the cover letter specified by editJob.coverLetterId
                     // - Need to get it so we can attach metadata later
                     try {
@@ -416,7 +426,8 @@ public class JobService {
                                 "though it should exist"
                         );
                     }
-                } else { // keepCoverLetter is false (or is not set, which won't happen)
+//                } else { // keepCoverLetter is false (or is not set, which won't happen)
+                } else { // keepCoverLetter != null && !keepCoverLetter
                     // Case 3: Delete the cover letter specified by editJob.
                     // TODO: Should throw an exception so I can catch and return
                     //   null, which the frontend expects where there's an error

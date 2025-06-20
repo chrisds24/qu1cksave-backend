@@ -1,5 +1,6 @@
 package com.qu1cksave.qu1cksave_backend.exceptions;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -7,6 +8,8 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.Arrays;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -84,12 +87,22 @@ public class GlobalExceptionHandler {
     // https://stackoverflow.com/questions/17201072/using-spring-mvc-accepting-post-requests-with-bad-json-leads-to-a-default-400-e
     // - If bad request (wrong types, etc.) is received, this is supposed to
     //   be called APPARENTLY (NEED TO TEST)
+    // https://spring.io/blog/2013/11/01/exception-handling-in-spring-mvc
+    // - To access the exception
     @ExceptionHandler({
         HttpMessageNotReadableException.class,
         MethodArgumentNotValidException.class
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Object handleBadRequestBody() {
+//    public Object handleBadRequestBody() {
+    public Object handleBadRequestBody(HttpServletRequest req, Exception ex) {
+        // Keep here for now for reference
+        // - This actually helped me fix a bug
+//        System.out.println("****** I GOT HERE !!!!!!!!!!!!!!!!");
+//        System.out.println("****** STACK TRACE: " + Arrays.toString(ex.getStackTrace()));
+//        System.out.println("****** MESSAGE: " + ex.getMessage());
+//        System.out.println("****** CAUSE:" + ex.getCause().toString());
+
         return null;
     }
 
