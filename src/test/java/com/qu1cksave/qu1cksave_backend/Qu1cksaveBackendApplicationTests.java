@@ -130,11 +130,11 @@ class Qu1cksaveBackendApplicationTests {
 	//        * MAKE TESTS FOR THESE 3
 	//    1.) Job has no resume, then edited to have a resume. Edit job again,
 	//       but using the old job w/o the resume
-	//    2.) Job has a resume, then edited to have no resume. Edit job again,
-	//       but using the old job w/ the resume
-	//    3.) Job has a resume, then edited to have a different resume id (by
+	//    2.) Job has a resume, then edited to have a different resume id (by
 	//       removing the resume, then adding one again). Edit job again,
 	//       but using the old job w/ the old resume id
+	//    3.) Job has a resume, then edited to have no resume. Edit job again,
+	//       but using the old job w/ the resume
 	//    +++ Other possible issues:
 	//    -- Same resume id. User then attempts to edit resume by editing the
 	//       stale job
@@ -206,6 +206,25 @@ class Qu1cksaveBackendApplicationTests {
 			.expectBody(ResponseJobDto.class)
 			.returnResult()
 			.getResponseBody()
+		;
+	}
+
+	// Used by some edit job tests
+	private void editJobRequestUsingStaleJob(
+		String jobId,
+		String jobJson
+	) {
+		this.webTestClient
+			.put()
+			.uri("/jobs/" + jobId)
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(jobJson)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isEqualTo(409)
+			.expectBody()
+			.isEmpty()
 		;
 	}
 
@@ -834,9 +853,56 @@ class Qu1cksaveBackendApplicationTests {
 		// TODO: Get the resume and cover letter to ensure they are added
 	}
 
-	// Job edited has files, which are edited
+
+	// ********* STALE JOB TEST 1 *********
+	// - Job now has a resume, but is being edited using a stale version
+	//   without a resume (so no resume id)
 	@Test
 	@Order(21)
+	void editJobWithFilesUsingStaleJobWithoutFiles() {
+		// First, get the job to be edited to obtain its file ids
+		ResponseJobDto origJob = getJobRequestReturningBodySpec(
+			"018ead6b-d160-772d-a001-2606322ebd1c")
+			.returnResult()
+			.getResponseBody();
+
+		assertNotNull(origJob);
+
+		// Edit the job with the stale job that doesn't have a resume id
+		editJobRequestUsingStaleJob(
+			"018ead6b-d160-772d-a001-2606322ebd1c",
+			TestInputs.testNewOrEditJobNoFiles
+		);
+
+		// Ensure that the job hasn't been changed
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+			.consumeWith(result -> {
+				ResponseJobDto job = result.getResponseBody();
+				assertNotNull(job);
+				assertEquals("test swe with files", job.getTitle());
+			});
+
+		// Edit the job with the stale job that doesn't have a resume id,
+		//   but this time attempt to upload a resume
+		editJobRequestUsingStaleJob(
+			"018ead6b-d160-772d-a001-2606322ebd1c",
+			TestInputs.testNewOrEditJobWithFiles
+		);
+
+		// Ensure that the job hasn't been changed (check the resumeId)
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+			.consumeWith(result -> {
+				ResponseJobDto job = result.getResponseBody();
+				assertNotNull(job);
+				assertEquals(
+					origJob.getResumeId(),
+					job.getResumeId());
+			});
+	}
+
+	// Job edited has files, which are edited
+	@Test
+	@Order(22)
 	void editJobWithFilesEditedThenGetThatJob() {
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
@@ -880,10 +946,51 @@ class Qu1cksaveBackendApplicationTests {
 		// TODO: Get the resume and cover letter to ensure they are edited
 	}
 
+	// ********* STALE JOB TEST 2 ********
+	// Job has a resume, then edited to have a different resume id (by
+	//   removing the resume, then adding one again). Edit job again,
+	//   but using the old job w/ the old resume id
+	// UPDATE: Using cover letter instead to check that resume changes are
+	//   rolled back.
+	@Test
+	@Order(23)
+	void editJobWithFilesUsingStaleJobWithOutdatedCoverLetterId() {
+		// First, get the job to be edited to obtain its file ids
+		ResponseJobDto origJob = getJobRequestReturningBodySpec(
+			"018ead6b-d160-772d-a001-2606322ebd1c")
+			.returnResult()
+			.getResponseBody();
+
+		assertNotNull(origJob);
+
+		editJobRequestUsingStaleJob(
+			"018ead6b-d160-772d-a001-2606322ebd1c",
+			TestInputs.testEditJobWithFilesEdited(
+				origJob.getResumeId().toString(),
+				"ccccdead-d160-beef-a001-2606322e1234"
+			)
+		);
+
+		// Ensure that the job hasn't been changed (check the resumeName)
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+			.consumeWith(result -> {
+				ResponseJobDto job = result.getResponseBody();
+				assertNotNull(job);
+				assertNotEquals(
+					"mYRESU_mE_isALLc_orrUPTed.docx",
+					job.getResume().getFileName()
+				);
+				assertEquals(
+					origJob.getResume().getFileName(),
+					job.getResume().getFileName()
+				);
+			});
+	}
+
 	// Here, I'm editing the job (clicking submit) even though I didn't really
 	//   make any changes
 	@Test
-	@Order(22)
+	@Order(24)
 	void editJobWithFilesNotEditedThenGetThatJob() {
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
@@ -930,7 +1037,7 @@ class Qu1cksaveBackendApplicationTests {
 	// Same as editJobWithFilesNotEditedThenGetThatJob, but keepResume and
 	//   keepCoverLetter are null (which shouldn't happen in the real app)
 	@Test
-	@Order(23)
+	@Order(25)
 	void editJobWithFilesNotEditedThenGetThatJobSanityCheck() {
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
@@ -975,7 +1082,7 @@ class Qu1cksaveBackendApplicationTests {
 	}
 
 	@Test
-	@Order(24)
+	@Order(26)
 	void editJobWithFilesDeletedThenGetThatJob() {
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
@@ -1017,8 +1124,41 @@ class Qu1cksaveBackendApplicationTests {
 		// TODO: Get the resume and cover letter to ensure they are deleted
 	}
 
+	// ******** STALE JOB TEST 3 ********
+	@Test
+	@Order(27)
+	void editJobWithNoFilesUsingStaleJobWithOutdatedFiles() {
+		// First, get the job to be edited to obtain its file ids
+		ResponseJobDto origJob = getJobRequestReturningBodySpec(
+			"018ead6b-d160-772d-a001-2606322ebd1c")
+			.returnResult()
+			.getResponseBody();
+
+		assertNotNull(origJob);
+
+		editJobRequestUsingStaleJob(
+			"018ead6b-d160-772d-a001-2606322ebd1c",
+			TestInputs.testEditJobWithFilesEdited(
+				origJob.getResumeId().toString(),
+				origJob.getCoverLetterId().toString()
+			)
+		);
+
+		// Ensure that the job hasn't been changed (check the resume id
+		//   and make sure it's not there)
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+			.consumeWith(result -> {
+				ResponseJobDto job = result.getResponseBody();
+				assertNotNull(job);
+				assertEquals(origJob.getTitle(), job.getTitle());
+				assertNull(job.getResumeId());
+				assertNull(job.getCoverLetterId());
+				assertNull(job.getResume());
+				assertNull(job.getCoverLetter());
+			});
+	}
+
 	// --------------------- EDIT STALE JOB TESTS -----------------------------
-	// TODO
 	//  - Stale job tests
 	//    +++ Note, a job where its resume id and cover letter id are the same
 	//        as the latest version is not considered stale
@@ -1030,11 +1170,11 @@ class Qu1cksaveBackendApplicationTests {
 	//        * MAKE TESTS FOR THESE 3
 	//    1.) Job has no resume, then edited to have a resume. Edit job again,
 	//       but using the old job w/o the resume
-	//    2.) Job has a resume, then edited to have no resume. Edit job again,
-	//       but using the old job w/ the resume
-	//    3.) Job has a resume, then edited to have a different resume id (by
+	//    2.) Job has a resume, then edited to have a different resume id (by
 	//       removing the resume, then adding one again). Edit job again,
 	//       but using the old job w/ the old resume id
+	//    3.) Job has a resume, then edited to have no resume. Edit job again,
+	//       but using the old job w/ the resume
 	//    +++ Other possible issues:
 	//    -- Same resume id. User then attempts to edit resume by editing the
 	//       stale job
