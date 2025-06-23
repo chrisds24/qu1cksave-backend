@@ -687,7 +687,7 @@ class Qu1cksaveBackendApplicationTests {
 		// INSERT INTO cover_letter(id, member_id, file_name, mime_type) VALUES
 		//   ('2bbbefef-46c8-e2a4-2bbb-beefdadafefe', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'TODELETE_CoverLetter.pdf', 'application/pdf');
 		// Delete job
-		this.webTestClient
+		ResponseJobDto job = this.webTestClient
 			.delete()
 			.uri("/job/323e9876-8018-b93a-8197-beefbeefbeef")
 			.exchange()
@@ -695,10 +695,17 @@ class Qu1cksaveBackendApplicationTests {
 			.isOk()
 			.expectHeader()
 			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody()
-			.jsonPath("$.title").isEqualTo("To Delete Job Title")
-			.jsonPath("$.company_name").isEqualTo("To Delete Job Company")
+//			.expectBody()
+//			.jsonPath("$.title").isEqualTo("To Delete Job Title")
+//			.jsonPath("$.company_name").isEqualTo("To Delete Job Company")
+			.expectBody(ResponseJobDto.class)
+			.returnResult()
+			.getResponseBody()
 		;
+
+		assertNotNull(job);
+		assertEquals("To Delete Job Title", job.getTitle());
+		assertEquals("To Delete Job Company", job.getCompanyName());
 
 		// Make sure it's no longer there
 		this.webTestClient
@@ -712,6 +719,25 @@ class Qu1cksaveBackendApplicationTests {
 		;
 
 		// TODO: Get the resume and cover letter from each respective endpoint
+		this.webTestClient
+			.get()
+			.uri("/resume/" + job.getResumeId())
+			.exchange()
+			.expectStatus()
+			.isNotFound()
+			.expectBody()
+			.isEmpty()
+		;
+
+		this.webTestClient
+			.get()
+			.uri("/coverLetter/" + job.getCoverLetterId())
+			.exchange()
+			.expectStatus()
+			.isNotFound()
+			.expectBody()
+			.isEmpty()
+		;
 	}
 
 	@Test
@@ -1185,6 +1211,60 @@ class Qu1cksaveBackendApplicationTests {
 				double[] arr = {2, 4, 7, 10, 14};
 				assertThat(Arrays.equals(arr, resume.getByteArrayAsArray())).isTrue();
 			})
+		;
+	}
+
+	@Test
+	@Order(28)
+	void getNonExistentResume() {
+		this.webTestClient
+			.get()
+			.uri("/resume/d160dead-a001-a001-a001-fefe322ec1db")
+			.exchange()
+			.expectStatus()
+			.isNotFound()
+			.expectBody()
+			.isEmpty()
+		;
+	}
+
+	@Test
+	@Order(29)
+	void getOneCoverLetter() {
+		// INSERT INTO cover_letter(id, member_id, file_name, mime_type) VALUES
+		//   ('fefeefef-dada-e2a4-2bbb-3cccbeef32e3', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8',
+		//   'Example_CoverLetter.pdf', 'application/pdf');
+		this.webTestClient
+			.get()
+			.uri("/coverLetter/fefeefef-dada-e2a4-2bbb-3cccbeef32e3")
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody(ResponseCoverLetterDto.class)
+			.consumeWith(result -> {
+				ResponseCoverLetterDto coverLetter = result.getResponseBody();
+				assertNotNull(coverLetter);
+				assertEquals("Example_CoverLetter.pdf", coverLetter.getFileName());
+				assertEquals("application/pdf", coverLetter.getMimeType());
+				double[] arr = {2, 4, 7, 10, 14};
+				assertThat(Arrays.equals(arr, coverLetter.getByteArrayAsArray())).isTrue();
+			})
+		;
+	}
+
+	@Test
+	@Order(30)
+	void getNonExistentCoverLetter() {
+		this.webTestClient
+			.get()
+			.uri("/coverLetter/beefdead-d160-fefe-061d-dead1bf0beef")
+			.exchange()
+			.expectStatus()
+			.isNotFound()
+			.expectBody()
+			.isEmpty()
 		;
 	}
 }

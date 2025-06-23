@@ -23,10 +23,12 @@ DELETE FROM resume;
 INSERT INTO resume(id, member_id, file_name, mime_type) VALUES ('132a76f8-2bbb-e2a4-46c8-386be1fe3d55', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'ChristianDelosSantos_Resume.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
 INSERT INTO resume(id, member_id, file_name, mime_type) VALUES ('2bbb76f8-46c8-e2a4-2bbb-3d55e1fe386b', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'ChristianDelosSantos_Resume.pdf', 'application/pdf');
 INSERT INTO resume(id, member_id, file_name, mime_type) VALUES ('3cccfefe-46c8-e2a4-46c8-dadae1fedada', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'TODELETE_Resume.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+INSERT INTO resume(id, member_id, file_name, mime_type) VALUES ('323efefe-beef-e2a4-46c8-dadae1fedead', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'Example_Resume.pdf', 'application/pdf');
 
 DELETE FROM cover_letter;
 INSERT INTO cover_letter(id, member_id, file_name, mime_type) VALUES ('3ccc76f8-46c8-e2a4-46c8-3d55e1fe3d55', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'ChristianDelosSantos_CoverLetter.pdf', 'application/pdf');
 INSERT INTO cover_letter(id, member_id, file_name, mime_type) VALUES ('2bbbefef-46c8-e2a4-2bbb-beefdadafefe', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'TODELETE_CoverLetter.pdf', 'application/pdf');
+INSERT INTO cover_letter(id, member_id, file_name, mime_type) VALUES ('fefeefef-dada-e2a4-2bbb-3cccbeef32e3', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'Example_CoverLetter.pdf', 'application/pdf');
 
 ---------------------- Anna Admin's jobs and files ---------------------------
 -- INSERT INTO job(id, member_id, title, company_name, job_description, notes, is_remote, country, us_state, city, date_applied, date_posted, job_status, links, found_from) VALUES ('a14ead6c-d173-1111-a001-2717322ebd12', '4604289c-b8fe-4560-8960-4da47fdfef94', 'anna swe job', 'anna swe company', 'anna swe job description.', 'Useless note.', 'Remote', 'United States', 'CA', 'Los Angeles', '{"year": 2024, "month": 3, "date": 3}', '{"year": 2024, "month": 2, "date": 29}', 'Applied', '["https://www.google.com/about/careers/applications/jobs/results/128445096799412934-software-engineer-quantum-error-correction-quantum-ai?utm_source=about&utm_medium=referral&utm_campaign=footer-link&q=%22Software%20Engineer%22"]', 'Google Careers');
