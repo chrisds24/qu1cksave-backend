@@ -16,7 +16,8 @@ import java.io.IOException;
 // Convert to actual type
 // https://stackoverflow.com/questions/75923197/how-to-convert-a-json-property-to-an-object-using-objectmapper
 //
-// NOTE: (6/12/25) Will just use JsonProperty instead
+// NOTE: (6/12/25)
+//   THIS IS NOT USED. Will just use JsonProperty instead
 public class ResponseJobDtoDeserializer extends StdDeserializer<ResponseJobDto> {
     public ResponseJobDtoDeserializer() {
         this(null);

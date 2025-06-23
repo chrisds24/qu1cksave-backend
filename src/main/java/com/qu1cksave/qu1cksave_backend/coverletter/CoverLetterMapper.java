@@ -8,7 +8,8 @@ public class CoverLetterMapper {
             entity.getId(),
             entity.getMemberId(),
             entity.getFileName(),
-            entity.getMimeType()
+            entity.getMimeType(),
+            null // Entity has no byteArrayAsArray
         );
     }
 

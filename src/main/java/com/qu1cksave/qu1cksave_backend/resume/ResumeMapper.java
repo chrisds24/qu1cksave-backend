@@ -8,7 +8,8 @@ public class ResumeMapper {
             entity.getId(),
             entity.getMemberId(),
             entity.getFileName(),
-            entity.getMimeType()
+            entity.getMimeType(),
+            null // Entity has no byteArrayAsArray
         );
     }
 

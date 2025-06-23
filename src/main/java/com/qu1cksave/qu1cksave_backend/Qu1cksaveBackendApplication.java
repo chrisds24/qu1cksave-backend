@@ -31,8 +31,11 @@ public class Qu1cksaveBackendApplication {
 //      To run a specific one:
 //        docker-compose -f docker-compose-test.yml up -d
 //        docker-compose -f docker-compose-test.yml down
+//
+//		docker compose		After the update, use this now instead
+//
 // 4.) ./gradlew bootRun		To run
-// 5.) Go to http://localhost:8080/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
+// 5.) Go to http://localhost:8080/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
 //
 // For tests:  ./gradlew clean test --info		(More info)   	OR		 ./gradlew clean test
 

@@ -198,10 +198,11 @@ public class ResponseJobDto {
 
             if (resume != null) {
                 if (resume instanceof String) {
+                    // NOTE: Have not tested if this works with
+                    //   ResponseResumeDto having a byteArrayAsArray
                     this.resume = objectMapper.readValue((String) resume, ResponseResumeDto.class);
-                } else {
+                } else { // Used when deserializing during tests
                     LinkedHashMap resumeMap = (LinkedHashMap) resume;
-
                     String fileId = (String) resumeMap.get("id");
                     String fileMemberId = (String) resumeMap.get("member_id");
 
@@ -221,9 +222,9 @@ public class ResponseJobDto {
                         fileId != null ? UUID.fromString(fileId): null,
                         fileMemberId != null ? UUID.fromString(fileMemberId): null,
                         (String) resumeMap.get("file_name"),
-                        (String) resumeMap.get("mime_type")
+                        (String) resumeMap.get("mime_type"),
+                        resumeMap.get("byte_array_as_array")
                     );
-
                 }
             }
 
@@ -239,7 +240,8 @@ public class ResponseJobDto {
                         fileId != null ? UUID.fromString(fileId): null,
                         fileMemberId != null ? UUID.fromString(fileMemberId): null,
                         (String) coverLetterMap.get("file_name"),
-                        (String) coverLetterMap.get("mime_type")
+                        (String) coverLetterMap.get("mime_type"),
+                        coverLetterMap.get("byte_array_as_array")
                     );
                 }
             }
@@ -337,7 +339,8 @@ public class ResponseJobDto {
             resume.getId() == null &&
             resume.getMemberId() == null &&
             resume.getFileName() == null &&
-            resume.getMimeType() == null
+            resume.getMimeType() == null &&
+            resume.getByteArrayAsArray() == null
         ) {
             resume = null;
         }
@@ -347,7 +350,8 @@ public class ResponseJobDto {
             coverLetter.getId() == null &&
             coverLetter.getMemberId() == null &&
             coverLetter.getFileName() == null &&
-            coverLetter.getMimeType() == null
+            coverLetter.getMimeType() == null &&
+            coverLetter.getByteArrayAsArray() == null
         ) {
             coverLetter = null;
         }

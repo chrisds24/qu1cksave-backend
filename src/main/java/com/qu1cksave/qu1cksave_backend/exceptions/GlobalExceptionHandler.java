@@ -111,7 +111,14 @@ public class GlobalExceptionHandler {
         Exception.class
     })
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Object handleOtherExceptions() {
+//    public Object handleOtherExceptions() {
+    public Object handleOtherExceptions(HttpServletRequest req, Exception ex) {
+        // TODO: TESTING
+        System.out.println("****** I GOT HERE !!!!!!!!!!!!!!!!");
+        System.out.println("****** STACK TRACE: " + Arrays.toString(ex.getStackTrace()));
+        System.out.println("****** MESSAGE: " + ex.getMessage());
+        System.out.println("****** CAUSE:" + ex.getCause().toString());
+
         return null;
     }
 

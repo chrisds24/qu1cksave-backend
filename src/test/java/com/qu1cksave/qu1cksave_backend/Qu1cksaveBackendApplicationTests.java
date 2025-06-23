@@ -20,6 +20,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -153,15 +154,13 @@ class Qu1cksaveBackendApplicationTests {
 	//          using a stale job (aka an outdated update timestamp)
  	//  ---------------------------
 	//  LATER: Not logged in tests for each endpoint
-	//  +++++++++++++++++++++++++++
-	//  The ??? in front means I'm not sure if I even need this test
 
 	// Used by some create job tests
 	private void badRequestBodyCreateTest(String json) {
 		// Create the job
 		this.webTestClient
 			.post()
-			.uri("/jobs")
+			.uri("/job")
 			.contentType(MediaType.APPLICATION_JSON)
 			// No resume and cover letter
 			.bodyValue(json)
@@ -178,7 +177,7 @@ class Qu1cksaveBackendApplicationTests {
 	private WebTestClient.BodySpec<ResponseJobDto, ?> getJobRequestReturningBodySpec(String id) {
 		return this.webTestClient
 			.get()
-			.uri("/jobs/" + id)
+			.uri("/job/" + id)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -194,7 +193,7 @@ class Qu1cksaveBackendApplicationTests {
 	) {
 		return this.webTestClient
 			.put()
-			.uri("/jobs/" + jobId)
+			.uri("/job/" + jobId)
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(jobJson)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
@@ -216,7 +215,7 @@ class Qu1cksaveBackendApplicationTests {
 	) {
 		this.webTestClient
 			.put()
-			.uri("/jobs/" + jobId)
+			.uri("/job/" + jobId)
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(jobJson)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
@@ -234,25 +233,13 @@ class Qu1cksaveBackendApplicationTests {
 	}
 
 	// ------------------- GET ONE JOB TESTS -------------------
-
-	// https://docs.spring.io/spring-framework/reference/testing/webtestclient.html
-	// - Has useful methods/assertions
-	// https://www.javadoc.io/doc/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.html
-	// - Docs on methods
-	// - The following also have methods
-	// - URI: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.UriSpec.html
-	// - Request: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.RequestHeadersSpec.html
-	// - Request Body: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.RequestBodySpec.html
-	// - Response: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.ResponseSpec.html
- 	// - Body Content: https://www.javadoc.io/static/org.springframework/spring-test/5.1.1.RELEASE/org/springframework/test/web/reactive/server/WebTestClient.BodyContentSpec.html
-
 	// Get one job tests
 	//  - Get one job, job exists
 	//  - Get one job, job doesn't exist
 	//    -- Covers case when user specifies an id of a job that doesn't belong
 	//       to them (since single jobs are found by id and userId)
 	//  - ??? Get one job, no id provided
-	//    -- Just goes to regular /jobs route but without a query
+	//    -- Just goes to regular /job route but without a query
 
 	@Test
 	@Order(2)
@@ -261,7 +248,7 @@ class Qu1cksaveBackendApplicationTests {
 		// Expected: 'Software Engineer', 'Microsoft', very long description
 		this.webTestClient
 			.get()
-			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -288,7 +275,7 @@ class Qu1cksaveBackendApplicationTests {
 	void getOneJobWithFiles() { // Get one job, job exists
 		this.webTestClient
 			.get()
-			.uri("/jobs/018eae28-8323-7918-b93a-6cdb9d189686")
+			.uri("/job/018eae28-8323-7918-b93a-6cdb9d189686")
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -308,7 +295,7 @@ class Qu1cksaveBackendApplicationTests {
 	void getNonExistentJob() {
 		this.webTestClient
 			.get()
-			.uri("/jobs/deadbeef-abab-6161-7c7c-fefe58135858")
+			.uri("/job/deadbeef-abab-6161-7c7c-fefe58135858")
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -327,7 +314,7 @@ class Qu1cksaveBackendApplicationTests {
 	void getForbiddenJob() {
 		this.webTestClient
 			.get()
-			.uri("/jobs/a14ead6c-d173-1111-a001-2717322ebd12")
+			.uri("/job/a14ead6c-d173-1111-a001-2717322ebd12")
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -345,7 +332,7 @@ class Qu1cksaveBackendApplicationTests {
 	//  - Create job, wrong types
 	//  - Create invalid job, missing required fields
 	//  - Create invalid job, extra fields
-	//  -
+	//  - ...
 	//   * For the last 2, I could use some kind of API validation, filters,
 	//     or custom code. API validation would be ideal, but custom code could
 	//     be enough for now
@@ -359,7 +346,7 @@ class Qu1cksaveBackendApplicationTests {
 		// Create the job
 		ResponseJobDto responseJobDto = this.webTestClient
 			.post()
-			.uri("/jobs")
+			.uri("/job")
 			.contentType(MediaType.APPLICATION_JSON)
 			// No resume and cover letter
 			.bodyValue(TestInputs.testNewOrEditJobNoFiles)
@@ -377,7 +364,6 @@ class Qu1cksaveBackendApplicationTests {
 		// Make sure create returned the expected value
 		assertNotNull(responseJobDto);
 		// Note that the toString uses camelCase key names
-//		System.out.println("********* responseJobDto: " + responseJobDto + "********************");
 		assertNotNull(responseJobDto.getId());
 		assertEquals(UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8"), responseJobDto.getMemberId());
 		assertNotNull(responseJobDto.getDateSaved());
@@ -399,7 +385,7 @@ class Qu1cksaveBackendApplicationTests {
 		// Get the job
 		this.webTestClient
 			.get()
-			.uri("/jobs/" + responseJobDto.getId())
+			.uri("/job/" + responseJobDto.getId())
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -423,7 +409,7 @@ class Qu1cksaveBackendApplicationTests {
 		// Create the job
 		ResponseJobDto responseJobDto = this.webTestClient
 			.post()
-			.uri("/jobs")
+			.uri("/job")
 			.contentType(MediaType.APPLICATION_JSON)
 			// No resume and cover letter
 			.bodyValue(TestInputs.testNewOrEditJobWithFiles)
@@ -456,7 +442,7 @@ class Qu1cksaveBackendApplicationTests {
 
 		this.webTestClient
 			.get()
-			.uri("/jobs/" + responseJobDto.getId())
+			.uri("/job/" + responseJobDto.getId())
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -472,24 +458,6 @@ class Qu1cksaveBackendApplicationTests {
 		//  ...
 		//  ...
 	}
-
-	// TODO: 6/15/25
-	// - Search "how to validate request body in spring boot"
-	//   -- "how to validate parameters spring boot"
-	//   -- https://www.baeldung.com/spring-boot-bean-validation
-	//      + @Valid on request body
-	//      + When the target argument fails to pass the validation, Spring Boot throws a MethodArgumentNotValidException exception
-	//   -- https://stackoverflow.com/questions/64517537/springboot-validate-requestbody
-	//      + Add spring-boot-starter-validation dependency
-	//   -- https://medium.com/@tericcabrel/validate-request-body-and-parameter-in-spring-boot-53ca77f97fe9
-	//      + @Validated on controller
-	//   -- https://www.baeldung.com/java-bean-validation-not-null-empty-blank
-	//      + Difference between notnull, notblank, notempty
-	//   -- https://hibernate.org/validator/documentation/
-	//      + Refer to if needed
-	// - NOTE: I can't have @NotNull on id for example, since RequestJobDto
-	//   is used for both creating (no id) and editing (has id) jobs
-	//   -- So I'll need to check this manually
 
 	// TODO: (6/16/25)
 	//  - These are not working properly. Some still create an object even
@@ -550,7 +518,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			// Molly Member's id
-			.uri("/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
+			.uri("/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -603,13 +571,14 @@ class Qu1cksaveBackendApplicationTests {
 	}
 
 	// TODO: Uncomment this once Spring Security authentication added
+	//  - Anna actually has a job in data.sql, which I commented out
 //	@Test
 //	@Order(12)
 //	void getMultipleJobsEmptyList() {
 //		this.webTestClient
 //			.get()
 //			// Anna Admin's id
-//			.uri("/jobs?id=4604289c-b8fe-4560-8960-4da47fdfef94")
+//			.uri("/job?id=4604289c-b8fe-4560-8960-4da47fdfef94")
 //			.exchange()
 //			.expectStatus()
 //			.isOk()
@@ -628,7 +597,7 @@ class Qu1cksaveBackendApplicationTests {
 	void getMultipleJobsWrongUser() {
 		this.webTestClient
 			.get()
-			.uri("/jobs?id=4604289c-b8fe-4560-8960-4da47fdfef94")
+			.uri("/job?id=4604289c-b8fe-4560-8960-4da47fdfef94")
 			.exchange()
 			.expectStatus()
 			// Wrong user returns not found for security reasons
@@ -643,7 +612,7 @@ class Qu1cksaveBackendApplicationTests {
 	void getMultipleJobsNonExistentUser() {
 		this.webTestClient
 			.get()
-			.uri("/jobs?id=1234abcd-dead-beef-daed-11112323aaaa")
+			.uri("/job?id=1234abcd-dead-beef-daed-11112323aaaa")
 			.exchange()
 			.expectStatus()
 			// Although the query returns a non-empty list if given a non-
@@ -661,7 +630,7 @@ class Qu1cksaveBackendApplicationTests {
 	void getMultipleJobsNoUserIdProvided() {
 		this.webTestClient
 			.get()
-			.uri("/jobs")
+			.uri("/job")
 			.exchange()
 			.expectStatus()
 			.isBadRequest()
@@ -684,7 +653,7 @@ class Qu1cksaveBackendApplicationTests {
 		// Delete job
 		this.webTestClient
 			.delete()
-			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -698,7 +667,7 @@ class Qu1cksaveBackendApplicationTests {
 		// Make sure it's no longer there
 		this.webTestClient
 			.get()
-			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -710,8 +679,39 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(17)
 	void deleteJobWithFilesThenGetThatJob() {
-		// TODO: Create resume and cover letter endpoint
-		//  Ensure that file metadata are deleted from database
+		// INSERT INTO job(id, member_id, resume_id, cover_letter_id, title, company_name, is_remote, job_status) VALUES
+		//   ('323e9876-8018-b93a-8197-beefbeefbeef', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', '3cccfefe-46c8-e2a4-46c8-dadae1fedada'
+		//   , '2bbbefef-46c8-e2a4-2bbb-beefdadafefe','To Delete Job Title', 'To Delete Job Company', 'Hybrid', 'Not Applied');
+		// INSERT INTO resume(id, member_id, file_name, mime_type) VALUES
+		//   ('3cccfefe-46c8-e2a4-46c8-dadae1fedada', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'TODELETE_Resume.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+		// INSERT INTO cover_letter(id, member_id, file_name, mime_type) VALUES
+		//   ('2bbbefef-46c8-e2a4-2bbb-beefdadafefe', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'TODELETE_CoverLetter.pdf', 'application/pdf');
+		// Delete job
+		this.webTestClient
+			.delete()
+			.uri("/job/323e9876-8018-b93a-8197-beefbeefbeef")
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody()
+			.jsonPath("$.title").isEqualTo("To Delete Job Title")
+			.jsonPath("$.company_name").isEqualTo("To Delete Job Company")
+		;
+
+		// Make sure it's no longer there
+		this.webTestClient
+			.get()
+			.uri("/job/23e9876-8018-b93a-8197-beefbeefbeef")
+			.exchange()
+			.expectStatus()
+			.isNotFound()
+			.expectBody()
+			.isEmpty()
+		;
+
+		// TODO: Get the resume and cover letter from each respective endpoint
 	}
 
 	@Test
@@ -724,7 +724,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.delete()
 			// This job has already been deleted in the previous test
-			.uri("/jobs/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -767,7 +767,7 @@ class Qu1cksaveBackendApplicationTests {
 		// Edit the job
 		this.webTestClient
 			.put()
-			.uri("/jobs/018ead6b-d160-772d-a001-2606322ebd1c")
+			.uri("/job/018ead6b-d160-772d-a001-2606322ebd1c")
 			.contentType(MediaType.APPLICATION_JSON)
 			// No resume and cover letter
 			.bodyValue(TestInputs.testNewOrEditJobNoFiles)
@@ -788,7 +788,7 @@ class Qu1cksaveBackendApplicationTests {
 		// Get the job
 		this.webTestClient
 			.get()
-			.uri("/jobs/018ead6b-d160-772d-a001-2606322ebd1c")
+			.uri("/job/018ead6b-d160-772d-a001-2606322ebd1c")
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1120,15 +1120,6 @@ class Qu1cksaveBackendApplicationTests {
 		ResponseJobDto res = getJobRequestReturningBodySpec(
 			"018ead6b-d160-772d-a001-2606322ebd1c"
 		)
-//			.consumeWith(result -> {
-//				ResponseJobDto res = result.getResponseBody();
-//				assertNotNull(res);
-//				// The native query used by getJob(get one job) returns a file
-//				//   with empty fields if the job doesn't that file. Need to
-//				//   set those to null so comparison could work properly
-//				res.nullifyEmptyFiles();
-//				assertEquals(job, res);
-//			});
 			.returnResult()
 			.getResponseBody();
 
@@ -1170,42 +1161,51 @@ class Qu1cksaveBackendApplicationTests {
 			});
 	}
 
-	// ******** STALE JOB TEST 3 ********
-	// Won't use since I have no way of getting the resume and cover letter
-	//   id of the job before the files were deleted
-//	@Test
-//	@Order(27)
-//	void editJobWithNoFilesUsingStaleJobWithOutdatedFiles() {
-//		// First, get the job to be edited to obtain its file ids
-//		ResponseJobDto origJob = getJobRequestReturningBodySpec(
-//			"018ead6b-d160-772d-a001-2606322ebd1c")
-//			.returnResult()
-//			.getResponseBody();
-//
-//		assertNotNull(origJob);
-//
-//		editJobRequestUsingStaleJob(
-//			"018ead6b-d160-772d-a001-2606322ebd1c",
-//			TestInputs.testEditJobWithFilesEdited(
-//				origJob.getResumeId().toString(),
-//				origJob.getCoverLetterId().toString()
-//			)
-//		);
-//
-//		// Ensure that the job hasn't been changed (check the resume id
-//		//   and make sure it's not there)
-//		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
-//			.consumeWith(result -> {
-//				ResponseJobDto job = result.getResponseBody();
-//				assertNotNull(job);
-//				assertEquals(origJob.getTitle(), job.getTitle());
-//				assertNull(job.getResumeId());
-//				assertNull(job.getCoverLetterId());
-//				assertNull(job.getResume());
-//				assertNull(job.getCoverLetter());
-//			});
-//	}
+	@Test
+	@Order(27)
+	void getOneResume() {
+		// INSERT INTO resume(id, member_id, file_name, mime_type) VALUES
+		//   ('323efefe-beef-e2a4-46c8-dadae1fedead', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'Example_Resume.pdf',
+		//   'application/pdf');
+		this.webTestClient
+			.get()
+			.uri("/resume/323efefe-beef-e2a4-46c8-dadae1fedead")
+			// No resume and cover letter
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody(ResponseResumeDto.class)
+			.consumeWith(result -> {
+				ResponseResumeDto resume = result.getResponseBody();
+				assertNotNull(resume);
+				assertEquals("Example_Resume.pdf", resume.getFileName());
+				assertEquals("application/pdf", resume.getMimeType());
+				double[] arr = {2, 4, 7, 10, 14};
+				assertThat(Arrays.equals(arr, resume.getByteArrayAsArray())).isTrue();
+			})
+		;
+	}
 }
+
+// NOTES: 6/15/25
+// - Search "how to validate request body in spring boot"
+//   -- "how to validate parameters spring boot"
+//   -- https://www.baeldung.com/spring-boot-bean-validation
+//      + @Valid on request body
+//      + When the target argument fails to pass the validation, Spring Boot throws a MethodArgumentNotValidException exception
+//   -- https://stackoverflow.com/questions/64517537/springboot-validate-requestbody
+//      + Add spring-boot-starter-validation dependency
+//   -- https://medium.com/@tericcabrel/validate-request-body-and-parameter-in-spring-boot-53ca77f97fe9
+//      + @Validated on controller
+//   -- https://www.baeldung.com/java-bean-validation-not-null-empty-blank
+//      + Difference between notnull, notblank, notempty
+//   -- https://hibernate.org/validator/documentation/
+//      + Refer to if needed
+// - NOTE: I can't have @NotNull on id for example, since RequestJobDto
+//   is used for both creating (no id) and editing (has id) jobs
+//   -- So I'll need to check this manually
 
 // NOTE: (5/10/25) What I did for container setup
 // 1.) Using @TestPropertySource, specify that this test suite will use

@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/jobs")
+//@RequestMapping("/jobs")
+@RequestMapping("/job")
 // https://medium.com/@tericcabrel/validate-request-body-and-parameter-in-spring-boot-53ca77f97fe9
 // - @Validated on controller
 @Validated
@@ -75,11 +76,10 @@ public class JobController {
     @GetMapping("/{id}") // NOTE: For now, this is used for testing only
     public ResponseEntity<ResponseJobDto> getJob(@PathVariable UUID id) {
         UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
-        // Use this job's id for testing:
-        // '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
-        // Expected: 'Software Engineer', 'Microsoft', very long description
         ResponseJobDto job = jobService.getJob(id, authUserId);
-        return new ResponseEntity<ResponseJobDto>(job, job != null ? HttpStatus.OK : HttpStatus.NOT_FOUND);
+        return new ResponseEntity<ResponseJobDto>(
+            job, job != null ? HttpStatus.OK : HttpStatus.NOT_FOUND
+        );
     }
 
     @PostMapping()
