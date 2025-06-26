@@ -10,6 +10,9 @@ public class Qu1cksaveBackendApplication {
 	}
 }
 
+// TODO: Packaging a Spring Boot app in a Docker container
+//  - https://docs.spring.io/spring-boot/reference/packaging/index.html
+
 // When running the app:
 // 1.) Might need to do File > Invalidate Caches
 // 2.) Set environment variables
