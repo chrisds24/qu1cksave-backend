@@ -7,8 +7,9 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
+// Used for add new job and edit job
 public class RequestJobDto {
-    // TODO:
+    // NOTE:
     //  - (6/16/25) I haven't added @NotNull constraints to the response
     //    dtos. The entities have @Column(...nullable=false)
     private final UUID resumeId;

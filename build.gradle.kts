@@ -23,16 +23,10 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.postgresql:postgresql")
-	// Needed for error:
-	//   com.fasterxml.jackson.databind.exc.InvalidDefinitionException: Java 8 date/time type `java.time.Instant` not supported by default: add Module "com.fasterxml.jackson.datatype:jackson-datatype-jsr310" to enable handling
-	// - I added the dependency, but it still doesn't work
-	// - I commented out the return new ObjectMapper().writeValueAsString(this)
-	//   temporarily since I don't need it yet
-//	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2")
+//	implementation("org.springframework.security:spring-security-crypto")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 //	https://java.testcontainers.org/
 	testImplementation("org.testcontainers:testcontainers:1.21.0")
-//	implementation platform('org.testcontainers:testcontainers-bom:1.21.0')
 	implementation(platform("org.testcontainers:testcontainers-bom:1.21.0"))
 	testImplementation("org.testcontainers:postgresql")
 	testImplementation("org.testcontainers:junit-jupiter")
@@ -42,3 +36,18 @@ dependencies {
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
+
+// Finding the correct versions
+// https://medium.com/@python-javascript-php-html-css/how-to-choose-the-correct-spring-security-crypto-version-for-spring-framework-5-3-27-c3d8330adc0e
+// - Script to dynamically find and use the correct jar version through Gradle build automation
+	// Use Gradle's dependency constraint mechanism
+//	dependencies {
+//		implementation platform('org.springframework.boot:spring-boot-dependencies:2.6.3')
+//		implementation 'org.springframework.security:spring-security-crypto'
+//	}
+	// Specify platform dependencies to ensure all versions match
+	// Run: ./gradlew dependencies to verify the selected versions
+//
+// https://stackoverflow.com/questions/78726416/which-version-of-spring-security-crypto-jar-compatible-to-support-spring-version
+// - https://docs.spring.io/spring-boot/docs/2.7.12/reference/html/dependency-versions.html
+//   -- I should look at the dependency versions for my specific spring boot version

@@ -139,6 +139,9 @@ public class ResponseJobDto {
             this.dateSaved = dateSaved.toString();
 
             // https://www.baeldung.com/jackson-object-mapper-tutorial
+            // IMPORTANT: When obtaining from the database via native query,
+            //   objects such YearMonthDateDto, String[], and the custom file
+            //   classes are passed to the constructor as String.
             ObjectMapper objectMapper = new ObjectMapper();
             // ------------ OLD (Keep for reference) -------------
             // If using Map<String, Object> for dateApplied/Posted. Otherwise,
@@ -147,8 +150,11 @@ public class ResponseJobDto {
 //            this.datePosted = datePosted != null ? objectMapper.readValue(datePosted, new TypeReference<Map<String, Object>>(){}) : null;
             // ------------------------------
             if (dateApplied != null) {
+                // When obtaining from the database via native query, this is a
+                //   String.
                 if (dateApplied instanceof String) {
                     this.dateApplied = objectMapper.readValue((String) dateApplied, YearMonthDateDto.class);
+                // When deserializing, such as during integeration tests
                 } else {
                     // When I do:
                     //   this.dateApplied = (YearMonthDateDto) dateApplied;
@@ -248,6 +254,14 @@ public class ResponseJobDto {
 //            this.resume = resume != null ? objectMapper.readValue(resume, ResponseResumeDto.class) : null;
 //            this.coverLetter = coverLetter != null ? objectMapper.readValue(coverLetter, ResponseCoverLetterDto.class) : null;
         } catch (JsonProcessingException e) {
+            // TODO: I can just have the method throws JsonProcessingException
+            //  since I'm not adding a custom message here
+            //  - I needed to have this throw a runtime exception since
+            //    Transactional only rolls back on runtime exceptions.
+            //    However, adding the annotation on the config below changes that
+            //      @EnableTransactionManagement(rollbackOn=ALL_EXCEPTIONS)
+            //  - UPDATE: I'm keeping this since adding throws JsonProcessingException
+            //    requires adding a throws again in the service, then the controller, ...
             throw new RuntimeException(e);
         }
     }

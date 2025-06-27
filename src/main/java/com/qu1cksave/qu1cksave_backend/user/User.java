@@ -1,10 +1,13 @@
 package com.qu1cksave.qu1cksave_backend.user;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -13,14 +16,23 @@ import java.util.UUID;
 @Entity
 @Table(name = "member")
 public class User {
+    // IMPORTANT:
+    // - email, password, name, and roles aren't marked as NOT NULL in the
+    //   schema. But I'm marking it as not nullable here since that is the
+    //   correct thing to do
+
+    @Generated
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @ColumnDefault("gen_random_uuid()")
     private UUID id;
 
+    @Column(nullable = false)
     private String email;
 
+    @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
     private String name;
 
     // TODO:
@@ -29,6 +41,7 @@ public class User {
     //    might not work
     //  - UPDATE: It does work
     @JdbcTypeCode(SqlTypes.JSON)
+    @Column(nullable = false)
     private String[] roles;
 
     // TODO: I need a User-type class that has an optional accessToken
@@ -162,4 +175,15 @@ public class User {
 //    -- Has really nice non Spring Security specific info about filters
 //  - https://www.baeldung.com/spring-boot-add-filter
 //    -- GREAT SOURCE :)
+
+// BCrypt without Spring Security
+// - spring-security-crypto (From Google AI Overview)
+//   -- Can instantiate a BCryptPasswordEncoder
+// - https://stackoverflow.com/questions/73940887/best-way-for-spring-boot-password-encryption-not-using-bcryptpasswordencoder
+//   -- Suggests spring-security-crypto and BCryptPasswordEncoder
+// - https://stackoverflow.com/questions/56249159/use-bcrypt-hashing-function-in-spring-boot-without-all-the-overkill-security
+//   -- If using Spring Security, add the code below to not include the auto configurations
+//      + @SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
+// - https://docs.spring.io/spring-security/reference/features/integrations/cryptography.html
+//   -- Example on how to use spring-security-crypto and BCryptPasswordEncoder
 

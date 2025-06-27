@@ -178,9 +178,6 @@ public class Job {
     // https://hibernate.org/orm/quickly/
     // - If you have a field or property that maps to a single column, but its
     //   type isn’t one of the basic types build in to Hibernate, you can use an AttributeConverter
-    // TODO: Keep this one in mind in case it causes errors
-    //   - Also, should this be String[] or List<String> ???
-    //   - This seems to work fine
     @JdbcTypeCode(SqlTypes.JSON)
     private String[] links;
 

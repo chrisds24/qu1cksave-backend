@@ -10,6 +10,11 @@ public class Qu1cksaveBackendApplication {
 	}
 }
 
+// TODO: (5/7/25): I need to set the URI for my whole backend
+//  Ex. /api/v1     instead of just /
+//  So it would become http://localhost:8080/api/v1/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
+//  Instead of http://localhost:8080/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8 (CURRENT)
+
 // TODO: Packaging a Spring Boot app in a Docker container
 //  - https://docs.spring.io/spring-boot/reference/packaging/index.html
 
