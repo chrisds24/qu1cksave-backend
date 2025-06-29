@@ -95,7 +95,7 @@ public class GlobalExceptionHandler {
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
 //    public Object handleBadRequestBody() {
-    public Object handleBadRequestBody(HttpServletRequest req, Exception ex) {
+    public Object handleBadRequestBodyExceptions(HttpServletRequest req, Exception ex) {
         // Keep here for now for reference
         // - This actually helped me fix a bug
 //        System.out.println("****** I GOT HERE !!!!!!!!!!!!!!!!");
@@ -103,6 +103,22 @@ public class GlobalExceptionHandler {
 //        System.out.println("****** MESSAGE: " + ex.getMessage());
 //        System.out.println("****** CAUSE:" + ex.getCause().toString());
 
+        return null;
+    }
+
+    // Note: I'm using a 404 Not Found Exception to not give away the existence
+    //   of a user
+    @ExceptionHandler(InvalidCredentialsException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Object handleInvalidCredentialsException() {
+        return null;
+    }
+
+    // TODO: I read that stating that a user already exists is a security
+    //   issue. What status code to show instead?
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Object handleUserAlreadyExistsException() {
         return null;
     }
 
