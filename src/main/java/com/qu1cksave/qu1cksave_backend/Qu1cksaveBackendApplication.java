@@ -26,6 +26,8 @@ public class Qu1cksaveBackendApplication {
 //         -- (OLD Node version) POSTGRES_HOST=localhost
 //         -- Can add ?useSSL=false at end if needed (self explanatory)
 //
+//		 ****** NOTE: It's fine to put these here, since they're only used for
+//         development.
 //       export POSTGRES_HOST=localhost
 //       - The docker-compose.yml uses this
 //       - Also, the spring.datasource.url
@@ -33,6 +35,8 @@ public class Qu1cksaveBackendApplication {
 //       export POSTGRES_DB=dev
 //		 export POSTGRES_USER=postgres
 //		 export POSTGRES_PASSWORD=postgres
+//       ****** Shouldn't really matter if I leave this here, but just not gonna do it
+//       export ACCESS_TOKEN=???
 // 3.) Run postgres docker container
 //		docker-compose down		(If you want to reset. Then compose up again)
 // 		docker-compose up -d
@@ -40,7 +44,7 @@ public class Qu1cksaveBackendApplication {
 //        docker-compose -f docker-compose-test.yml up -d
 //        docker-compose -f docker-compose-test.yml down
 //
-//		docker compose		After the update, use this now instead
+//		docker compose		After the update, use this now instead of docker-compose
 //
 // 4.) ./gradlew bootRun		To run
 // 5.) Go to http://localhost:8080/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8

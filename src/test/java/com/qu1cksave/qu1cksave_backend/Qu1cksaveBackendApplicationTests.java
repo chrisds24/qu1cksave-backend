@@ -3,6 +3,7 @@ package com.qu1cksave.qu1cksave_backend;
 import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.job.ResponseJobDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
+import com.qu1cksave.qu1cksave_backend.user.ResponseUserDto;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -1267,6 +1269,181 @@ class Qu1cksaveBackendApplicationTests {
 			.isEmpty()
 		;
 	}
+
+
+
+
+
+	// ************************************************************************
+	// ************************************************************************
+	// ************************************************************************
+	//
+	//               AUTHENTICATION/AUTHORIZATION TESTS
+	//
+	// ************************************************************************
+	// ************************************************************************
+	// ************************************************************************
+	// - TODO: Ideally, it's better to move these in a separate file
+
+	@Test
+	@Order(31)
+	void loginWithExistentUser() {
+		ResponseUserDto user = this.webTestClient
+			.post()
+			.uri("/user/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(TestAuthInputs.testExistentCredentials)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody(ResponseUserDto.class)
+			.returnResult()
+			.getResponseBody()
+		;
+
+		assertNotNull(user);
+		assertEquals(
+			UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8"),
+			user.getId()
+		);
+		assertEquals("molly@books.com", user.getEmail());
+		assertEquals("Molly Member", user.getName());
+		assertEquals("member", user.getRoles()[0]);
+		assertNotNull(user.getAccessToken());
+	}
+
+	@Test
+	@Order(32)
+	void loginWithExistentUser2() {
+		this.webTestClient
+			.post()
+			.uri("/user/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(TestAuthInputs.testExistentCredentials2)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody()
+			.jsonPath("$.id").isEqualTo("4604289c-b8fe-4560-8960-4da47fdfef94")
+			.jsonPath("$.email").isEqualTo("anna@books.com")
+		;
+	}
+
+	// Note: I'm returning a 404 when the wrong password is provided to not
+	//   give out info about the existence of a user
+	@Test
+	@Order(33)
+	void loginWithWrongPassword() {
+		this.webTestClient
+			.post()
+			.uri("/user/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(TestAuthInputs.testWrongCredentials)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isNotFound()
+			.expectBody()
+			.isEmpty()
+		;
+	}
+
+	@Test
+	@Order(34)
+	void loginWithNonExistentUser() {
+		this.webTestClient
+			.post()
+			.uri("/user/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(TestAuthInputs.testNonExistentUser)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isNotFound()
+			.expectBody()
+			.isEmpty()
+		;
+	}
+
+	@Test
+	@Order(35)
+	void signupWithNewUserThenLogin() {
+		ResponseUserDto user = this.webTestClient
+			.post()
+			.uri("/user/signup")
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(TestAuthInputs.testNewUser)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody(ResponseUserDto.class)
+			.returnResult()
+			.getResponseBody()
+		;
+
+		assertNotNull(user);
+		assertNotNull(user.getId());
+		assertEquals("kevindurant@books.com", user.getEmail());
+		assertEquals("Kevin Durant", user.getName());
+		assertEquals("member", user.getRoles()[0]);
+		assertNull(user.getAccessToken()); // Should be no access token
+
+		// Login with newly created user
+		this.webTestClient
+			.post()
+			.uri("/user/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(TestAuthInputs.testNewlyCreatedUser)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody(ResponseUserDto.class)
+			.consumeWith(result -> {
+				// Can't use since no access token for signup return
+//				assertEquals(user, result.getResponseBody());
+				ResponseUserDto res = result.getResponseBody();
+				assertNotNull(res);
+				assertEquals(user.getId(), res.getId());
+				assertEquals(user.getEmail(), res.getEmail());
+				assertEquals(user.getName(), res.getName());
+				assertThat(Arrays.equals(user.getRoles(), res.getRoles())).isTrue();
+				assertNotNull(res.getAccessToken());
+			})
+		;
+	}
+
+	@Test
+	@Order(36)
+	void signupWithExistingUser() {
+		this.webTestClient
+			.post()
+			.uri("/user/signup")
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(TestAuthInputs.testNewUser)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isEqualTo(HttpStatus.CONFLICT)
+			.expectBody()
+			.isEmpty()
+		;
+	}
+
+	// TODO: *************** IMPORTANT ******************
+	//  - Edit job w/ files, but with the fields out of order
+
 }
 
 // NOTES: 6/15/25

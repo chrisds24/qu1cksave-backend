@@ -23,7 +23,14 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.postgresql:postgresql")
-//	implementation("org.springframework.security:spring-security-crypto")
+	implementation("org.springframework.security:spring-security-crypto")
+//	implementation("io.jsonwebtoken:jjwt")
+	// From ChatGPT, since I can't find how to properly add jjwt dependencies
+	//   using Gradle w/ Kotlin (can't even find the version for my Spring
+	//   Boot version)
+	implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6") // Uses Jackson for JSON serialization
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 //	https://java.testcontainers.org/
 	testImplementation("org.testcontainers:testcontainers:1.21.0")
@@ -46,8 +53,10 @@ tasks.withType<Test> {
 //		implementation 'org.springframework.security:spring-security-crypto'
 //	}
 	// Specify platform dependencies to ensure all versions match
-	// Run: ./gradlew dependencies to verify the selected versions
+	// Run:    ./gradlew dependencies    to verify the selected versions
 //
 // https://stackoverflow.com/questions/78726416/which-version-of-spring-security-crypto-jar-compatible-to-support-spring-version
 // - https://docs.spring.io/spring-boot/docs/2.7.12/reference/html/dependency-versions.html
 //   -- I should look at the dependency versions for my specific spring boot version
+// ME: Search spring boot 3.4.3 dependencies
+//   https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies/3.4.3

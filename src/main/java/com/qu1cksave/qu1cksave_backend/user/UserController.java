@@ -22,7 +22,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping()
+    @PostMapping("/login")
     public ResponseEntity<ResponseUserDto> login(
         @Valid @RequestBody CredentialsDto credentials
     ) {
@@ -39,5 +39,12 @@ public class UserController {
         return new ResponseEntity<ResponseUserDto>(
             user, user != null ? HttpStatus.OK : HttpStatus.NOT_FOUND
         );
+    }
+
+    @PostMapping("/signup")
+    public ResponseUserDto signup(
+        @Valid @RequestBody RequestUserDto newUser
+    ) {
+        return userService.signup(newUser);
     }
 }

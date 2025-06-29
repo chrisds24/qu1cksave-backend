@@ -142,7 +142,6 @@ public class User {
 //    -- There's never, stateless, etc.
 
 
-
 //  Docs
 //  https://docs.spring.io/spring-security/reference/servlet/getting-started.html#servlet-hello-auto-configuration
 //  - Runtime Expectations is useful for what Spring Security can provide
@@ -151,7 +150,6 @@ public class User {
 //  - REST API with JWT:
 //    -- "I am building a REST API, and I need to authenticate a JWT or other bearer token"
 //        + https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html
-
 
 
 //  Stateless/Sessionless REST API
@@ -168,6 +166,8 @@ public class User {
 //    -- This one uses a filter for authentication too (to check the jwt in
 //       the header)
 //       + In addition, I need a way to extract the authorities from the jwt
+//  - https://medium.com/@tericcabrel/implement-jwt-authentication-in-a-spring-boot-3-application-5839e4fd8fac
+//    -- Also has info when working with JWTs
 //  - https://stackoverflow.com/questions/75117913/how-do-i-manually-register-filters-in-springboot
 //    -- Also uses FilterRegistrationBean
 //  - Can register different filters by having multiple FilterRegistrationBeans
@@ -176,14 +176,5 @@ public class User {
 //  - https://www.baeldung.com/spring-boot-add-filter
 //    -- GREAT SOURCE :)
 
-// BCrypt without Spring Security
-// - spring-security-crypto (From Google AI Overview)
-//   -- Can instantiate a BCryptPasswordEncoder
-// - https://stackoverflow.com/questions/73940887/best-way-for-spring-boot-password-encryption-not-using-bcryptpasswordencoder
-//   -- Suggests spring-security-crypto and BCryptPasswordEncoder
-// - https://stackoverflow.com/questions/56249159/use-bcrypt-hashing-function-in-spring-boot-without-all-the-overkill-security
-//   -- If using Spring Security, add the code below to not include the auto configurations
-//      + @SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
-// - https://docs.spring.io/spring-security/reference/features/integrations/cryptography.html
-//   -- Example on how to use spring-security-crypto and BCryptPasswordEncoder
+
 
