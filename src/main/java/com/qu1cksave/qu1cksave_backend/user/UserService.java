@@ -57,7 +57,6 @@ public class UserService {
                 .claim("id", user.getId())
                 .claim("email", user.getEmail())
                 .claim("name", user.getName())
-                // TODO: Might need to convert roles to String?
                 .claim("roles", user.getRoles())
                 // https://forums.oracle.com/ords/apexds/post/system-currenttimemillis-returns-time-in-utc-or-not-4286
                 // - long values of Date are always in UTC

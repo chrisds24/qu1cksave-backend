@@ -160,6 +160,9 @@ public class User {
 //    -- I should just disable csrf
 //  - https://stackoverflow.com/questions/75571606/if-using-jwt-token-there-is-a-need-of-spring-security
 //    -- This question linked the very useful springframework.guru link below
+
+
+// Filters
 //  - https://springframework.guru/jwt-authentication-in-spring-microservices-jwt-token/
 //    -- Doesn't use Spring Security
 //    -- Really good. Even has some code on how to work with JWT
