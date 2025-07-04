@@ -1,5 +1,6 @@
 package com.qu1cksave.qu1cksave_backend.job;
 import com.qu1cksave.qu1cksave_backend.exceptions.ForbiddenResourceException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,8 @@ public class JobController {
     // https://stackoverflow.com/questions/63259116/what-is-the-difference-between-using-autowired-annotation-and-private-final
     // - The above is regarding service and repos, but the same idea may apply
     private final JobService jobService;
+    // Autowiring the request is not commonly done for controllers
+//    private HttpServletRequest req;
 
     public JobController(@Autowired JobService jobService) {
         this.jobService = jobService;
@@ -46,16 +49,20 @@ public class JobController {
     @GetMapping()
     // https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RequestParam.html
     // - RequestParams are required by default
-    public List<ResponseJobDto> getJobs(@RequestParam("id") UUID userId) {
-        // UPDATE: When no userId is provided, a
+    // https://docs.spring.io/spring-framework/reference/web/webflux/controller/ann-methods/requestattrib.html
+    // - To get request attributes, just use @RequestAttribute instead of
+    //   using HttpServletRequest
+    public List<ResponseJobDto> getJobs(
+        @RequestParam("id") UUID queryUserId,
+        @RequestAttribute String userId
+    ) {
+        // UPDATE: When no queryUserId is provided, a
         //   MissingServletRequestParameterException is thrown
 
-        // TODO: Replace mollyMemberId with user id obtained from auth header
-        //  - I'll compare the one from the query and the auth header
-        UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
+        UUID authUserId = UUID.fromString(userId);
 
         // User wants jobs that don't belong to them, so return an error
-        if (!authUserId.equals(userId)) {
+        if (!authUserId.equals(queryUserId)) {
             throw new ForbiddenResourceException(
                 "Mismatch between auth header and query param user id"
             );
@@ -74,8 +81,11 @@ public class JobController {
     // - HttpServletResponse is from Java. ResponseEntity is from Spring
     // NOTE: getJob is only used for testing.
     @GetMapping("/{id}") // NOTE: For now, this is used for testing only
-    public ResponseEntity<ResponseJobDto> getJob(@PathVariable UUID id) {
-        UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
+    public ResponseEntity<ResponseJobDto> getJob(
+        @PathVariable UUID id,
+        @RequestAttribute String userId
+    ) {
+        UUID authUserId = UUID.fromString(userId);
         ResponseJobDto job = jobService.getJob(id, authUserId);
         return new ResponseEntity<ResponseJobDto>(
             job, job != null ? HttpStatus.OK : HttpStatus.NOT_FOUND
@@ -86,17 +96,21 @@ public class JobController {
     @ResponseStatus(HttpStatus.CREATED)
     // https://www.baeldung.com/spring-boot-bean-validation
     // - @Valid on request body
-    public ResponseJobDto createJob(@Valid @RequestBody RequestJobDto newJob) {
-        UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
+    public ResponseJobDto createJob(
+        @Valid @RequestBody RequestJobDto newJob,
+        @RequestAttribute String userId
+    ) {
+        UUID authUserId = UUID.fromString(userId);
         return jobService.createJob(newJob, authUserId);
     }
 
     @PutMapping("/{id}")
     public ResponseJobDto editJob(
         @PathVariable UUID id,
-        @Valid @RequestBody RequestJobDto editJob)
-    {
-        UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
+        @Valid @RequestBody RequestJobDto editJob,
+        @RequestAttribute String userId
+    ) {
+        UUID authUserId = UUID.fromString(userId);
 //        ResponseJobDto job = jobService.editJob(id, authUserId, editJob);
 //        return new ResponseEntity<ResponseJobDto>(job, job != null ? HttpStatus.OK : HttpStatus.NOT_FOUND);
         return jobService.editJob(id, authUserId, editJob);
@@ -104,8 +118,11 @@ public class JobController {
 
     @DeleteMapping("/{id}")
     // 200 for delete if returning something
-    public ResponseJobDto deleteJob(@PathVariable UUID id) {
-        UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
+    public ResponseJobDto deleteJob(
+        @PathVariable UUID id,
+        @RequestAttribute String userId
+    ) {
+        UUID authUserId = UUID.fromString(userId);
 //        ResponseJobDto job = jobService.deleteJobByIdAndUserId(id, authUserId);
 //        return new ResponseEntity<ResponseJobDto>(job, job != null ? HttpStatus.OK : HttpStatus.NOT_FOUND);
         return jobService.deleteJobByIdAndUserId(id, authUserId);

@@ -162,22 +162,4 @@ public class User {
 //    -- This question linked the very useful springframework.guru link below
 
 
-// Filters
-//  - https://springframework.guru/jwt-authentication-in-spring-microservices-jwt-token/
-//    -- Doesn't use Spring Security
-//    -- Really good. Even has some code on how to work with JWT
-//    -- This one uses a filter for authentication too (to check the jwt in
-//       the header)
-//       + In addition, I need a way to extract the authorities from the jwt
-//  - https://medium.com/@tericcabrel/implement-jwt-authentication-in-a-spring-boot-3-application-5839e4fd8fac
-//    -- Also has info when working with JWTs
-//  - https://stackoverflow.com/questions/75117913/how-do-i-manually-register-filters-in-springboot
-//    -- Also uses FilterRegistrationBean
-//  - Can register different filters by having multiple FilterRegistrationBeans
-//  - https://docs.spring.io/spring-security/reference/servlet/architecture.html
-//    -- Has really nice non Spring Security specific info about filters
-//  - https://www.baeldung.com/spring-boot-add-filter
-//    -- GREAT SOURCE :)
-
-
 

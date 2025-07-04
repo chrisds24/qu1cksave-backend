@@ -1,7 +1,13 @@
 package com.qu1cksave.qu1cksave_backend;
 
+import com.qu1cksave.qu1cksave_backend.filters.APIKeyFilter;
+import com.qu1cksave.qu1cksave_backend.filters.BearerAuthenticationFilter;
+import com.qu1cksave.qu1cksave_backend.filters.ExceptionHandlerFilter;
+import com.qu1cksave.qu1cksave_backend.filters.JWTFilter;
+import com.qu1cksave.qu1cksave_backend.filters.MemberAuthorizationFilter;
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -38,6 +44,76 @@ public class Qu1cksaveBackendConfiguration {
         JpaTransactionManager txManager = new JpaTransactionManager();
         txManager.setEntityManagerFactory(entityManagerFactory);
         return txManager;
+    }
+
+    // Register filters
+    // - https://www.baeldung.com/spring-boot-add-filter (Used this one)
+    // - https://stackoverflow.com/questions/75117913/how-do-i-manually-register-filters-in-springboot
+    // - https://springframework.guru/jwt-authentication-in-spring-microservices-jwt-token/
+    @Bean
+    public FilterRegistrationBean<ExceptionHandlerFilter> exceptionHandlerFilter(){
+        FilterRegistrationBean<ExceptionHandlerFilter> registrationBean
+            = new FilterRegistrationBean<>();
+
+        registrationBean.setFilter(new ExceptionHandlerFilter());
+        registrationBean.addUrlPatterns("*");
+        registrationBean.setOrder(1);
+
+        return registrationBean;
+    }
+
+    @Bean
+    public FilterRegistrationBean<BearerAuthenticationFilter> bearerAuthenticationFilter(){
+        FilterRegistrationBean<BearerAuthenticationFilter> registrationBean
+            = new FilterRegistrationBean<>();
+
+        registrationBean.setFilter(new BearerAuthenticationFilter());
+        // TODO: Later, this should not apply to login and signup endpoints
+        //  This would also be order 3, with APIKeyFilter being order 2
+        registrationBean.addUrlPatterns("*");
+        registrationBean.setOrder(2);
+
+        return registrationBean;
+    }
+
+    @Bean
+    public FilterRegistrationBean<APIKeyFilter> apiKeyFilter(){
+        FilterRegistrationBean<APIKeyFilter> registrationBean
+            = new FilterRegistrationBean<>();
+
+        registrationBean.setFilter(new APIKeyFilter());
+        registrationBean.addUrlPatterns("*");
+        registrationBean.setOrder(3);
+
+        return registrationBean;
+    }
+
+    // Exclude an endpoint:
+    // - https://www.baeldung.com/spring-exclude-filter
+    @Bean
+    public FilterRegistrationBean<JWTFilter> jwtFilter(){
+        FilterRegistrationBean<JWTFilter> registrationBean
+            = new FilterRegistrationBean<>();
+
+        registrationBean.setFilter(new JWTFilter());
+        // I excluded login and signup using shouldNotFilter in the filter itself
+        registrationBean.addUrlPatterns("*");
+        registrationBean.setOrder(4);
+
+        return registrationBean;
+    }
+
+    @Bean
+    public FilterRegistrationBean<MemberAuthorizationFilter> memberAuthorizationFilter(){
+        FilterRegistrationBean<MemberAuthorizationFilter> registrationBean
+            = new FilterRegistrationBean<>();
+
+        registrationBean.setFilter(new MemberAuthorizationFilter());
+        // I excluded login and signup using shouldNotFilter in the filter itself
+        registrationBean.addUrlPatterns("*");
+        registrationBean.setOrder(5);
+
+        return registrationBean;
     }
 }
 

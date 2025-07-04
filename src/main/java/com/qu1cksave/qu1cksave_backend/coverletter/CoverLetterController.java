@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,9 +24,10 @@ public class CoverLetterController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseCoverLetterDto> getCoverLetter(
-        @PathVariable UUID id
+        @PathVariable UUID id,
+        @RequestAttribute String userId
     ) {
-        UUID authUserId = UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8");
+        UUID authUserId = UUID.fromString(userId);
         ResponseCoverLetterDto coverLetter = coverLetterService.getCoverLetter(id, authUserId);
         return new ResponseEntity<ResponseCoverLetterDto>(
             coverLetter, coverLetter != null ? HttpStatus.OK : HttpStatus.NOT_FOUND

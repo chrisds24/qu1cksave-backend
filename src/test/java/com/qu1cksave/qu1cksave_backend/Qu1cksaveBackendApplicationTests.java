@@ -4,9 +4,11 @@ import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
 import com.qu1cksave.qu1cksave_backend.job.ResponseJobDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 import com.qu1cksave.qu1cksave_backend.user.ResponseUserDto;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,6 +40,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Testcontainers
 // Run tests in a specific order: https://www.baeldung.com/junit-5-test-order
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+// https://www.baeldung.com/junit-testinstance-annotation
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Qu1cksaveBackendApplicationTests {
 	// Not needed
 //    @LocalServerPort
@@ -63,17 +67,6 @@ class Qu1cksaveBackendApplicationTests {
 		.withInitScripts("sql/schema.sql", "sql/data.sql")
 		.withStartupTimeout(Duration.of(3, MINUTES));
 
-	// Not needed. But could be useful for extra setup
-//	@BeforeAll
-//	static void beforeAll() {
-//		postgreSQLContainer.start();
-//	}
-//
-//	@AfterAll
-//	static void afterAll() {
-//		postgreSQLContainer.stop();
-//	}
-
 	@DynamicPropertySource
 	static void postgresqlProperties(DynamicPropertyRegistry registry) {
 		// Need this since the postgreSQLContainer uses a random port
@@ -85,6 +78,8 @@ class Qu1cksaveBackendApplicationTests {
 
 	@Autowired
 	private WebTestClient webTestClient;
+
+
 
 	// TODO: (6/4/25) Tests I need
 	//  - Get one job, job exists
@@ -157,6 +152,18 @@ class Qu1cksaveBackendApplicationTests {
  	//  ---------------------------
 	//  LATER: Not logged in tests for each endpoint
 
+
+
+	// ************************************************************************
+	// ************************************************************************
+	// ************************************************************************
+	//
+	//          HELPER FUNCTIONS, BEFOREALL, COMMON VARIABLES
+	//
+	// ************************************************************************
+	// ************************************************************************
+	// ************************************************************************
+
 	// Used by some create job tests
 	private void badRequestBodyCreateTest(String json) {
 		// Create the job
@@ -167,6 +174,7 @@ class Qu1cksaveBackendApplicationTests {
 			// No resume and cover letter
 			.bodyValue(json)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isBadRequest()
@@ -180,6 +188,7 @@ class Qu1cksaveBackendApplicationTests {
 		return this.webTestClient
 			.get()
 			.uri("/job/" + id)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -199,6 +208,7 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(jobJson)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -221,6 +231,7 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(jobJson)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isEqualTo(409)
@@ -228,6 +239,50 @@ class Qu1cksaveBackendApplicationTests {
 			.isEmpty()
 		;
 	}
+
+	private final String apiKey = System.getenv("API_KEY");
+	// The login/signup tests will not use this jwt
+	// Some helper functions might use the jwt returned from the previous
+	//   request in that function
+	private String jwt;
+
+	// Login as Molly and set the accessToken
+	// https://docs.junit.org/5.0.0/api/org/junit/jupiter/api/BeforeAll.html
+	// - must be static w/ void return type and not private
+	// Not required to be static due to @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+	@BeforeAll
+	void loginAsMolly() {
+		ResponseUserDto user = this.webTestClient
+			.post()
+			.uri("/user/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(TestAuthInputs.testExistentCredentials)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody(ResponseUserDto.class)
+			.returnResult()
+			.getResponseBody()
+		;
+
+		jwt = user != null ? user.getAccessToken() : null;
+	}
+
+
+
+	// ************************************************************************
+	// ************************************************************************
+	// ************************************************************************
+	//
+	//               JOB, RESUME, COVERLETTER TESTS
+	//
+	// ************************************************************************
+	// ************************************************************************
+	// ************************************************************************
 
 	@Test
 	@Order(1)
@@ -251,6 +306,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -278,6 +334,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/018eae28-8323-7918-b93a-6cdb9d189686")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -298,6 +355,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/deadbeef-abab-6161-7c7c-fefe58135858")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -317,6 +375,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/a14ead6c-d173-1111-a001-2717322ebd12")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -353,6 +412,7 @@ class Qu1cksaveBackendApplicationTests {
 			// No resume and cover letter
 			.bodyValue(TestInputs.testNewOrEditJobNoFiles)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isCreated()
@@ -388,6 +448,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/" + responseJobDto.getId())
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -416,6 +477,7 @@ class Qu1cksaveBackendApplicationTests {
 			// No resume and cover letter
 			.bodyValue(TestInputs.testNewOrEditJobWithFiles)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isCreated()
@@ -445,6 +507,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/" + responseJobDto.getId())
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -521,6 +584,7 @@ class Qu1cksaveBackendApplicationTests {
 			.get()
 			// Molly Member's id
 			.uri("/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -600,6 +664,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job?id=4604289c-b8fe-4560-8960-4da47fdfef94")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			// Wrong user returns not found for security reasons
@@ -615,6 +680,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job?id=1234abcd-dead-beef-daed-11112323aaaa")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			// Although the query returns a non-empty list if given a non-
@@ -633,6 +699,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isBadRequest()
@@ -656,6 +723,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.delete()
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -670,6 +738,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -692,6 +761,7 @@ class Qu1cksaveBackendApplicationTests {
 		ResponseJobDto job = this.webTestClient
 			.delete()
 			.uri("/job/323e9876-8018-b93a-8197-beefbeefbeef")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -713,6 +783,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/23e9876-8018-b93a-8197-beefbeefbeef")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -724,6 +795,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/resume/" + job.getResumeId())
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -734,6 +806,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/coverLetter/" + job.getCoverLetterId())
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -753,6 +826,7 @@ class Qu1cksaveBackendApplicationTests {
 			.delete()
 			// This job has already been deleted in the previous test
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -800,6 +874,7 @@ class Qu1cksaveBackendApplicationTests {
 			// No resume and cover letter
 			.bodyValue(TestInputs.testNewOrEditJobNoFiles)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -817,6 +892,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/018ead6b-d160-772d-a001-2606322ebd1c")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1198,6 +1274,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/resume/323efefe-beef-e2a4-46c8-dadae1fedead")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			// No resume and cover letter
 			.exchange()
 			.expectStatus()
@@ -1222,6 +1299,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/resume/d160dead-a001-a001-a001-fefe322ec1db")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -1239,6 +1317,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/coverLetter/fefeefef-dada-e2a4-2bbb-3cccbeef32e3")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1262,6 +1341,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/coverLetter/beefdead-d160-fefe-061d-dead1bf0beef")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -1294,6 +1374,7 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(TestAuthInputs.testExistentCredentials)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1324,6 +1405,7 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(TestAuthInputs.testExistentCredentials2)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1346,6 +1428,7 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(TestAuthInputs.testWrongCredentials)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -1363,6 +1446,7 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(TestAuthInputs.testNonExistentUser)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -1380,6 +1464,7 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(TestAuthInputs.testNewUser)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1404,6 +1489,7 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(TestAuthInputs.testNewlyCreatedUser)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1433,6 +1519,7 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(TestAuthInputs.testNewUser)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
 			.exchange()
 			.expectStatus()
 			.isEqualTo(HttpStatus.CONFLICT)
