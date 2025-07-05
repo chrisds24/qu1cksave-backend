@@ -10,11 +10,6 @@ public class Qu1cksaveBackendApplication {
 	}
 }
 
-// TODO: (5/7/25): I need to set the URI for my whole backend
-//  Ex. /api/v1     instead of just /
-//  So it would become http://localhost:8080/api/v1/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
-//  Instead of http://localhost:8080/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8 (CURRENT)
-
 // TODO: Packaging a Spring Boot app in a Docker container
 //  - https://docs.spring.io/spring-boot/reference/packaging/index.html
 
@@ -48,7 +43,7 @@ public class Qu1cksaveBackendApplication {
 //		docker compose		After the update, use this now instead of docker-compose
 //
 // 4.) ./gradlew bootRun		To run
-// 5.) Go to http://localhost:8080/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
+// 5.) Go to http://localhost:8080/api/v0/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
 //
 // For tests:  ./gradlew clean test --info		(More info)   	OR		 ./gradlew clean test
 

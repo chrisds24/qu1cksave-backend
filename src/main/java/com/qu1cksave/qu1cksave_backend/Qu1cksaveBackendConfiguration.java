@@ -97,8 +97,8 @@ public class Qu1cksaveBackendConfiguration {
 
         registrationBean.setFilter(new JWTFilter());
         // I excluded login and signup using shouldNotFilter in the filter itself
-//        registrationBean.addUrlPatterns("*");
-        registrationBean.addUrlPatterns("/job/*", "/resume/*", "/coverLetter/*");
+        registrationBean.addUrlPatterns("/*");
+//        registrationBean.addUrlPatterns("/job/*", "/resume/*", "/coverLetter/*");
         registrationBean.setOrder(4);
 
         return registrationBean;
@@ -111,8 +111,8 @@ public class Qu1cksaveBackendConfiguration {
 
         registrationBean.setFilter(new MemberAuthorizationFilter());
         // I excluded login and signup using shouldNotFilter in the filter itself
-//        registrationBean.addUrlPatterns("*");
-        registrationBean.addUrlPatterns("/job/*", "/resume/*", "/coverLetter/*");
+        registrationBean.addUrlPatterns("/*");
+//        registrationBean.addUrlPatterns("/job/*", "/resume/*", "/coverLetter/*");
         registrationBean.setOrder(5);
 
         return registrationBean;
