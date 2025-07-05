@@ -84,7 +84,7 @@ class Qu1cksaveBackendApplicationTests {
 
 
 
-	// TODO: (6/4/25) Tests I need
+	// NOTE: (6/4/25) Tests I need
 	//  - Get one job, job exists
 	//  - Get one job, job doesn't exist
 	//    -- Covers case when user specifies an id of a job that doesn't belong
@@ -207,7 +207,7 @@ class Qu1cksaveBackendApplicationTests {
 	private ResponseJobDto editJobRequestReturningJob(
 		String jobId,
 		String jobJson,
-		String jwt // TODO: Remove once BeforeAll works properly
+		String jwt // TODO: Remove once BeforeAll and @TestInstance(...) works properly
 	) {
 		return this.webTestClient
 			.put()
@@ -301,7 +301,7 @@ class Qu1cksaveBackendApplicationTests {
 			.expectBody(ResponseUserDto.class)
 			.returnResult()
 			.getResponseBody()
-			;
+		;
 
 		return user != null ? user.getAccessToken() : null;
 	}
@@ -720,25 +720,44 @@ class Qu1cksaveBackendApplicationTests {
 
 	// TODO: Uncomment this once Spring Security authentication added
 	//  - Anna actually has a job in data.sql, which I commented out
-//	@Test
-//	@Order(12)
-//	void getMultipleJobsEmptyList() {
-//		this.webTestClient
-//			.get()
-//			// Anna Admin's id
-//			.uri("/job?id=4604289c-b8fe-4560-8960-4da47fdfef94")
-//			.exchange()
-//			.expectStatus()
-//			.isOk()
-//			.expectHeader()
-//			.contentType(MediaType.APPLICATION_JSON)
-//			.expectBodyList(ResponseJobDto.class)
-//			.consumeWith(result -> {
-//				List<ResponseJobDto> jobs = result.getResponseBody();
-//				assertNotNull(jobs);
-//				assertEquals(0, jobs.size());
-//			});
-//	}
+	@Test
+	@Order(12)
+	void getMultipleJobsEmptyList() {
+		String jwt = this.webTestClient
+			.post()
+			.uri("/user/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(TestAuthInputs.testExistentCredentials2)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody(ResponseUserDto.class)
+			.returnResult()
+			.getResponseBody()
+			.getAccessToken()
+		;
+
+		this.webTestClient
+			.get()
+			// Anna Admin's id
+			.uri("/job?id=4604289c-b8fe-4560-8960-4da47fdfef94")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBodyList(ResponseJobDto.class)
+			.consumeWith(result -> {
+				List<ResponseJobDto> jobs = result.getResponseBody();
+				assertNotNull(jobs);
+				assertEquals(0, jobs.size());
+			});
+	}
 
 	@Test
 	@Order(13)
@@ -883,7 +902,7 @@ class Qu1cksaveBackendApplicationTests {
 			.isEmpty()
 		;
 
-		// TODO: Get the resume and cover letter from each respective endpoint
+		// Get the resume and cover letter from each respective endpoint
 		this.webTestClient
 			.get()
 			.uri("/resume/" + job.getResumeId())
@@ -2039,7 +2058,7 @@ class Qu1cksaveBackendApplicationTests {
 //   -- Also a good read
 // - https://rieckpil.de/spring-boot-testing-mockmvc-vs-webtestclient-vs-testresttemplate/
 //   -- The table is very helpful
-//   -- Good example on how to use TestRestTemplate TODO: (5/3/25) I can use this example
+//   -- Good example on how to use TestRestTemplate
 
 // RestAssured
 // - I keep seeing this one too
