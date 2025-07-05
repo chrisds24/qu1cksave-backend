@@ -44,9 +44,7 @@ public class JWTFilter extends OncePerRequestFilter {
         // - I used this
         // https://github.com/jwtk/jjwt#json-jackson-custom-types
         // - .json(new JacksonDeserializer(Maps.of("user", User.class).build()))
-        //   -- TODO: Maybe I need to deserialize it here?
-        //       + Or can I just deserialize it in the next filter (via
-        //         Jackson's ObjectMapper)
+        // - I just converted from ArrayList to String[]
         Claims claims;
         try {
             claims = Jwts.parser()
@@ -85,8 +83,8 @@ public class JWTFilter extends OncePerRequestFilter {
         // NOTE: If I ever need more than the userId, I can set it here
         Object userId = claims.get("id");
         Object roles = claims.get("roles");
-        if (userId == null || roles == null) {
-            throw new CustomFilterException("Missing userId and/or roles in claims.");
+        if (userId == null) {
+            throw new CustomFilterException("Missing userId in claims.");
         }
         req.setAttribute("userId", userId);
         req.setAttribute("roles", roles);

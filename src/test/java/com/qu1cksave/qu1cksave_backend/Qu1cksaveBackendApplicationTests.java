@@ -40,8 +40,10 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Testcontainers
 // Run tests in a specific order: https://www.baeldung.com/junit-5-test-order
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-// https://www.baeldung.com/junit-testinstance-annotation
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+// TODO: Commenting out @TestInstance due to:
+//  java.lang.IllegalStateException: Mapped port can only be obtained after the container is started
+//// https://www.baeldung.com/junit-testinstance-annotation
+//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Qu1cksaveBackendApplicationTests {
 	// Not needed
 //    @LocalServerPort
@@ -165,26 +167,29 @@ class Qu1cksaveBackendApplicationTests {
 	// ************************************************************************
 
 	// Used by some create job tests
-	private void badRequestBodyCreateTest(String json) {
-		// Create the job
-		this.webTestClient
-			.post()
-			.uri("/job")
-			.contentType(MediaType.APPLICATION_JSON)
-			// No resume and cover letter
-			.bodyValue(json)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
-			.exchange()
-			.expectStatus()
-			.isBadRequest()
-			.expectBody()
-			.isEmpty()
-		;
-	}
+//	private void badRequestBodyCreateTest(String json) {
+//		// Create the job
+//		this.webTestClient
+//			.post()
+//			.uri("/job")
+//			.contentType(MediaType.APPLICATION_JSON)
+//			// No resume and cover letter
+//			.bodyValue(json)
+//			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+//			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+//			.exchange()
+//			.expectStatus()
+//			.isBadRequest()
+//			.expectBody()
+//			.isEmpty()
+//		;
+//	}
 
 	// Used by some edit job tests
-	private WebTestClient.BodySpec<ResponseJobDto, ?> getJobRequestReturningBodySpec(String id) {
+	private WebTestClient.BodySpec<ResponseJobDto, ?> getJobRequestReturningBodySpec(
+		String id,
+		String jwt
+	) {
 		return this.webTestClient
 			.get()
 			.uri("/job/" + id)
@@ -200,7 +205,8 @@ class Qu1cksaveBackendApplicationTests {
 	// Used by some edit job tests
 	private ResponseJobDto editJobRequestReturningJob(
 		String jobId,
-		String jobJson
+		String jobJson,
+		String jwt // TODO: Remove once BeforeAll works properly
 	) {
 		return this.webTestClient
 			.put()
@@ -223,7 +229,8 @@ class Qu1cksaveBackendApplicationTests {
 	// Used by some edit job tests
 	private void editJobRequestUsingStaleJob(
 		String jobId,
-		String jobJson
+		String jobJson,
+		String jwt
 	) {
 		this.webTestClient
 			.put()
@@ -241,17 +248,43 @@ class Qu1cksaveBackendApplicationTests {
 	}
 
 	private final String apiKey = System.getenv("API_KEY");
+
+	// TODO: Commenting out due to:
+	//   java.lang.IllegalStateException: Mapped port can only be obtained after the container is started
 	// The login/signup tests will not use this jwt
 	// Some helper functions might use the jwt returned from the previous
 	//   request in that function
-	private String jwt;
+//	private String jwt;
 
+	// TODO: Commenting out due to
+	//   java.lang.IllegalStateException: Mapped port can only be obtained after the container is started
 	// Login as Molly and set the accessToken
 	// https://docs.junit.org/5.0.0/api/org/junit/jupiter/api/BeforeAll.html
 	// - must be static w/ void return type and not private
 	// Not required to be static due to @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-	@BeforeAll
-	void loginAsMolly() {
+//	@BeforeAll
+//	void loginAsMolly() {
+//		ResponseUserDto user = this.webTestClient
+//			.post()
+//			.uri("/user/login")
+//			.contentType(MediaType.APPLICATION_JSON)
+//			.bodyValue(TestAuthInputs.testExistentCredentials)
+//			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+//			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+//			.exchange()
+//			.expectStatus()
+//			.isOk()
+//			.expectHeader()
+//			.contentType(MediaType.APPLICATION_JSON)
+//			.expectBody(ResponseUserDto.class)
+//			.returnResult()
+//			.getResponseBody()
+//		;
+//
+//		jwt = user != null ? user.getAccessToken() : null;
+//	}
+
+	private String loginAsMolly() {
 		ResponseUserDto user = this.webTestClient
 			.post()
 			.uri("/user/login")
@@ -267,11 +300,10 @@ class Qu1cksaveBackendApplicationTests {
 			.expectBody(ResponseUserDto.class)
 			.returnResult()
 			.getResponseBody()
-		;
+			;
 
-		jwt = user != null ? user.getAccessToken() : null;
+		return user != null ? user.getAccessToken() : null;
 	}
-
 
 
 	// ************************************************************************
@@ -301,6 +333,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(2)
 	void getOneJobNoFiles() { // Get one job, job exists
+		String jwt = loginAsMolly();
+
 		// '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
 		// Expected: 'Software Engineer', 'Microsoft', very long description
 		this.webTestClient
@@ -331,6 +365,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(3)
 	void getOneJobWithFiles() { // Get one job, job exists
+		String jwt = loginAsMolly();
+
 		this.webTestClient
 			.get()
 			.uri("/job/018eae28-8323-7918-b93a-6cdb9d189686")
@@ -352,6 +388,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(4)
 	void getNonExistentJob() {
+		String jwt = loginAsMolly();
+
 		this.webTestClient
 			.get()
 			.uri("/job/deadbeef-abab-6161-7c7c-fefe58135858")
@@ -372,6 +410,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(5)
 	void getForbiddenJob() {
+		String jwt = loginAsMolly();
+
 		this.webTestClient
 			.get()
 			.uri("/job/a14ead6c-d173-1111-a001-2717322ebd12")
@@ -404,6 +444,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(6)
 	void createJobNoFilesThenGetThatJob() {
+		String jwt = loginAsMolly();
+
 		// Create the job
 		ResponseJobDto responseJobDto = this.webTestClient
 			.post()
@@ -469,6 +511,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(7)
 	void createJobWithFilesThenGetThatJob() {
+		String jwt = loginAsMolly();
+
 		// Create the job
 		ResponseJobDto responseJobDto = this.webTestClient
 			.post()
@@ -580,6 +624,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(11)
 	void getMultipleJobsNonEmptyList() {
+		String jwt = loginAsMolly();
+
 		this.webTestClient
 			.get()
 			// Molly Member's id
@@ -661,6 +707,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(13)
 	void getMultipleJobsWrongUser() {
+		String jwt = loginAsMolly();
+
 		this.webTestClient
 			.get()
 			.uri("/job?id=4604289c-b8fe-4560-8960-4da47fdfef94")
@@ -677,6 +725,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(14)
 	void getMultipleJobsNonExistentUser() {
+		String jwt = loginAsMolly();
+
 		this.webTestClient
 			.get()
 			.uri("/job?id=1234abcd-dead-beef-daed-11112323aaaa")
@@ -696,6 +746,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(15)
 	void getMultipleJobsNoUserIdProvided() {
+		String jwt = loginAsMolly();
+
 		this.webTestClient
 			.get()
 			.uri("/job")
@@ -719,6 +771,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(16)
 	void deleteJobWithoutFilesThenGetThatJob() {
+		String jwt = loginAsMolly();
+
 		// Delete job
 		this.webTestClient
 			.delete()
@@ -750,6 +804,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(17)
 	void deleteJobWithFilesThenGetThatJob() {
+		String jwt = loginAsMolly();
+
 		// INSERT INTO job(id, member_id, resume_id, cover_letter_id, title, company_name, is_remote, job_status) VALUES
 		//   ('323e9876-8018-b93a-8197-beefbeefbeef', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', '3cccfefe-46c8-e2a4-46c8-dadae1fedada'
 		//   , '2bbbefef-46c8-e2a4-2bbb-beefdadafefe','To Delete Job Title', 'To Delete Job Company', 'Hybrid', 'Not Applied');
@@ -821,6 +877,8 @@ class Qu1cksaveBackendApplicationTests {
 	// In real life, this happens if a user's job list is stale and
 	//   they click delete on a job that no longer exists
 	void deleteNonExistentJob() {
+		String jwt = loginAsMolly();
+
 		// Delete job
 		this.webTestClient
 			.delete()
@@ -858,6 +916,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(19)
 	void editJobWithNoFilesThenGetThatJob() {
+		String jwt = loginAsMolly();
+
 		// Original before edit
 		// id: '018ead6b-d160-772d-a001-2606322ebd1c'
 		// member_id: '269a3d55-4eee-4a2e-8c64-e1fe386b76f8'
@@ -913,6 +973,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(20)
 	void editJobWithFilesAddedThenGetThatJob() {
+		String jwt = loginAsMolly();
+
 		// Original before edit
 		// id: "018ead6b-d160-772d-a001-2606322ebd1c"
 		// member_id: "269a3d55-4eee-4a2e-8c64-e1fe386b76f8"
@@ -923,7 +985,8 @@ class Qu1cksaveBackendApplicationTests {
 
 		ResponseJobDto job = editJobRequestReturningJob(
 			"018ead6b-d160-772d-a001-2606322ebd1c",
-			TestInputs.testNewOrEditJobWithFiles
+			TestInputs.testNewOrEditJobWithFiles,
+			jwt
 		);
 
 		// Ensure that changed data have changed and unchanged data haven't
@@ -949,7 +1012,7 @@ class Qu1cksaveBackendApplicationTests {
 		);
 
 		// Get the job
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
 			.consumeWith(result -> {
 				assertEquals(job, result.getResponseBody());
 			});
@@ -964,9 +1027,11 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(21)
 	void editJobWithFilesUsingStaleJobWithoutFiles() {
+		String jwt = loginAsMolly();
+
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
-			"018ead6b-d160-772d-a001-2606322ebd1c")
+			"018ead6b-d160-772d-a001-2606322ebd1c", jwt)
 			.returnResult()
 			.getResponseBody();
 		assertNotNull(origJob);
@@ -975,10 +1040,11 @@ class Qu1cksaveBackendApplicationTests {
 			"018ead6b-d160-772d-a001-2606322ebd1c",
 			// Note: The previous test used TestInputs.testNewOrEditJobWithFiles
 			//   which added files to this job
-			TestInputs.testNewOrEditJobNoFiles
+			TestInputs.testNewOrEditJobNoFiles,
+			jwt
 		);
 		// Ensure that the job hasn't been changed
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
 			.consumeWith(result -> {
 				ResponseJobDto job = result.getResponseBody();
 				assertNotNull(job);
@@ -989,10 +1055,11 @@ class Qu1cksaveBackendApplicationTests {
 		//   but this time attempt to upload a resume
 		editJobRequestUsingStaleJob(
 			"018ead6b-d160-772d-a001-2606322ebd1c",
-			TestInputs.testNewOrEditJobWithFiles
+			TestInputs.testNewOrEditJobWithFiles,
+			jwt
 		);
 		// Ensure that the job hasn't been changed (check the resumeId)
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
 			.consumeWith(result -> {
 				ResponseJobDto job = result.getResponseBody();
 				assertNotNull(job);
@@ -1006,9 +1073,11 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(22)
 	void editJobWithFilesEditedThenGetThatJob() {
+		String jwt = loginAsMolly();
+
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
-			"018ead6b-d160-772d-a001-2606322ebd1c")
+			"018ead6b-d160-772d-a001-2606322ebd1c", jwt)
 			.returnResult()
 			.getResponseBody();
 
@@ -1020,7 +1089,8 @@ class Qu1cksaveBackendApplicationTests {
 			TestInputs.testEditJobWithFilesEdited(
 				origJob.getResumeId().toString(),
 				origJob.getCoverLetterId().toString()
-			)
+			),
+			jwt
 		);
 
 		assertNotNull(job);
@@ -1040,7 +1110,7 @@ class Qu1cksaveBackendApplicationTests {
 		);
 
 		// Get the job
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
 			.consumeWith(result -> {
 				assertEquals(job, result.getResponseBody());
 			});
@@ -1057,9 +1127,11 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(23)
 	void editJobWithFilesUsingStaleJobWithOutdatedCoverLetterId() {
+		String jwt = loginAsMolly();
+
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
-			"018ead6b-d160-772d-a001-2606322ebd1c")
+			"018ead6b-d160-772d-a001-2606322ebd1c", jwt)
 			.returnResult()
 			.getResponseBody();
 
@@ -1078,11 +1150,12 @@ class Qu1cksaveBackendApplicationTests {
 			TestInputs.testEditJobWithResumeEdited(
 				origJob.getResumeId().toString(),
 				"ccccdead-d160-beef-a001-2606322e1234"
-			)
+			),
+			jwt
 		);
 
 		// Ensure that the job hasn't been changed (check the resumeName)
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
 			.consumeWith(result -> {
 				ResponseJobDto job = result.getResponseBody();
 				assertNotNull(job);
@@ -1102,9 +1175,11 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(24)
 	void editJobWithFilesNotEditedThenGetThatJob() {
+		String jwt = loginAsMolly();
+
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
-			"018ead6b-d160-772d-a001-2606322ebd1c")
+			"018ead6b-d160-772d-a001-2606322ebd1c", jwt)
 			.returnResult()
 			.getResponseBody();
 
@@ -1116,7 +1191,8 @@ class Qu1cksaveBackendApplicationTests {
 			TestInputs.testEditJobWithFilesNotEdited(
 				origJob.getResumeId().toString(),
 				origJob.getCoverLetterId().toString()
-			)
+			),
+			jwt
 		);
 
 		assertNotNull(job);
@@ -1136,7 +1212,7 @@ class Qu1cksaveBackendApplicationTests {
 		);
 
 		// Get the job
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
 			.consumeWith(result -> {
 				assertEquals(job, result.getResponseBody());
 			});
@@ -1149,9 +1225,11 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(25)
 	void editJobWithFilesNotEditedThenGetThatJobSanityCheck() {
+		String jwt = loginAsMolly();
+
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
-			"018ead6b-d160-772d-a001-2606322ebd1c")
+			"018ead6b-d160-772d-a001-2606322ebd1c", jwt)
 			.returnResult()
 			.getResponseBody();
 
@@ -1163,7 +1241,8 @@ class Qu1cksaveBackendApplicationTests {
 			TestInputs.testEditJobWithFilesNotEditedSanityCheck(
 				origJob.getResumeId().toString(),
 				origJob.getCoverLetterId().toString()
-			)
+			),
+			jwt
 		);
 
 		assertNotNull(job);
@@ -1183,7 +1262,7 @@ class Qu1cksaveBackendApplicationTests {
 		);
 
 		// Get the job
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
 			.consumeWith(result -> {
 				assertEquals(job, result.getResponseBody());
 			});
@@ -1195,9 +1274,11 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(26)
 	void editJobWithFilesDeletedThenGetThatJob() {
+		String jwt = loginAsMolly();
+
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
-			"018ead6b-d160-772d-a001-2606322ebd1c")
+			"018ead6b-d160-772d-a001-2606322ebd1c", jwt)
 			.returnResult()
 			.getResponseBody();
 
@@ -1209,7 +1290,8 @@ class Qu1cksaveBackendApplicationTests {
 			TestInputs.testEditJobWithFilesDeleted(
 				origJob.getResumeId().toString(),
 				origJob.getCoverLetterId().toString()
-			)
+			),
+			jwt
 		);
 
 		assertNotNull(job);
@@ -1222,7 +1304,7 @@ class Qu1cksaveBackendApplicationTests {
 
 		// Get the job
 		ResponseJobDto res = getJobRequestReturningBodySpec(
-			"018ead6b-d160-772d-a001-2606322ebd1c"
+			"018ead6b-d160-772d-a001-2606322ebd1c", jwt
 		)
 			.returnResult()
 			.getResponseBody();
@@ -1247,12 +1329,13 @@ class Qu1cksaveBackendApplicationTests {
 			TestInputs.testEditJobWithFilesEdited(
 				origJob.getResumeId().toString(),
 				origJob.getCoverLetterId().toString()
-			)
+			),
+			jwt
 		);
 
 		// Ensure that the job hasn't been changed (check the file ids
 		//   and make sure they're not there)
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c")
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
 			.consumeWith(result -> {
 				ResponseJobDto res2 = result.getResponseBody();
 				assertNotNull(res2);
@@ -1268,6 +1351,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(27)
 	void getOneResume() {
+		String jwt = loginAsMolly();
+
 		// INSERT INTO resume(id, member_id, file_name, mime_type) VALUES
 		//   ('323efefe-beef-e2a4-46c8-dadae1fedead', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'Example_Resume.pdf',
 		//   'application/pdf');
@@ -1296,6 +1381,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(28)
 	void getNonExistentResume() {
+		String jwt = loginAsMolly();
+
 		this.webTestClient
 			.get()
 			.uri("/resume/d160dead-a001-a001-a001-fefe322ec1db")
@@ -1311,6 +1398,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(29)
 	void getOneCoverLetter() {
+		String jwt = loginAsMolly();
+
 		// INSERT INTO cover_letter(id, member_id, file_name, mime_type) VALUES
 		//   ('fefeefef-dada-e2a4-2bbb-3cccbeef32e3', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8',
 		//   'Example_CoverLetter.pdf', 'application/pdf');
@@ -1338,6 +1427,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(30)
 	void getNonExistentCoverLetter() {
+		String jwt = loginAsMolly();
+
 		this.webTestClient
 			.get()
 			.uri("/coverLetter/beefdead-d160-fefe-061d-dead1bf0beef")

@@ -49,8 +49,8 @@ public class BearerAuthenticationFilter extends OncePerRequestFilter {
         //    Authorization: Bearer APIKey JWTTokenHere
         //  - So splitHeader[0] = Bearer
         String[] splitHeader = authHeader.split(" ");
-        // TODO: Change to != 2 once api key issue is solved
-        if (splitHeader.length != 3) {
+        // TODO: Change to < 2 || > 3 once api key issue is solved
+        if (splitHeader.length < 2 || splitHeader.length > 3) {
             throw new CustomFilterException("Invalid/malformed auth header");
         }
         if (splitHeader[0] == null || splitHeader[0].isEmpty()) {
@@ -62,8 +62,12 @@ public class BearerAuthenticationFilter extends OncePerRequestFilter {
 
         req.setAttribute("apiKey", splitHeader[1]);
         // TODO: Change to splitHeader[1] once api key issue is solved
-        req.setAttribute("jwt", splitHeader[2]);
-
+        // Only set the jwt if one was provided
+        if (splitHeader.length == 3) {
+            req.setAttribute("jwt", splitHeader[2]);
+        } else {
+            req.setAttribute("jwt", null);
+        }
         filterChain.doFilter(req, res);
     }
 }

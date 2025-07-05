@@ -56,7 +56,7 @@ public class Qu1cksaveBackendConfiguration {
             = new FilterRegistrationBean<>();
 
         registrationBean.setFilter(new ExceptionHandlerFilter());
-        registrationBean.addUrlPatterns("*");
+        registrationBean.addUrlPatterns("/*");
         registrationBean.setOrder(1);
 
         return registrationBean;
@@ -70,7 +70,7 @@ public class Qu1cksaveBackendConfiguration {
         registrationBean.setFilter(new BearerAuthenticationFilter());
         // TODO: Later, this should not apply to login and signup endpoints
         //  This would also be order 3, with APIKeyFilter being order 2
-        registrationBean.addUrlPatterns("*");
+        registrationBean.addUrlPatterns("/*");
         registrationBean.setOrder(2);
 
         return registrationBean;
@@ -82,7 +82,7 @@ public class Qu1cksaveBackendConfiguration {
             = new FilterRegistrationBean<>();
 
         registrationBean.setFilter(new APIKeyFilter());
-        registrationBean.addUrlPatterns("*");
+        registrationBean.addUrlPatterns("/*");
         registrationBean.setOrder(3);
 
         return registrationBean;
@@ -97,7 +97,8 @@ public class Qu1cksaveBackendConfiguration {
 
         registrationBean.setFilter(new JWTFilter());
         // I excluded login and signup using shouldNotFilter in the filter itself
-        registrationBean.addUrlPatterns("*");
+//        registrationBean.addUrlPatterns("*");
+        registrationBean.addUrlPatterns("/job/*", "/resume/*", "/coverLetter/*");
         registrationBean.setOrder(4);
 
         return registrationBean;
@@ -110,7 +111,8 @@ public class Qu1cksaveBackendConfiguration {
 
         registrationBean.setFilter(new MemberAuthorizationFilter());
         // I excluded login and signup using shouldNotFilter in the filter itself
-        registrationBean.addUrlPatterns("*");
+//        registrationBean.addUrlPatterns("*");
+        registrationBean.addUrlPatterns("/job/*", "/resume/*", "/coverLetter/*");
         registrationBean.setOrder(5);
 
         return registrationBean;

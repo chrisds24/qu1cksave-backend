@@ -1,19 +1,16 @@
 package com.qu1cksave.qu1cksave_backend.filters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qu1cksave.qu1cksave_backend.exceptions.CustomFilterException;
 import com.qu1cksave.qu1cksave_backend.exceptions.ForbiddenResourceException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.lang.NonNull;
-import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class MemberAuthorizationFilter extends OncePerRequestFilter {
@@ -23,9 +20,18 @@ public class MemberAuthorizationFilter extends OncePerRequestFilter {
         @NonNull HttpServletResponse res,
         @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        final String[] roles =
-            objectMapper.readValue((String) req.getAttribute("roles"), String[].class);
+        Object reqRoles = req.getAttribute("roles");
+        if (reqRoles == null) {
+            throw new CustomFilterException("Missing roles in claims");
+        }
+
+        ArrayList arrLstRoles = (ArrayList) reqRoles;
+        String[] roles = new String[arrLstRoles.size()];
+        arrLstRoles.toArray(roles);
+
+        if (roles.length == 0) {
+            throw new ForbiddenResourceException("User has no roles");
+        }
 
         // Note: The Node.js version does things differently. It checks all the
         //   roles (scopes) needed for an endpoint, checks if the request
