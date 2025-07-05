@@ -1,6 +1,7 @@
 package com.qu1cksave.qu1cksave_backend;
 
 import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
+import com.qu1cksave.qu1cksave_backend.exceptions.CustomFilterException;
 import com.qu1cksave.qu1cksave_backend.job.ResponseJobDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 import com.qu1cksave.qu1cksave_backend.user.ResponseUserDto;
@@ -303,6 +304,41 @@ class Qu1cksaveBackendApplicationTests {
 			;
 
 		return user != null ? user.getAccessToken() : null;
+	}
+
+	private void loginInvalidAuthHeader(
+		String authHeader
+	) {
+		this.webTestClient
+			.post()
+			.uri("/user/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(TestAuthInputs.testExistentCredentials)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+//			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+			.header(HttpHeaders.AUTHORIZATION, authHeader)
+			.exchange()
+			.expectStatus()
+			.isUnauthorized()
+			.expectBody()
+			.isEmpty()
+		;
+	}
+
+	private void getOneJobInvalidAuthHeader(
+		String authHeader
+	) {
+		this.webTestClient
+			.get()
+			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+//			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, authHeader)
+			.exchange()
+			.expectStatus()
+			.isUnauthorized()
+			.expectBody()
+			.isEmpty()
+		;
 	}
 
 
@@ -1443,8 +1479,6 @@ class Qu1cksaveBackendApplicationTests {
 
 
 
-
-
 	// ************************************************************************
 	// ************************************************************************
 	// ************************************************************************
@@ -1614,6 +1648,135 @@ class Qu1cksaveBackendApplicationTests {
 			.exchange()
 			.expectStatus()
 			.isEqualTo(HttpStatus.CONFLICT)
+			.expectBody()
+			.isEmpty()
+		;
+	}
+
+
+
+	// ************************************************************************
+	// ************************************************************************
+	// ************************************************************************
+	//
+	//               			FILTER TESTS
+	//
+	// ************************************************************************
+	// ************************************************************************
+	// ************************************************************************
+	@Test
+	@Order(37)
+	void loginMissingAuthHeader() {
+		// Null auth header
+		this.webTestClient
+			.post()
+			.uri("/user/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(TestAuthInputs.testExistentCredentials)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.exchange()
+			.expectStatus()
+			.isUnauthorized()
+			.expectBody()
+			.isEmpty()
+		;
+
+		// Empty string auth header
+		loginInvalidAuthHeader("");
+	}
+
+	@Test
+	@Order(38)
+	void loginMalformedAuthHeader() {
+		// Too short
+		loginInvalidAuthHeader("Bearer");
+		// Too long
+		loginInvalidAuthHeader("Bearer apiKey jwt whatisthis");
+	}
+
+	// Causes:
+	//   org.springframework.web.reactive.function.client.WebClientRequestException: Validation failed for header 'Authorization'
+	//   Caused by:
+	//     java.lang.IllegalArgumentException: a header value contains prohibited character 0x20 at index 0.
+	// So removing this test since WebTestClient throws an exception
+//	@Test
+//	@Order(39)
+//	void loginMissingAuthScheme() {
+//		// split returns arr with length 2, arr[0] = "" (empty string)
+//		loginInvalidAuthHeader(" apiKey");
+//	}
+
+	@Test
+	@Order(40)
+	void loginNotBearerAuth() {
+		loginInvalidAuthHeader("Basic apiKey");
+	}
+
+	@Test
+	@Order(41)
+	void loginMissingApiKey() {
+		// split returns arr with length 3, arr[1] = ""
+		loginInvalidAuthHeader("Bearer  jwt");
+	}
+
+	@Test
+	@Order(42)
+	void loginWrongApiKey() {
+		loginInvalidAuthHeader("Bearer wrongApiKey");
+	}
+
+	@Test
+	@Order(43)
+	void getOneJobMissingJwt() {
+		// Null JWT
+		getOneJobInvalidAuthHeader("Bearer " + apiKey);
+		// Can't really simulate empty string jwt
+	}
+
+	@Test
+	@Order(44)
+	void getOneJobNotAValidJwt() {
+		getOneJobInvalidAuthHeader("Bearer " + apiKey + " invalidJwt");
+	}
+
+	@Test
+	@Order(45)
+	void getOneJobJwtInvalidSignature() {
+		String wrongJwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFubmFAYm9va3MuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNjA2Mjc3MDAxLCJleHAiOjE2MDYyNzcwNjF9.1nwY0lDMGrb7AUFFgSaYd4Q7Tzr-BjABclmoKZOqmr4";
+		getOneJobInvalidAuthHeader("Bearer " + apiKey + " " + wrongJwt);
+	}
+
+	// Insufficient permissions
+	@Test
+	@Order(46)
+	void getOneJobNoMemberRole() {
+		String jwt = this.webTestClient
+			.post()
+			.uri("/user/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(TestAuthInputs.testNobbyNobody)
+			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody(ResponseUserDto.class)
+			.returnResult()
+			.getResponseBody()
+			.getAccessToken()
+		;
+
+		this.webTestClient
+			.get()
+			// Nobby has no jobs, but it shouldn't even get to the point where
+			//   it checks that he doesn't own this job
+			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.exchange()
+			.expectStatus()
+			.isForbidden()
 			.expectBody()
 			.isEmpty()
 		;

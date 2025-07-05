@@ -20,19 +20,19 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
         try {
             filterChain.doFilter(req, res);
         } catch (CustomFilterException err) {
-            System.out.println("****** MESSAGE (CustomFilterException): " + err.getMessage());
+//            System.out.println("****** MESSAGE (CustomFilterException): " + err.getMessage());
             setStatusAndContentToJson(
                 res,
                 HttpStatus.UNAUTHORIZED
             );
         } catch (ForbiddenResourceException err) {
-            System.out.println("****** MESSAGE (ForbiddenResourceException): " + err.getMessage());
+//            System.out.println("****** MESSAGE (ForbiddenResourceException): " + err.getMessage());
             setStatusAndContentToJson(
                 res,
                 HttpStatus.FORBIDDEN
             );
         } catch (Exception err) {
-            System.out.println("****** MESSAGE (Exception): " + err.getMessage());
+//            System.out.println("****** MESSAGE (Exception): " + err.getMessage());
             setStatusAndContentToJson(
                 res,
                 HttpStatus.INTERNAL_SERVER_ERROR

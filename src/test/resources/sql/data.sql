@@ -1,6 +1,7 @@
 DELETE FROM member;
 INSERT INTO member(id, email, password, name, roles) VALUES('269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'molly@books.com', '$2b$10$Y00XOZD/f5gBSpDusPUgU.iJufk6Nxx6gAoHRG8t2eHyGgoP2bK4y', 'Molly Member', '["member"]');
 INSERT INTO member(id, email, password, name, roles) VALUES('4604289c-b8fe-4560-8960-4da47fdfef94', 'anna@books.com', '$2b$10$Y00XOZD/f5gBSpDusPUgU.G1ohpR3oQbbBHK4KzX7dU219Pv/lzze', 'Anna Admin', '["member"]');
+INSERT INTO member(id, email, password, name, roles) VALUES('ef9476f8-0654-beef-5eee-3d55e1feb8fe','nobby@books.com','$2a$12$ZnrvkMk9jn56NlyJGOyTE.biz5xvJUr1iKIFsWyFWPFF/x3j5fUhm', 'Nobby Nobody', '["nobody"]');
 
 -- Use JavaScript Date to convert year, month, and date into a meaningful date.
 -- job_status values: Applied, Not Applied, Assessment, Interview, Job Offered, Accepted Offer, Declined Offer, Rejected, Ghosted, Closed

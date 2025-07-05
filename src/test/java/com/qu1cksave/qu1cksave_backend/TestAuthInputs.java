@@ -43,4 +43,11 @@ public class TestAuthInputs {
 				"password": "kevindurant"
 			}
 		""";
+
+	public static String testNobbyNobody = """
+			{
+				"email": "nobby@books.com",
+				"password": "nobbynobody"
+			}
+		""";
 }
