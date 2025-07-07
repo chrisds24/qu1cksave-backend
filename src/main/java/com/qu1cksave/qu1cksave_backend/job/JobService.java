@@ -4,6 +4,8 @@ import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetter;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterMapper;
 import com.qu1cksave.qu1cksave_backend.coverletter.CoverLetterRepository;
 import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
+import com.qu1cksave.qu1cksave_backend.exceptions.S3DeleteFailedException;
+import com.qu1cksave.qu1cksave_backend.exceptions.S3PutFailedException;
 import com.qu1cksave.qu1cksave_backend.exceptions.SQLAddFailedException;
 import com.qu1cksave.qu1cksave_backend.exceptions.SQLDeleteFailedException;
 import com.qu1cksave.qu1cksave_backend.exceptions.SQLEditFailedException;
@@ -151,7 +153,31 @@ public class JobService {
             throw new SQLAddFailedException("Save new job failed", err);
         }
 
-        // --------------- TODO: 4.) Add files to S3 -------------------
+        // --------------- 4.) Add files to S3 -------------------
+        if (responseResumeDto != null && newJob.getResume() != null) {
+            try {
+
+            } catch (RuntimeException err) {
+                throw new S3PutFailedException(
+                    "Error when adding resume in S3 during add job",
+                    err
+                );
+            }
+        }
+
+        if (responseCoverLetterDto != null && newJob.getCoverLetter() != null) {
+            try {
+
+            } catch (RuntimeException err) {
+                throw new S3PutFailedException(
+                    "Error when adding cover letter in S3 during add job",
+                    err
+                );
+            }
+        }
+
+        // TODO: How to properly/reliably undo resume add when cover letter
+        //   add fails?
 
         return responseJobDto;
     }
@@ -328,6 +354,8 @@ public class JobService {
 //                } else { // keepResume is false (or is not set, which won't happen) ORIGINAL JAVA VERSION
                 // Note: I changed this so that keepResume == null leads to
                 //   keeping the file
+                // Condition 'keepResume != null && !keepResume' is always 'true'
+//                } else if (keepResume != null && !keepResume) {
                 } else { // keepResume != null && !keepResume
                     // Case 3: Delete the resume specified by editJob.
                     // TODO: Should throw an exception so I can catch and return
@@ -567,15 +595,76 @@ public class JobService {
             );
         }
 
-        // TODO: 5.) S3 Calls
-        //  -
+        // ---------------------- 5.) S3 Calls --------------------------------
+
+        if (resume != null) {
+            // resume != null in Cases 2, 4, and 5
+            // - Make the S3 call to add/edit the resume file
+
+            // Cases 4 and 5: 4 is add, 5 is edit
+            if (Objects.equals(resumeAction, "put")) {
+                try {
+
+                } catch (RuntimeException err) {
+                    throw new S3PutFailedException(
+                        "Add/edit resume in S3 failed during edit job"
+                    );
+                }
+            }
+            // Case 2 (keep and don't change resume): No S3 call needed
+        } else {
+            // resume == null in Cases 1 and 3
+
+            // Case 3: Delete the resume
+            if (Objects.equals(resumeAction, "delete")) {
+                try {
+
+                } catch (RuntimeException err) {
+                    throw new S3DeleteFailedException(
+                      "Delete resume from S3 failed during edit job"
+                    );
+                }
+            }
+            // Case 1: No resume, so no S3 call needed
+        }
+
+        if (coverLetter != null) {
+            // coverLetter != null in Cases 2, 4, and 5
+            // - Make the S3 call to add/edit the coverLetter file
+
+            // Cases 4 and 5: 4 is add, 5 is edit
+            if (Objects.equals(coverLetterAction, "put")) {
+                try {
+
+                } catch (RuntimeException err) {
+                    throw new S3PutFailedException(
+                        "Add/edit coverLetter in S3 failed during edit job"
+                    );
+                }
+            }
+            // Case 2 (keep and don't change coverLetter): No S3 call needed
+        } else {
+            // coverLetter == null in Cases 1 and 3
+
+            // Case 3: Delete the coverLetter
+            if (Objects.equals(coverLetterAction, "delete")) {
+                try {
+
+                } catch (RuntimeException err) {
+                    throw new S3DeleteFailedException(
+                        "Delete coverLetter from S3 failed during edit job"
+                    );
+                }
+            }
+            // Case 1: No coverLetter, so no S3 call needed
+        }
 
         // 6.) Return the job with resume and cover letter metadata attached
         return responseJobDtoWithFiles;
     }
 
     @Transactional
-    public ResponseJobDto deleteJobByIdAndUserId(UUID id, UUID userId) {
+    public ResponseJobDto deleteJob(UUID id, UUID userId) {
         // 1.) Delete job
         // 2.) Delete resume from database (if any)
         // 3.) Delete cover letter from database (if any)
@@ -694,6 +783,27 @@ public class JobService {
         }
 
         // TODO: 4.) and 5.) Delete files from S3
+        if (resume != null) {
+            try {
+
+            } catch (RuntimeException err) {
+                throw new S3DeleteFailedException(
+                    "Delete resume from S3 failed during delete job",
+                    err
+                );
+            }
+        }
+
+        if (coverLetter != null) {
+            try {
+
+            } catch (RuntimeException err) {
+                throw new S3DeleteFailedException(
+                    "Delete cover letter from S3 failed during delete job",
+                    err
+                );
+            }
+        }
 
 
         // ------------ 6.) Return deleted job with files -------------

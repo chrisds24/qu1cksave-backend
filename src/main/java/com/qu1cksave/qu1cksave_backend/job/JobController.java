@@ -123,8 +123,8 @@ public class JobController {
         @RequestAttribute String userId
     ) {
         UUID authUserId = UUID.fromString(userId);
-//        ResponseJobDto job = jobService.deleteJobByIdAndUserId(id, authUserId);
+//        ResponseJobDto job = jobService.deleteJob(id, authUserId);
 //        return new ResponseEntity<ResponseJobDto>(job, job != null ? HttpStatus.OK : HttpStatus.NOT_FOUND);
-        return jobService.deleteJobByIdAndUserId(id, authUserId);
+        return jobService.deleteJob(id, authUserId);
     }
 }

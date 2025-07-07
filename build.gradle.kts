@@ -24,6 +24,13 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.postgresql:postgresql")
 	implementation("org.springframework.security:spring-security-crypto")
+	// https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup-project-gradle.html
+	implementation(platform("software.amazon.awssdk:bom:2.31.77"))
+	implementation("software.amazon.awssdk:s3")
+	// ------------ Not sure if I'll need these two ------------------
+//	implementation("software.amazon.awssdk:sso")
+//	implementation("software.amazon.awssdk:ssooidc")
+	// --------------------------------------------------------------
 //	implementation("io.jsonwebtoken:jjwt")
 	// From ChatGPT, since I can't find how to properly add jjwt dependencies
 	//   using Gradle w/ Kotlin (can't even find the version for my Spring

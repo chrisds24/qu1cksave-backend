@@ -14,6 +14,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import static org.springframework.transaction.annotation.RollbackOn.ALL_EXCEPTIONS;
 
@@ -116,6 +121,21 @@ public class Qu1cksaveBackendConfiguration {
         registrationBean.setOrder(5);
 
         return registrationBean;
+    }
+
+    @Bean
+    public S3Client s3Client() {
+        StaticCredentialsProvider staticCredentialsProvider =
+            StaticCredentialsProvider.create(AwsBasicCredentials.create(
+                System.getenv("BUCKET_ACCESS_KEY"),
+                System.getenv("BUCKET_SECRET_ACCESS_KEY")
+            ));
+
+        return S3Client.builder()
+            .region(Region.of(System.getenv("BUCKET_REGION")))
+            .credentialsProvider(staticCredentialsProvider)
+            .build()
+        ;
     }
 }
 

@@ -33,6 +33,10 @@ public class Qu1cksaveBackendApplication {
 //       ****** Shouldn't really matter if I leave this here, but just not gonna do it
 //       export ACCESS_TOKEN=???
 //       export API_KEY=???
+//		 export BUCKET_NAME=???
+//		 export BUCKET_REGION=???
+//		 export BUCKET_ACCESS_KEY=???
+//		 export BUCKET_SECRET_ACCESS_KEY=???
 // 3.) Run postgres docker container
 //		docker-compose down		(If you want to reset. Then compose up again)
 // 		docker-compose up -d

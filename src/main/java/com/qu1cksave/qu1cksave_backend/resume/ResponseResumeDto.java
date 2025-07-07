@@ -20,10 +20,10 @@ public class ResponseResumeDto {
     private final String mimeType;
 
     // TODO: (3/29/25) Need a byteArrayAsArray field
-    //  I was originally thinking of using Integer[] (or int[]), but the size
-    //    of a number in JavaScript is 64 bits
-    //  - So long[] might be more appropriate (Also, double is also 64 bits)
-    //  - But there's also byte[] as an option
+    //  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number
+    //  - A number literal like 37 in JavaScript code is a floating-point value, not an integer
+    //  - The JavaScript Number type is a double-precision 64-bit binary format IEEE 754 value, like double in Java or C#
+    //  Therefore, I'm using double in Java
     private double[] byteArrayAsArray;
 
     // Constructors
