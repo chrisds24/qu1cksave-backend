@@ -16,6 +16,7 @@ import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 import com.qu1cksave.qu1cksave_backend.resume.Resume;
 import com.qu1cksave.qu1cksave_backend.resume.ResumeMapper;
 import com.qu1cksave.qu1cksave_backend.resume.ResumeRepository;
+import com.qu1cksave.qu1cksave_backend.s3.S3Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,17 +30,20 @@ public class JobService {
     private final JobRepository jobRepository;
     private final ResumeRepository resumeRepository;
     private final CoverLetterRepository coverLetterRepository;
+    private final S3Service s3Service;
 
     // If I need a property value, Ex:
     //   @Value("${postgres.host}") String postgresHost
     public JobService(
         @Autowired JobRepository jobRepository,
         @Autowired ResumeRepository resumeRepository,
-        @Autowired CoverLetterRepository coverLetterRepository
+        @Autowired CoverLetterRepository coverLetterRepository,
+        @Autowired S3Service s3Service
     ) {
         this.jobRepository = jobRepository;
         this.resumeRepository = resumeRepository;
         this.coverLetterRepository = coverLetterRepository;
+        this.s3Service = s3Service;
     }
 
     // Note: https://www.marcobehler.com/guides/spring-transaction-management-transactional-in-depth
@@ -156,7 +160,11 @@ public class JobService {
         // --------------- 4.) Add files to S3 -------------------
         if (responseResumeDto != null && newJob.getResume() != null) {
             try {
-
+                // Won't be returning anything
+                s3Service.putObject(
+                    responseResumeDto.getId(),
+                    newJob.getResume().getByteArrayAsArray()
+                );
             } catch (RuntimeException err) {
                 throw new S3PutFailedException(
                     "Error when adding resume in S3 during add job",
@@ -167,7 +175,11 @@ public class JobService {
 
         if (responseCoverLetterDto != null && newJob.getCoverLetter() != null) {
             try {
-
+                // Won't be returning anything
+                s3Service.putObject(
+                    responseCoverLetterDto.getId(),
+                    newJob.getCoverLetter().getByteArrayAsArray()
+                );
             } catch (RuntimeException err) {
                 throw new S3PutFailedException(
                     "Error when adding cover letter in S3 during add job",
@@ -604,7 +616,11 @@ public class JobService {
             // Cases 4 and 5: 4 is add, 5 is edit
             if (Objects.equals(resumeAction, "put")) {
                 try {
-
+                    s3Service.putObject(
+                        // Node.js version uses resume.id, which is this here
+                        resume.getId(),
+                        editJob.getResume().getByteArrayAsArray()
+                    );
                 } catch (RuntimeException err) {
                     throw new S3PutFailedException(
                         "Add/edit resume in S3 failed during edit job"
@@ -618,7 +634,16 @@ public class JobService {
             // Case 3: Delete the resume
             if (Objects.equals(resumeAction, "delete")) {
                 try {
-
+                    // Node.js version uses resumeId, which is rows[0].id after
+                    //   selecting job. Here, there's also resumeId, which is
+                    //   just jobEntity.getResumeId()
+                    // Can't use resume.getId() since resume (from querying
+                    //   resume table) is null since delete query doesn't return
+                    //   the resume metadata
+                    // IMPORTANT: This makes sense, since we don't want to
+                    //   attach the deleted resume's metadata to the job we're
+                    //   returning
+                    s3Service.deleteObject(resumeId);
                 } catch (RuntimeException err) {
                     throw new S3DeleteFailedException(
                       "Delete resume from S3 failed during edit job"
@@ -635,7 +660,11 @@ public class JobService {
             // Cases 4 and 5: 4 is add, 5 is edit
             if (Objects.equals(coverLetterAction, "put")) {
                 try {
-
+                    s3Service.putObject(
+                        // Node.js version using coverLetter.id, which is this here
+                        coverLetter.getId(),
+                        editJob.getCoverLetter().getByteArrayAsArray()
+                    );
                 } catch (RuntimeException err) {
                     throw new S3PutFailedException(
                         "Add/edit coverLetter in S3 failed during edit job"
@@ -649,7 +678,7 @@ public class JobService {
             // Case 3: Delete the coverLetter
             if (Objects.equals(coverLetterAction, "delete")) {
                 try {
-
+                    s3Service.deleteObject(coverLetterId);
                 } catch (RuntimeException err) {
                     throw new S3DeleteFailedException(
                         "Delete coverLetter from S3 failed during edit job"
@@ -782,10 +811,10 @@ public class JobService {
             }
         }
 
-        // TODO: 4.) and 5.) Delete files from S3
+        // ------------------ Delete files from S3 -----------------
         if (resume != null) {
             try {
-
+                s3Service.deleteObject(resume.getId());
             } catch (RuntimeException err) {
                 throw new S3DeleteFailedException(
                     "Delete resume from S3 failed during delete job",
@@ -796,7 +825,7 @@ public class JobService {
 
         if (coverLetter != null) {
             try {
-
+                s3Service.deleteObject(coverLetter.getId());
             } catch (RuntimeException err) {
                 throw new S3DeleteFailedException(
                     "Delete cover letter from S3 failed during delete job",

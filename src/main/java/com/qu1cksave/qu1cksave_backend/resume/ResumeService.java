@@ -1,6 +1,7 @@
 package com.qu1cksave.qu1cksave_backend.resume;
 
 import com.qu1cksave.qu1cksave_backend.exceptions.SQLGetFailedException;
+import com.qu1cksave.qu1cksave_backend.s3.S3Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,9 +11,14 @@ import java.util.UUID;
 @Component
 public class ResumeService {
     private final ResumeRepository resumeRepository;
+    private final S3Service s3Service;
 
-    public ResumeService(@Autowired ResumeRepository resumeRepository) {
+    public ResumeService(
+        @Autowired ResumeRepository resumeRepository,
+        @Autowired S3Service s3Service
+    ) {
         this.resumeRepository = resumeRepository;
+        this.s3Service = s3Service;
     }
 
     @Transactional(readOnly = true)
@@ -27,18 +33,17 @@ public class ResumeService {
                 return null;
             }
 
-            // TODO: Get from S3 and do data conversions
-            //   ...
+            // Get from S3 and do data conversions
+            double[] byteArrayAsArray = s3Service.getObject(resume.getId());
+            // This won't be null. If the object doesn't exist, the s3 call
+            //   throws an exception
 
-            // Add the actual resume file to the response resume
-            //   TODO: This is a temp value
-            double[] arr = {2, 4, 7, 10, 14};
             return new ResponseResumeDto(
-              resume.getId(),
-              resume.getMemberId(),
-              resume.getFileName(),
-              resume.getMimeType(),
-              arr
+                resume.getId(),
+                resume.getMemberId(),
+                resume.getFileName(),
+                resume.getMimeType(),
+                byteArrayAsArray
             );
         } catch (RuntimeException err) {
             throw new SQLGetFailedException("Select one resume failed", err);
