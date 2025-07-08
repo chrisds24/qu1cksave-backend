@@ -11,12 +11,15 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.UUID;
 
 @Component
 public class S3Service {
     private final S3Client s3Client;
     private final String bucketName = System.getenv("BUCKET_NAME");
+    private final String envType = System.getenv("ENV_TYPE");
 
     public S3Service(@Autowired S3Client s3Client) {
         this.s3Client = s3Client;
@@ -28,39 +31,69 @@ public class S3Service {
         UUID key,
         double[] byteArrayAsArray
     ) {
-        // Note: The try-catch is in the job service file to allow it or any
-        //   other service that uses this method to customize the error message
-        // https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/core/sync/RequestBody.html
-        // - RequestBody
-        s3Client.putObject(
-            PutObjectRequest.builder()
-                .bucket(bucketName)
-                .key(String.valueOf(key))
-                .build(),
-            RequestBody.fromBytes(
-                doubleArrToByteArr(byteArrayAsArray)
-            )
-        );
+        // If in a production environment, use this code. Otherwise, we don't
+        //   want to mess around with the production S3 bucket.
+        if (Objects.equals(envType, "PROD")) {
+            // Note: The try-catch is in the job service file to allow it or any
+            //   other service that uses this method to customize the error message
+            // https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/core/sync/RequestBody.html
+            // - RequestBody
+            s3Client.putObject(
+                PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(String.valueOf(key))
+                    .build(),
+                RequestBody.fromBytes(
+                    doubleArrToByteArr(byteArrayAsArray)
+                )
+            );
+        } else {
+            // This doesn't really return anything, but I'll just do the conversion
+            //   from double[] to byte[], then from that byte[] back to double[]
+            //   here.
+            System.out.println(
+                "Given double[]: " + Arrays.toString(byteArrayAsArray)
+            );
+
+            byte[] bytes = doubleArrToByteArr(byteArrayAsArray);
+            System.out.println(
+                "Converted to byte[]: " + Arrays.toString(bytes)
+            );
+
+            double[] doubles = byteArrToDoubleArr(bytes);
+            System.out.println(
+                "From byte[] back to double[]: " + Arrays.toString(doubles)
+            );
+        }
     }
 
     public void deleteObject(UUID key) {
-        s3Client.deleteObject(
-            DeleteObjectRequest.builder()
-                .bucket(bucketName)
-                .key(String.valueOf(key))
-                .build()
-        );
-    }
-
-    public double[] getObject(UUID key) {
-        return byteArrToDoubleArr(
-            s3Client.getObjectAsBytes(
-                GetObjectRequest.builder()
+        if (Objects.equals(envType, "PROD")) {
+            s3Client.deleteObject(
+                DeleteObjectRequest.builder()
                     .bucket(bucketName)
                     .key(String.valueOf(key))
                     .build()
-            ).asByteArray()
-        );
+            );
+        }
+        // If not in production mode, doesn't do anything
+    }
+
+    public double[] getObject(UUID key) {
+        if (Objects.equals(envType, "PROD")) {
+            return byteArrToDoubleArr(
+                s3Client.getObjectAsBytes(
+                    GetObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(String.valueOf(key))
+                        .build()
+                ).asByteArray()
+            );
+        } else {
+            // If not in production mode, simply returns this array (which is
+            //   used by the tests)
+            return new double[]{2, 4, 7, 10, 14};
+        }
     }
 
     // https://stackoverflow.com/questions/13071777/convert-double-to-byte-array
@@ -88,7 +121,16 @@ public class S3Service {
     }
 }
 
-// TODO: (7/6/25)
+// TODO: After the mocked S3 calls (using Mockito) are done for the tests, I
+//   should leave the check for PROD to make sure that I don't use the
+//   production S3 bucket accidentally.
+//  - On the other hand, accidentally modifying the production database in RDS
+//    isn't an issue since it can only be affected if I set my database env
+//    variables to match its name/credentials.
+//    -- I'll just keep setting my AWS env credentials so I don't have to
+//       rewrite my code.
+
+// NOTES: (7/6/25)
 //  -------- AWS SDK for Java ---------
 //  https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/credentials-explicit.html
 //  - Creating an S3Client using supplied credentials via StaticCredentialsProvider

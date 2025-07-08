@@ -60,6 +60,8 @@ class Qu1cksaveBackendApplicationTests {
 
 	private static String postgresPassword = System.getenv("POSTGRES_PASSWORD");
 
+	private static final String apiKey = System.getenv("API_KEY");
+
 	// This will use a random port
 	@Container
 	static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest")
@@ -247,8 +249,6 @@ class Qu1cksaveBackendApplicationTests {
 			.isEmpty()
 		;
 	}
-
-	private final String apiKey = System.getenv("API_KEY");
 
 	// TODO: Commenting out due to:
 	//   java.lang.IllegalStateException: Mapped port can only be obtained after the container is started

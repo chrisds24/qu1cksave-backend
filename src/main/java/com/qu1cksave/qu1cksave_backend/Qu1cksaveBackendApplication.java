@@ -37,6 +37,8 @@ public class Qu1cksaveBackendApplication {
 //		 export BUCKET_REGION=???
 //		 export BUCKET_ACCESS_KEY=???
 //		 export BUCKET_SECRET_ACCESS_KEY=???
+//       export ENV_TYPE=???
+//       - Set the PROD if in production. Otherwise, can simply not set it.
 // 3.) Run postgres docker container
 //		docker-compose down		(If you want to reset. Then compose up again)
 // 		docker-compose up -d
