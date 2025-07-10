@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
     })
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Object handleSQLExceptions(HttpServletRequest req, Exception ex) {
-        printErr(ex); // TODO: Comment out in production
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SQLNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Object handleSQLNotFoundException(HttpServletRequest req, Exception ex) {
-        printErr(ex); // TODO: Comment out in production
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ForbiddenResourceException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Object handleForbiddenResourceException(HttpServletRequest req, Exception ex) {
-        printErr(ex); // TODO: Comment out in production
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -57,7 +57,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Object handleMissingServletRequestParameterException(HttpServletRequest req, Exception ex) {
-        printErr(ex); // TODO: Comment out in production
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -70,7 +70,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(StaleFrontendJobException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public Object handleStaleFrontendJobException(HttpServletRequest req, Exception ex) {
-        printErr(ex); // TODO: Comment out in production
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -81,7 +81,7 @@ public class GlobalExceptionHandler {
     })
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR) // TODO: Is 500 appropriate?
     public Object handleS3Exceptions(HttpServletRequest req, Exception ex) {
-        printErr(ex); // TODO: Comment out in production
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -102,7 +102,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
 //    public Object handleBadRequestBody() {
     public Object handleBadRequestBodyExceptions(HttpServletRequest req, Exception ex) {
-        printErr(ex); // TODO: Comment out in production
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -111,7 +111,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Object handleInvalidCredentialsException(HttpServletRequest req, Exception ex) {
-        printErr(ex); // TODO: Comment out in production
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -121,7 +121,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
 //    public Object handleUserAlreadyExistsException() {
     public Object handleUserAlreadyExistsException(HttpServletRequest req, Exception ex) {
-        printErr(ex); // TODO: Comment out in production
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -132,7 +132,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 //    public Object handleOtherExceptions() {
     public Object handleOtherExceptions(HttpServletRequest req, Exception ex) {
-        printErr(ex); // TODO: Comment out in production
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 

@@ -1803,16 +1803,6 @@ class Qu1cksaveBackendApplicationTests {
 
 	// TODO: *************** IMPORTANT ******************
 	//  - Edit job w/ files, but with the fields out of order
-
-	// TODO: ******* IMPORTANT ********
-	//  Search these:
-	//  - 413 Payload Too Large Spring Boot
-	//    Set request body size limit Spring Boot
-	//  - Check PROD S3 calls. Make sure to print its id so I know which one it
-	//    is in S3. Then check it in S3 upon edit and delete.
-	//    -- Also add print statements to check which code in the S3 service is
-	//       being executed
-
 }
 
 // NOTES (7/9/25): ********* React frontend changes **********
