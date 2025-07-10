@@ -34,7 +34,8 @@ public class S3Service {
         // If in a production environment, use this code. Otherwise, we don't
         //   want to mess around with the production S3 bucket.
         if (Objects.equals(envType, "PROD")) {
-            System.out.println("******** WARNING !!!!!!!!!!!: Using PROD mode for putObject");
+//            System.out.println("******** WARNING !!!!!!!!!!!: Using PROD mode for putObject");
+//            System.out.println("PUTTING object with id: " + key);
             // Note: The try-catch is in the job service file to allow it or any
             //   other service that uses this method to customize the error message
             // https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/core/sync/RequestBody.html
@@ -49,7 +50,7 @@ public class S3Service {
                 )
             );
         } else {
-            System.out.println("************** DEV mode putObject.");
+//            System.out.println("************** DEV mode putObject.");
             // This doesn't really return anything, but I'll just do the conversion
             //   from double[] to byte[], then from that byte[] back to double[]
             //   here.
@@ -71,7 +72,8 @@ public class S3Service {
 
     public void deleteObject(UUID key) {
         if (Objects.equals(envType, "PROD")) {
-            System.out.println("******** WARNING !!!!!!!!!!!: Using PROD mode for deleteObject");
+//            System.out.println("******** WARNING !!!!!!!!!!!: Using PROD mode for deleteObject");
+//            System.out.println("DELETING object with id: " + key);
             s3Client.deleteObject(
                 DeleteObjectRequest.builder()
                     .bucket(bucketName)
@@ -79,14 +81,15 @@ public class S3Service {
                     .build()
             );
         } else {
-            System.out.println("******** DEV MODE deleteObject");
+//            System.out.println("******** DEV MODE deleteObject");
         }
         // If not in production mode, doesn't do anything
     }
 
     public double[] getObject(UUID key) {
         if (Objects.equals(envType, "PROD")) {
-            System.out.println("******** WARNING !!!!!!!!!!!: Using PROD mode for getObject");
+//            System.out.println("******** WARNING !!!!!!!!!!!: Using PROD mode for getObject");
+//            System.out.println("GETTING object with id: " + key);
             return byteArrToDoubleArr(
                 s3Client.getObjectAsBytes(
                     GetObjectRequest.builder()
@@ -98,7 +101,7 @@ public class S3Service {
         } else {
             // If not in production mode, simply returns this array (which is
             //   used by the tests)
-            System.out.println("********** DEV mode getObject");
+//            System.out.println("********** DEV mode getObject");
             return new double[]{2, 4, 7, 10, 14};
         }
     }

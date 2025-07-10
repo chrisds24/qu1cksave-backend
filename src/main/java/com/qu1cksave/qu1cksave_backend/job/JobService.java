@@ -166,6 +166,7 @@ public class JobService {
                     newJob.getResume().getByteArrayAsArray()
                 );
             } catch (RuntimeException err) {
+//                System.out.println("Error when adding resume in S3 during add job."); // TODO: Comment out later
                 throw new S3PutFailedException(
                     "Error when adding resume in S3 during add job",
                     err
@@ -181,6 +182,7 @@ public class JobService {
                     newJob.getCoverLetter().getByteArrayAsArray()
                 );
             } catch (RuntimeException err) {
+//                System.out.println("Error when adding cover letter in S3 during add job."); // TODO: Comment out later
                 throw new S3PutFailedException(
                     "Error when adding cover letter in S3 during add job",
                     err
@@ -622,6 +624,7 @@ public class JobService {
                         editJob.getResume().getByteArrayAsArray()
                     );
                 } catch (RuntimeException err) {
+//                    System.out.println("Error when adding/editing resume in S3 during edit job."); // TODO: Comment out later
                     throw new S3PutFailedException(
                         "Add/edit resume in S3 failed during edit job"
                     );
@@ -645,6 +648,7 @@ public class JobService {
                     //   returning
                     s3Service.deleteObject(resumeId);
                 } catch (RuntimeException err) {
+//                    System.out.println("Error when deleting resume during edit job");
                     throw new S3DeleteFailedException(
                       "Delete resume from S3 failed during edit job"
                     );
@@ -666,6 +670,7 @@ public class JobService {
                         editJob.getCoverLetter().getByteArrayAsArray()
                     );
                 } catch (RuntimeException err) {
+//                    System.out.println("Error when adding/editing cover letter in S3 during edit job."); // TODO: Comment out later
                     throw new S3PutFailedException(
                         "Add/edit coverLetter in S3 failed during edit job"
                     );
@@ -680,6 +685,7 @@ public class JobService {
                 try {
                     s3Service.deleteObject(coverLetterId);
                 } catch (RuntimeException err) {
+//                    System.out.println("Error when deleting cover letter during edit job");
                     throw new S3DeleteFailedException(
                         "Delete coverLetter from S3 failed during edit job"
                     );
@@ -816,6 +822,7 @@ public class JobService {
             try {
                 s3Service.deleteObject(resume.getId());
             } catch (RuntimeException err) {
+//                System.out.println("Error when deleting resume during delete job");
                 throw new S3DeleteFailedException(
                     "Delete resume from S3 failed during delete job",
                     err
@@ -827,6 +834,7 @@ public class JobService {
             try {
                 s3Service.deleteObject(coverLetter.getId());
             } catch (RuntimeException err) {
+//                System.out.println("Error when deleting cover letter during delete job");
                 throw new S3DeleteFailedException(
                     "Delete cover letter from S3 failed during delete job",
                     err
