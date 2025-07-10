@@ -24,21 +24,21 @@ public class Qu1cksaveBackendApplication {
 //		 ****** NOTE: It's fine to put these here, since they're only used for
 //         development.
 //       export POSTGRES_HOST=localhost
-//       - The docker-compose.yml uses this
-//       - Also, the spring.datasource.url
+//             - The docker-compose.yml uses this
+//             - Also, the spring.datasource.url
 //		 export POSTGRES_PORT=5432
 //       export POSTGRES_DB=dev
 //		 export POSTGRES_USER=postgres
 //		 export POSTGRES_PASSWORD=postgres
-//       ****** Shouldn't really matter if I leave this here, but just not gonna do it
+//              ****** Shouldn't really matter if I leave this here, but just not gonna do it
 //       export ACCESS_TOKEN=???
 //       export API_KEY=???
 //		 export BUCKET_NAME=???
 //		 export BUCKET_REGION=???
 //		 export BUCKET_ACCESS_KEY=???
 //		 export BUCKET_SECRET_ACCESS_KEY=???
-//       export ENV_TYPE=???
-//       - Set the PROD if in production. Otherwise, can simply not set it.
+//       export ENV_TYPE=DEV
+//       - Set to PROD if in production. Otherwise, can simply not set it.
 // 3.) Run postgres docker container
 //		docker-compose down		(If you want to reset. Then compose up again)
 // 		docker-compose up -d

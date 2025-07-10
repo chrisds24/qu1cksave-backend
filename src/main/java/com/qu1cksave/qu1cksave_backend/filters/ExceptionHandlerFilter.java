@@ -6,16 +6,15 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
 
 public class ExceptionHandlerFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(
-        HttpServletRequest req,
-        HttpServletResponse res,
-        FilterChain filterChain
+        @NonNull HttpServletRequest req,
+        @NonNull HttpServletResponse res,
+        @NonNull FilterChain filterChain
     ) {
         try {
             filterChain.doFilter(req, res);

@@ -298,84 +298,17 @@ public class Job {
         this.usState = editJob.getUsState();
         this.city = editJob.getCity();
         // Need to convert YearMonthDateDto to YearMonthDate first
-        this.dateApplied = YearMonthDateMapper.toEmbeddable(editJob.getDateApplied());;
-        this.datePosted = YearMonthDateMapper.toEmbeddable(editJob.getDatePosted());
+        this.dateApplied = editJob.getDateApplied() != null ?
+            YearMonthDateMapper.toEmbeddable(editJob.getDateApplied()) :
+            null
+        ;
+        this.datePosted = editJob.getDatePosted() != null ?
+            YearMonthDateMapper.toEmbeddable(editJob.getDatePosted()) :
+            null
+        ;
         this.jobStatus = editJob.getJobStatus();
         this.links = editJob.getLinks();
         this.foundFrom = editJob.getFoundFrom();
-    }
-
-    // Use instead if using @DynamicUpdate
-    public void setColumnsIfDifferentFromRequestJobDto(RequestJobDto editJob) {
-        // If equal values, don't set. Otherwise, the set the value
-        // - null is equal to null
-        // - null in editJob (the request job dto) means clear the value
-        //   for that column in the database
-        // - For Objects.equals, null is equal to null
-
-        //   resumeId, coverLetterId, title, companyName, jobDescription, notes,
-        //   isRemote, salaryMin, salaryMax, country, usState, city, dateApplied,
-        //   datePosted, jobStatus, links, foundFrom
-
-        if (!Objects.equals(editJob.getResumeId(), this.resumeId)) {
-            this.resumeId = editJob.getResumeId();
-        }
-        if (!Objects.equals(editJob.getCoverLetterId(), this.coverLetterId)) {
-            this.coverLetterId = editJob.getCoverLetterId();
-        }
-        if (!Objects.equals(editJob.getTitle(), this.title)) {
-            this.title = editJob.getTitle();
-        }
-        if (!Objects.equals(editJob.getCompanyName(), this.companyName)) {
-            this.companyName = editJob.getCompanyName();
-        }
-        if (!Objects.equals(editJob.getJobDescription(), this.jobDescription)) {
-            this.jobDescription = editJob.getJobDescription();
-        }
-        if (!Objects.equals(editJob.getNotes(), this.notes)) {
-            this.notes = editJob.getNotes();
-        }
-        if (!Objects.equals(editJob.getIsRemote(), this.isRemote)) {
-            this.isRemote = editJob.getIsRemote();
-        }
-        if (!Objects.equals(editJob.getSalaryMin(), this.salaryMin)) {
-            this.salaryMin = editJob.getSalaryMin();
-        }
-        if (!Objects.equals(editJob.getSalaryMax(), this.salaryMax)) {
-            this.salaryMax = editJob.getSalaryMax();
-        }
-        if (!Objects.equals(editJob.getCountry(), this.country)) {
-            this.country = editJob.getCountry();
-        }
-        if (!Objects.equals(editJob.getUsState(), this.usState)) {
-            this.usState = editJob.getUsState();
-        }
-        if (!Objects.equals(editJob.getCity(), this.city)) {
-            this.city = editJob.getCity();
-        }
-
-        // Need to convert YearMonthDateDto to YearMonthDate first
-        YearMonthDate editJobDateApplied =
-            YearMonthDateMapper.toEmbeddable(editJob.getDateApplied());
-        if (!Objects.equals(editJobDateApplied, this.dateApplied)) {
-            this.dateApplied = editJobDateApplied;
-        }
-
-        YearMonthDate editJobDatePosted =
-            YearMonthDateMapper.toEmbeddable(editJob.getDatePosted());
-        if (!Objects.equals(editJobDatePosted, this.datePosted)) {
-            this.datePosted = editJobDatePosted;
-        }
-
-        if (!Objects.equals(editJob.getJobStatus(), this.jobStatus)) {
-            this.jobStatus = editJob.getJobStatus();
-        }
-        if (!Arrays.equals(editJob.getLinks(), this.links)) {
-            this.links = editJob.getLinks();
-        }
-        if (!Objects.equals(editJob.getFoundFrom(), this.foundFrom)) {
-            this.foundFrom = editJob.getFoundFrom();
-        }
     }
 
     // Causes error:
