@@ -22,11 +22,11 @@ public class Qu1cksaveBackendApplication {
 
 // When running the app:
 // 1.) Might need to do File > Invalidate Caches
+//     - I only needed to do this at the beginning, and the error might have
+//       been due to something else
+// 1.5) Gradle (right sidebar elephant icon) -> Sync All Gradle Projects
 // 2.) Set environment variables
-//       OLD:
-//		 - export POSTGRES_HOST=jdbc:postgresql://localhost:5432/dev
-//         -- (OLD Node version) POSTGRES_HOST=localhost
-//         -- Can add ?useSSL=false at end if needed (self explanatory)
+//       NEVER USED, but I can add ?useSSL=false at end if needed (self explanatory)
 //
 //		 ****** NOTE: It's fine to put these here, since they're only used for
 //         development.
@@ -47,18 +47,66 @@ public class Qu1cksaveBackendApplication {
 //       export ENV_TYPE=DEV
 //       - Set to PROD if in production. Otherwise, can simply not set it.
 // 3.) Run postgres docker container
-//		docker-compose down		(If you want to reset. Then compose up again)
-// 		docker-compose up -d
-//      To run a specific one:
-//        docker-compose -f docker-compose-test.yml up -d
-//        docker-compose -f docker-compose-test.yml down
+//      docker compose -f docker-compose-db.yml up -d
+//      	- To run the DB image
+//      docker compose -f docker-compose-db.yml down
 //
-//		docker compose		After the update, use this now instead of docker-compose
+//		OLD:
+//			docker-compose down		(If you want to reset. Then compose up again)
+// 			docker-compose up -d
+//          *** After the update, docker compose is now used instead of docker-compose
 //
 // 4.) ./gradlew bootRun		To run
-// 5.) Go to http://localhost:8080/api/v0/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
+// 5.) Go to http://localhost:8080 (Assuming that the frontend server is running)
+//     - To start the frontend, just cd frontend_folder and enter npm run dev
 //
-// For tests:  ./gradlew clean test --info		(More info)   	OR		 ./gradlew clean test
+// ****** For tests:  ./gradlew clean test --info (More info)   	OR		 ./gradlew clean test
+//
+//
+//
+// ========== Starting the backend in a container (for development) ===========
+// Source: Had to get help from Chat GPT since it's difficult to find
+//   Dockerized Spring Boot w/ Gradle info in the official docs
+// - Though, I used "docker init" to create the .dockerignore and just
+//   deleted the generated Dockerfile (uses Maven T_T) and compose file.
+//   + It also generated a README.Docker.md, which I just left here
+//
+// IMPORTANT:
+//   In order for Docker containers to communicate with each other locally,
+//     they need be running in the same Docker network.
+//   - We can't use localhost since localhost within a container refers to the
+//     container itself, not the host machine
+//   Docker Compose automatically creates a default network for all services in
+//     your docker-compose.yml. You can connect your manually-run container to
+//     that network.
+//
+// ****** After running the postgres docker container ******
+// I can just set the POSTGRES DB, USER, and PASSWORD
+//   when running Spring Boot app in a container.
+// - These are the only ones the compose file uses
+//
+// 1.) Find the default network name:
+//       docker network ls
+// 2.) Check that the container is running within the network
+//       docker network inspect qu1cksave-backend_default
+// 3.) Build the image for the Spring Boot app
+//       docker build -t qu1cksave-backend-app .
+// 4.) Run the container
+//       docker run -p 8080:8080 --network qu1cksave-backend_default --env-file .env qu1cksave-backend-app
+//       docker run -p 8080:8080 --network qu1cksave-backend_default --env-file .env -e POSTGRES_HOST=qu1cksave-backend-docker-postgres qu1cksave-backend-app
+//       - If I want to make the .env file have the default settings I use for dev
+//         mode and just edit the postgres host for the container
+//         -- However, this env file is used only for the container since it
+//            doesn't work when running with gradlew bootRun
+//       - qu1cksave-backend-docker-postgres is the container_name in the yml file
+//         -- POSTGRES_HOST needs to be the container name so that they can
+//           communicate with each other within the network
+
+
+
+// ============================================================================
+// ============================= USEFUL NOTES =================================
+// ============================================================================
 
 // In terminal log: No active profile set, falling back to 1 default profile: "default"
 // - https://stackoverflow.com/questions/68171743/eclipse-no-active-profile-set-falling-back-to-default-profiles-default
@@ -69,8 +117,7 @@ public class Qu1cksaveBackendApplication {
 // - https://stackoverflow.com/questions/62119161/adding-environment-variables-to-springs-application-properties
 //   -- Input "export POSTGRES_HOST=myvalue" in terminal to set environment variables
 //   -- Setting it in Intellij doesn't seem to work
-
-// USEFUL NOTES:
+//
 // https://www.marcobehler.com/guides/java-databases
 // 1.) Spring takes care of configuring SessionFactory for Hibernate, so no
 //     need to write code for it.
@@ -294,6 +341,11 @@ public class Qu1cksaveBackendApplication {
 //  https://docs.docker.com/guides/java/containerize/
 //  https://www.docker.com/blog/kickstart-your-spring-boot-application-development/
 //  https://spring.io/guides/gs/spring-boot-docker
+//  - boot2docker is deprecated
+//  - https://www.techtarget.com/searchitoperations/definition/Boot2Docker
+//    -- Docker Machine is now used
+//  - https://www.reddit.com/r/docker/comments/dyxwug/what_is_docker_machine/
+//    -- With Docker on Mac, I don't need Virtual Box not Docker Machine
 //  https://docs.spring.io/spring-boot/reference/packaging/container-images/dockerfiles.html
 
 // TODO: Spring Boot Gradle Docker

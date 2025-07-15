@@ -50,7 +50,7 @@ public class S3Service {
                 )
             );
         } else {
-//            System.out.println("************** DEV mode putObject.");
+            System.out.println("************** DEV mode putObject.");
             // This doesn't really return anything, but I'll just do the conversion
             //   from double[] to byte[], then from that byte[] back to double[]
             //   here.
@@ -81,7 +81,7 @@ public class S3Service {
                     .build()
             );
         } else {
-//            System.out.println("******** DEV MODE deleteObject");
+            System.out.println("******** DEV MODE deleteObject");
         }
         // If not in production mode, doesn't do anything
     }
@@ -101,7 +101,7 @@ public class S3Service {
         } else {
             // If not in production mode, simply returns this array (which is
             //   used by the tests)
-//            System.out.println("********** DEV mode getObject");
+            System.out.println("********** DEV mode getObject");
             return new double[]{2, 4, 7, 10, 14};
         }
     }
