@@ -60,6 +60,8 @@ class Qu1cksaveBackendApplicationTests {
 
 	private static String postgresPassword = System.getenv("POSTGRES_PASSWORD");
 
+	private static final String apiKey = System.getenv("API_KEY");
+
 	// This will use a random port
 	@Container
 	static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest")
@@ -247,8 +249,6 @@ class Qu1cksaveBackendApplicationTests {
 			.isEmpty()
 		;
 	}
-
-	private final String apiKey = System.getenv("API_KEY");
 
 	// TODO: Commenting out due to:
 	//   java.lang.IllegalStateException: Mapped port can only be obtained after the container is started
@@ -1803,8 +1803,34 @@ class Qu1cksaveBackendApplicationTests {
 
 	// TODO: *************** IMPORTANT ******************
 	//  - Edit job w/ files, but with the fields out of order
-
 }
+
+// NOTES (7/9/25): ********* React frontend changes **********
+//  - Need to make sure that I don't have any issue with returning null
+//    from the backend instead of undefined.
+//    -- The undefined causes an error since it can't be json parsed
+//    -- I don't remember which calls it is where I'm relying on the
+//       undefined causing an error to cause the exception and execute
+//       the catch case (Since the Node.js backend doesn't properly set
+//       the status code for all error cases and just returns undefined)
+//  - Basically, check everywhere where I make an API call (NOT NEEDED)
+//    -- Start with the Route Handlers and Server Actions. Then look
+//       everywhere where these are used (DONE)
+//       + Note: Server Actions are called as functions, while Route
+//         Handlers are called via a fetch call
+//       + No need to check calls/fetch calls to these, since the res.json
+//         ends up executing the catch block and returns undefined
+//  - Check which cases there are where I check    something === undefined (DONE)
+//  - Check how the frontend is setting the keys for a job, etc.
+//    -- UPDATE: The frontend doesn't set fields that don't exist for the new
+//       or to be updated job. (So they're not even keys)
+//  - Finally, check all fetch calls, in case I made one that isn't in
+//    a Route Handler or Server Action (DONE)
+//  - NOTE: If res /res body is undefined, res.json() causes an error, so
+//    I don't have to worry about cases where res.ok is true (using the
+//    original Node.js API) but the body is undefined.
+//    - res.json throws SyntaxError: Unexpected end of JSON input if res
+//      or res.body is undefined
 
 // NOTES: 6/15/25
 // - Search "how to validate request body in spring boot"

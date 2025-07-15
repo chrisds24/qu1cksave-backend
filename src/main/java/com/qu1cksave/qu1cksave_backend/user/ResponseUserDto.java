@@ -26,9 +26,6 @@ public class ResponseUserDto {
         @JsonProperty("name") String name,
         @JsonProperty("email") String email,
         @JsonProperty("roles") Object roles,
-        // TODO: Does the frontend expect accessToken or access_token?
-        //  - The job classes expect snakecase (since it made it easier for me to
-        //     work on the Node.js when I didn't have to change them).
         @JsonProperty("access_token") String accessToken
     ) {
         try {

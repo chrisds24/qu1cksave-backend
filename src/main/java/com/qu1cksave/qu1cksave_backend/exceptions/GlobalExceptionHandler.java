@@ -26,7 +26,8 @@ public class GlobalExceptionHandler {
         SQLGetFailedException.class
     })
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Object handleSQLExceptions() {
+    public Object handleSQLExceptions(HttpServletRequest req, Exception ex) {
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -34,7 +35,8 @@ public class GlobalExceptionHandler {
     //   or any of its files aren't found
     @ExceptionHandler(SQLNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Object handleSQLNotFoundException() {
+    public Object handleSQLNotFoundException(HttpServletRequest req, Exception ex) {
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -46,14 +48,16 @@ public class GlobalExceptionHandler {
     //   useful for attackers
     @ExceptionHandler(ForbiddenResourceException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Object handleForbiddenResourceException() {
+    public Object handleForbiddenResourceException(HttpServletRequest req, Exception ex) {
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
     // No user id query provided for get multiple jobs
     @ExceptionHandler(MissingServletRequestParameterException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Object handleMissingServletRequestParameterException() {
+    public Object handleMissingServletRequestParameterException(HttpServletRequest req, Exception ex) {
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -65,7 +69,8 @@ public class GlobalExceptionHandler {
     // - 409 is the suggested status code for updating outdated data
     @ExceptionHandler(StaleFrontendJobException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public Object handleStaleFrontendJobException() {
+    public Object handleStaleFrontendJobException(HttpServletRequest req, Exception ex) {
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -75,7 +80,8 @@ public class GlobalExceptionHandler {
         S3PutFailedException.class
     })
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR) // TODO: Is 500 appropriate?
-    public Object handleS3Exceptions() {
+    public Object handleS3Exceptions(HttpServletRequest req, Exception ex) {
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -96,13 +102,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
 //    public Object handleBadRequestBody() {
     public Object handleBadRequestBodyExceptions(HttpServletRequest req, Exception ex) {
-        // Keep here for now for reference
-        // - This actually helped me fix a bug
-//        System.out.println("****** I GOT HERE !!!!!!!!!!!!!!!!");
-//        System.out.println("****** STACK TRACE: " + Arrays.toString(ex.getStackTrace()));
-//        System.out.println("****** MESSAGE: " + ex.getMessage());
-//        System.out.println("****** CAUSE:" + ex.getCause().toString());
-
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -110,7 +110,8 @@ public class GlobalExceptionHandler {
     //   of a user
     @ExceptionHandler(InvalidCredentialsException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Object handleInvalidCredentialsException() {
+    public Object handleInvalidCredentialsException(HttpServletRequest req, Exception ex) {
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -118,7 +119,9 @@ public class GlobalExceptionHandler {
     //   issue. What status code to show instead?
     @ExceptionHandler(UserAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public Object handleUserAlreadyExistsException() {
+//    public Object handleUserAlreadyExistsException() {
+    public Object handleUserAlreadyExistsException(HttpServletRequest req, Exception ex) {
+//        printErr(ex); // TODO: Comment out in production
         return null;
     }
 
@@ -129,13 +132,16 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 //    public Object handleOtherExceptions() {
     public Object handleOtherExceptions(HttpServletRequest req, Exception ex) {
-        // TODO: TESTING
-        System.out.println("****** I GOT HERE !!!!!!!!!!!!!!!!");
+//        printErr(ex); // TODO: Comment out in production
+        return null;
+    }
+
+    // TODO: Uncomment calls to this in production
+    //  - Also use an actual logging system
+    public void printErr(Exception ex) {
         System.out.println("****** STACK TRACE: " + Arrays.toString(ex.getStackTrace()));
         System.out.println("****** MESSAGE: " + ex.getMessage());
-        System.out.println("****** CAUSE:" + ex.getCause().toString());
-
-        return null;
+//        System.out.println("****** CAUSE:" + ex.getCause().toString());
     }
 
     // TODO: Add a handler for Exception and RuntimeException

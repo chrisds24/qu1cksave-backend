@@ -9,9 +9,16 @@ public class Qu1cksaveBackendApplication {
 		SpringApplication.run(Qu1cksaveBackendApplication.class, args);
 	}
 }
-
-// TODO: Packaging a Spring Boot app in a Docker container
-//  - https://docs.spring.io/spring-boot/reference/packaging/index.html
+// TODO:
+//  Search these:
+//  - 413 Payload Too Large Spring Boot
+//    Set request body size limit Spring Boot
+//  - Something about the order of the fields being passed to the constructor
+//    -- Seems like it should be fine, since the comment I put before was in
+//       ResponseUserDto and not in any of the RequestDtos. It seems that my
+//       custom mapper was causing the issue, which shouldn't be a problem
+//       with the request bodies I send
+//
 
 // When running the app:
 // 1.) Might need to do File > Invalidate Caches
@@ -24,15 +31,21 @@ public class Qu1cksaveBackendApplication {
 //		 ****** NOTE: It's fine to put these here, since they're only used for
 //         development.
 //       export POSTGRES_HOST=localhost
-//       - The docker-compose.yml uses this
-//       - Also, the spring.datasource.url
+//             - The docker-compose.yml uses this
+//             - Also, the spring.datasource.url
 //		 export POSTGRES_PORT=5432
 //       export POSTGRES_DB=dev
 //		 export POSTGRES_USER=postgres
 //		 export POSTGRES_PASSWORD=postgres
-//       ****** Shouldn't really matter if I leave this here, but just not gonna do it
+//              ****** Shouldn't really matter if I leave this here, but just not gonna do it
 //       export ACCESS_TOKEN=???
 //       export API_KEY=???
+//		 export BUCKET_NAME=???
+//		 export BUCKET_REGION=???
+//		 export BUCKET_ACCESS_KEY=???
+//		 export BUCKET_SECRET_ACCESS_KEY=???
+//       export ENV_TYPE=DEV
+//       - Set to PROD if in production. Otherwise, can simply not set it.
 // 3.) Run postgres docker container
 //		docker-compose down		(If you want to reset. Then compose up again)
 // 		docker-compose up -d
@@ -195,3 +208,120 @@ public class Qu1cksaveBackendApplication {
 //     -- DOESN'T FIX
 //  https://stackoverflow.com/questions/79246915/problems-with-hibernate-startup-logging-after-adding-jpa-with-database-in-spring
 // 	- SOLUTION: Says that there is no issue
+
+
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+// ------------------------ DOCKER NOTES ---------------------------------
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+
+// ------------------------ Docker Docs ---------------------------------
+// https://docs.docker.com/?_gl=1*jf7xwa*_gcl_au*ODAxMjUyNDMyLjE3NTIwMDc2NzQ.*_ga*NjA5MzAyNjQ4LjE3NTA2NTYxOTA.*_ga_XJWPQMJYHQ*czE3NTIwMDk5MjQkbzMkZzEkdDE3NTIwMDk5MzYkajQ4JGwwJGgw
+// - There's a .dockerignore file
+// https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/
+// - Talks about official docker images and layers
+// https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-docker-compose/
+// - Docker Compose
+//   -- More on https://docs.docker.com/compose/
+// https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/
+// - Dockerfile: This is what I'll need
+// - Seems like we don't want to run as the root user
+// - https://docs.docker.com/reference/dockerfile/
+//   -- Dockerfile reference
+// - https://docs.docker.com/reference/cli/docker/init/
+//   -- docker init to quickly build a Dockerfile
+//      + WARNING !!!!!!    If any of the files already exist, a prompt appears
+//        and provides a warning as well as giving you the option to overwrite
+//        all the files. If docker-compose.yaml already exists instead of
+//        compose.yaml, docker init can overwrite it, using docker-compose.yaml
+//        as the name for the Compose file
+// https://docs.docker.com/get-started/docker-concepts/building-images/multi-stage-builds/
+// - Has Spring Boot example, but using multi-stage builds
+//   -- They used "FROM eclipse-temurin:21.0.2_13-jdk-jammy" to get the image
+// https://docs.docker.com/guides/java/containerize/
+// - Containerize a Java (Spring) app using Docker
+// https://docs.docker.com/build/concepts/dockerfile/
+// - Dockerfile overview
+//   -- REALLY GOOD SUMMARY
+// - https://docs.docker.com/reference/dockerfile/#shell-and-exec-form
+//   -- Shell vs exec form CMD (shell = CMD in "array", exec = CMD like a terminal command)
+// - https://docs.docker.com/build/concepts/context/
+//   -- Build context
+//   -- has .dockerignore examples
+//      + https://github.com/moby/patternmatcher/tree/main/ignorefile
+//        * More on dockerignore pattern matching logic
+// https://docs.docker.com/reference/dockerfile/
+// - Has almost everything about Dockerfiles
+// - Allowing the build container to access secret values
+//		RUN --mount=type=secret
+//		This mount type allows the build container to access secret values, such as tokens or private keys, without baking them into the image.
+//
+//		By default, the secret is mounted as a file. You can also mount the secret as an environment variable by setting the env option
+// - TODO: Look at Dockerfile examples at the very bottom
+// - ENV
+//   -- The ENV instruction sets the environment variable <key> to the value <value>. This value
+//      will be in the environment for all subsequent instructions in the build stage and can be
+//      replaced inline in many as well
+//   -- The environment variables set using ENV will persist when a container is run from the resulting image
+//   -- TODO: Should I use RUN --mount=type=secret or ENV for secrets, API keys, etc.???
+//  - ADD vs COPY: COPY seems to be used more
+//  - COPY
+//    -- You can specify multiple source files or directories with COPY. The last argument must always be the destination.
+//    -- TODO: Look at the "Source" section, to review how to specify paths
+//
+// https://docs.docker.com/build/building/best-practices/
+// - Best practices
+
+// ------------------------ Docker w/ Render ---------------------------------
+// https://render.com/docs/docker
+// - Docker with Render
+//   -- https://render.com/docs/docker-secrets
+//      + Using secrets with Docker (IMPORTANT)
+//   -- Render can build your service's Docker image based on the Dockerfile in your project repo
+//   -- Render omits files and directories from your build context based on your .dockerignore file
+// https://community.render.com/t/java-springboot-app-start-command/19835
+// https://community.render.com/t/running-java-spring-boot-in-docker-container-on-web-services/3232
+
+// ------------------------ Has examples ---------------------------------
+// https://docs.docker.com/guides/java/containerize/
+// https://spring.io/guides/gs/spring-boot-docker
+// https://docs.spring.io/spring-boot/reference/packaging/container-images/dockerfiles.html
+// - Looks very useful
+// https://www.docker.com/blog/kickstart-your-spring-boot-application-development/
+
+// TODO: ------------------ SKIM AGAIN ----------------
+//  https://docs.docker.com/guides/java/containerize/
+//  https://www.docker.com/blog/kickstart-your-spring-boot-application-development/
+//  https://spring.io/guides/gs/spring-boot-docker
+//  https://docs.spring.io/spring-boot/reference/packaging/container-images/dockerfiles.html
+
+// TODO: Spring Boot Gradle Docker
+//  https://medium.com/shoutloudz/dockerize-your-spring-boot-application-with-gradle-afcbf8da11bd
+//  https://www.reddit.com/r/docker/comments/1e2g7a6/build_spring_boot_in_the_container_or_outside_of/
+//  https://stackoverflow.com/questions/71697307/best-practices-while-building-docker-images-for-spring-boot-app-via-gradle
+//  https://stackoverflow.com/questions/78455007/dockerfile-for-gradle-spring-boot-application-using-multi-stage
+//  https://www.reddit.com/r/SpringBoot/comments/1d5sxlh/sprinboot_gradle_on_docker_how_to_make_hot_reload/
+//  Search "spring boot gradle dockerfile site:stackoverflow.com"
+
+
+// TODO: ./mvnw package in Gradle
+
+// TODO: How to add secrets Docker env
+
+
+
+
+// TODO: ------------- OFF TOPIC, regarding async and sync --------------
+//  Search these:
+//  - async in spring boot    OR    async in spring mvc
+//  - CompletableFuture java
+//  - Why aren't services beans?    OR    why are services component instead of bean
+//  ------------------------------------
+//  - https://www.reddit.com/r/SpringBoot/comments/1abjzuf/spring_boot_weblux_with_kotlin_or_spring_boot_mvc/
+//  - https://stackoverflow.com/questions/70997077/spring-web-mvc-vs-spring-webflux-blocking-and-non-blocking
+//  - https://stackoverflow.com/questions/46606246/spring-mvc-async-vs-spring-webflux
+//  - https://www.baeldung.com/spring-mvc-async-vs-webflux
+//  - https://dev.to/jottyjohn/spring-mvc-vs-spring-webflux-choosing-the-right-framework-for-your-project-4cd2
+//  - https://www.reddit.com/r/Frontend/comments/1g5nhun/question_regarding_synchronous_and_asynchronous/
+//  - https://softwareengineering.stackexchange.com/questions/380536/how-to-decide-if-an-api-should-be-synchronous-or-asynchronous

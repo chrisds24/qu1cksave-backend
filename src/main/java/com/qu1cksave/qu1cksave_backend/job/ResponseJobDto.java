@@ -17,8 +17,8 @@ import java.util.UUID;
 // https://www.baeldung.com/jackson-nested-values
 // - Register deserializer to class
 // NOTE: (6/12/25) Not using custom deserializer since Jackson seems to keep
-//   trying to use my constructor
-//@JsonDeserialize(using = ResponseJobDtoDeserializer.class)
+//   trying to use my constructor.
+//@JsonDeserialize(using = ResponseJobDtoDeserializer.class) // FILE HAS BEEN DELETED
 public class ResponseJobDto {
     // TODO: Search for:
     //  - How to specify not nullable?
