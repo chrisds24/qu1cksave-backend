@@ -174,18 +174,3 @@ public class S3Service {
 //    app.use(express.urlencoded({ extended: false }));
 
 
-// TODO: Off-topic, but important regarding sync vs async rest api
-//  Search these:
-//  - async in spring boot    OR    async in spring mvc
-//  - CompletableFuture java
-//  - Why aren't services beans?    OR    why are services component instead of bean
-//  ------------------------------------
-//  - https://www.reddit.com/r/SpringBoot/comments/1abjzuf/spring_boot_weblux_with_kotlin_or_spring_boot_mvc/
-//  - https://stackoverflow.com/questions/70997077/spring-web-mvc-vs-spring-webflux-blocking-and-non-blocking
-//  - https://stackoverflow.com/questions/46606246/spring-mvc-async-vs-spring-webflux
-//  - https://www.baeldung.com/spring-mvc-async-vs-webflux
-//  - https://dev.to/jottyjohn/spring-mvc-vs-spring-webflux-choosing-the-right-framework-for-your-project-4cd2
-//  - https://www.reddit.com/r/Frontend/comments/1g5nhun/question_regarding_synchronous_and_asynchronous/
-//  - https://softwareengineering.stackexchange.com/questions/380536/how-to-decide-if-an-api-should-be-synchronous-or-asynchronous
-
-
