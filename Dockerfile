@@ -29,6 +29,11 @@ ENV SPRING_BOOT_LAYERS_ENABLED=true
 
 # Declare the port the app runs on
 EXPOSE 8080
+# NOTE:
+# TODO:
+#   https://render.com/docs/web-services
+#   - Every Render web service must bind to a port on host 0.0.0.0 to serve HTTP requests
+#     -- Don't worry abou this yet
 
 # Use Spring Boot's layered JAR entrypoint
 ENTRYPOINT ["java", "-jar", "app.jar"]
