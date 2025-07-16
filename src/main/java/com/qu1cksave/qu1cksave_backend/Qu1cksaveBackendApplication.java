@@ -80,6 +80,10 @@ public class Qu1cksaveBackendApplication {
 //     your docker-compose.yml. You can connect your manually-run container to
 //     that network.
 //
+// IMPORTANT:
+//   POSTGRES_HOST must be localhost when starting the postgres container.
+//   The Spring Boot app container won't use localhost though
+//
 // ****** After running the postgres docker container ******
 // I can just set the POSTGRES DB, USER, and PASSWORD
 //   when running Spring Boot app in a container.
