@@ -39,3 +39,5 @@ out/
 ### I added ###
 **/.dockerignore
 **/.env
+**/*.pem
+**/.DS_Store
