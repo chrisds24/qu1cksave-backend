@@ -105,8 +105,8 @@ public class Qu1cksaveBackendApplication {
 //   The Spring Boot app container won't use localhost though
 //
 // ****** After running the postgres docker container ******
-// I can just set the POSTGRES DB, USER, and PASSWORD
-//   when running Spring Boot app in a container.
+// I can just set the POSTGRES DB, USER, and PASSWORD when running the Spring
+//   Boot app in a container with the dev database
 // - These are the only ones the compose file uses
 //
 // 1.) Find the default network name:
@@ -125,6 +125,12 @@ public class Qu1cksaveBackendApplication {
 //       - qu1cksave-backend-docker-postgres is the container_name in the yml file
 //         -- POSTGRES_HOST needs to be the container name so that they can
 //           communicate with each other within the network
+//
+// ****** Running production mode locally with the container ********
+// Just build and run the container
+// 1.) docker build -t qu1cksave-backend-app .
+// 2.) docker run -p 8080:8080 --env-file .env qu1cksave-backend-app
+//     - Make sure to set env vars to use prod env vars
 
 
 
