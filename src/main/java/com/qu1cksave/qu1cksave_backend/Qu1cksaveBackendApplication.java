@@ -11,14 +11,34 @@ public class Qu1cksaveBackendApplication {
 }
 // TODO:
 //  Search these:
-//  - 413 Payload Too Large Spring Boot
-//    Set request body size limit Spring Boot
+//  - 413 Payload Too Large Spring Boot (I don't have this problem here, but
+//    had it in the Node.js version)
+//    -- Basically, set request body size limit Spring Boot
 //  - Something about the order of the fields being passed to the constructor
 //    -- Seems like it should be fine, since the comment I put before was in
 //       ResponseUserDto and not in any of the RequestDtos. It seems that my
 //       custom mapper was causing the issue, which shouldn't be a problem
 //       with the request bodies I send
-//
+//  - Render.com set secrets Docker
+//    -- https://render.com/docs/docker#docker-specific-features
+//       + Env vars set in Render will be passed as build args to the image, so
+//         it's not recommended to do this. Need to use secret files instead
+//       + Docker secret files: https://render.com/docs/docker-secrets
+//    -- https://community.render.com/t/cant-find-secrets-in-docker-build/5939
+//    -- https://community.render.com/t/deploying-docker-containers-with-environment-variables-help/12635
+//    -- https://community.render.com/t/secrets-in-secret-file-env-automatically-makes-environment-variables/3598
+//  - Access .env in Spring Boot
+//  ...
+//  ...
+//  ...
+//  FILES THAT USE ENV VARS:
+//  - application.properties
+//  - Qu1cksaveBackendConfiguration
+//  - APIKeyFilter
+//  - JWTFilter
+//  - S3Service
+//  - UserService
+//  - JobService
 
 // When running the app:
 // 1.) Might need to do File > Invalidate Caches
