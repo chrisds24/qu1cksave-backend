@@ -5,6 +5,7 @@ import com.qu1cksave.qu1cksave_backend.filters.BearerAuthenticationFilter;
 import com.qu1cksave.qu1cksave_backend.filters.ExceptionHandlerFilter;
 import com.qu1cksave.qu1cksave_backend.filters.JWTFilter;
 import com.qu1cksave.qu1cksave_backend.filters.MemberAuthorizationFilter;
+import com.qu1cksave.qu1cksave_backend.filters.ReqBodySizeFilter;
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -119,6 +120,20 @@ public class Qu1cksaveBackendConfiguration {
         registrationBean.addUrlPatterns("/*");
 //        registrationBean.addUrlPatterns("/job/*", "/resume/*", "/coverLetter/*");
         registrationBean.setOrder(5);
+
+        return registrationBean;
+    }
+
+    @Bean
+    public FilterRegistrationBean<ReqBodySizeFilter> reqBodySizeFilter(){
+        FilterRegistrationBean<ReqBodySizeFilter> registrationBean
+            = new FilterRegistrationBean<>();
+
+        registrationBean.setFilter(new ReqBodySizeFilter());
+        // I excluded any requests not using PUT, POST, or PATCH using
+        //   shouldNotFilter in the filter itself
+        registrationBean.addUrlPatterns("/*");
+        registrationBean.setOrder(6);
 
         return registrationBean;
     }

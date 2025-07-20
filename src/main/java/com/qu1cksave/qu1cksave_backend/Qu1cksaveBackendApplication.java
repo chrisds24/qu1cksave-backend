@@ -11,18 +11,16 @@ public class Qu1cksaveBackendApplication {
 }
 // TODO:
 //  Search these:
-//  - 413 Payload Too Large Spring Boot (I don't have this problem here, but
-//    had it in the Node.js version)
-//    -- Basically, set request body size limit Spring Boot
 //  - Something about the order of the fields being passed to the constructor
 //    -- Seems like it should be fine, since the comment I put before was in
 //       ResponseUserDto and not in any of the RequestDtos. It seems that my
 //       custom mapper was causing the issue, which shouldn't be a problem
 //       with the request bodies I send
-//  - Render.com set secrets Docker
+//  - Render.com set secrets Docker (DONE)
 //    -- https://render.com/docs/docker#docker-specific-features
 //       + Env vars set in Render will be passed as build args to the image, so
 //         it's not recommended to do this. Need to use secret files instead
+//         * NOTE: I JUST WENT WITH THIS
 //       + Docker secret files: https://render.com/docs/docker-secrets
 //    -- https://community.render.com/t/cant-find-secrets-in-docker-build/5939
 //    -- https://community.render.com/t/deploying-docker-containers-with-environment-variables-help/12635
@@ -101,8 +99,7 @@ public class Qu1cksaveBackendApplication {
 //     that network.
 //
 // IMPORTANT:
-//   POSTGRES_HOST must be localhost when starting the postgres container.
-//   The Spring Boot app container won't use localhost though
+//   The Spring Boot app container won't use localhost to access the database
 //
 // ****** After running the postgres docker container ******
 // I can just set the POSTGRES DB, USER, and PASSWORD when running the Spring
@@ -117,10 +114,7 @@ public class Qu1cksaveBackendApplication {
 //       docker build -t qu1cksave-backend-app .
 // 4.) Run the container
 //       docker run -p 8080:8080 --network qu1cksave-backend_default --env-file .env qu1cksave-backend-app
-//       docker run -p 8080:8080 --network qu1cksave-backend_default --env-file .env -e POSTGRES_HOST=qu1cksave-backend-docker-postgres qu1cksave-backend-app
-//       - If I want to make the .env file have the default settings I use for dev
-//         mode and just edit the postgres host for the container
-//         -- However, this env file is used only for the container since it
+//       - Note that the env file is used only for the container since it
 //            doesn't work when running with gradlew bootRun
 //       - qu1cksave-backend-docker-postgres is the container_name in the yml file
 //         -- POSTGRES_HOST needs to be the container name so that they can

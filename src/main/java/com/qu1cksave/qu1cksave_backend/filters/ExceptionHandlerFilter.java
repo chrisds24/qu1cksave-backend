@@ -2,6 +2,7 @@ package com.qu1cksave.qu1cksave_backend.filters;
 
 import com.qu1cksave.qu1cksave_backend.exceptions.CustomFilterException;
 import com.qu1cksave.qu1cksave_backend.exceptions.ForbiddenResourceException;
+import com.qu1cksave.qu1cksave_backend.exceptions.RequestBodyTooLargeException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,6 +30,11 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
             setStatusAndContentToJson(
                 res,
                 HttpStatus.FORBIDDEN
+            );
+        } catch (RequestBodyTooLargeException err) {
+            setStatusAndContentToJson(
+                res,
+                HttpStatus.PAYLOAD_TOO_LARGE
             );
         } catch (Exception err) {
 //            System.out.println("****** MESSAGE (Exception): " + err.getMessage());
