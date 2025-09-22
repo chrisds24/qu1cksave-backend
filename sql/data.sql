@@ -1,3 +1,10 @@
+-- IMPORTANT REGARDING UUIDs
+-- https://www.uuidtools.com/decode
+-- 269a3d55-4eee-4a2e-8c64-e1fe386b76f8
+-- * The 4 after 4eee is the version (13th digit, 1-indexed). In this case, the UUID above is version 4
+-- * The 8 after the 4a2e is the variant (17th digit, 1-indexed). In this case, the UUID above is od random variant
+-- * So me copying UUIDs and randomly changing up values to create predetermined ones was a mistake
+
 DELETE FROM member;
 INSERT INTO member(id, email, password, name, roles) VALUES('269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'molly@books.com', '$2b$10$Y00XOZD/f5gBSpDusPUgU.iJufk6Nxx6gAoHRG8t2eHyGgoP2bK4y', 'Molly Member', '["member"]');
 INSERT INTO member(id, email, password, name, roles) VALUES('4604289c-b8fe-4560-8960-4da47fdfef94', 'anna@books.com', '$2b$10$Y00XOZD/f5gBSpDusPUgU.G1ohpR3oQbbBHK4KzX7dU219Pv/lzze', 'Anna Admin', '["member"]');
