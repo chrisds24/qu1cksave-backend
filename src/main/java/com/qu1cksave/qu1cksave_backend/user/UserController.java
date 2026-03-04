@@ -29,7 +29,6 @@ public class UserController {
         //   any request that doesn't have the API key, but the other endpoints
         //   including job, resume, and cover letter endpoints don't even
         //   though they should
-        //  - Cloudflare already blocks requests that don't have the API key.
         //  - Though, I should add a filter here that checks it for every
         //    request including unauthenticated ones
 
