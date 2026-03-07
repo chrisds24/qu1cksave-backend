@@ -37,6 +37,61 @@ public class JWTFilter extends OncePerRequestFilter {
             throw new CustomFilterException("Missing JWT");
         }
 
+        // TODO: I need to verify using Firebase Admin SDK
+        //  - First, I need to setup my Firebase project
+        //    -- Create Firebase accounts for users I'll use in dev mode + tests
+        //    -- Put their Firebase UID in the dev and test databases
+        //  - Second, I need to setup Admin SDK here
+        //    -- Install
+        //    -- Then setup the config for the backend to use
+        //    -- Is it possible to use a Bean in a filter?
+        //  - I then need to fix my tests
+        //  - I also need to edit my exceptions
+        //  --------------------
+        //  Basically, first use verifyToken to verify token validity
+        //  Then from the result of that, check if that user's email has been
+        //    verified
+        //  If it is indeed verified, check for user existence in the DB
+        //    + If user exists, can proceed as usual
+        //    + If user doesn't exist, signup the user to the DB, then proceed
+        //      as usual
+        //  -------------------
+        //  *** IMPORTANT: Tricky part is how I'll do the tests since I now
+        //      need to have an actual valid token for verifyToken to work.
+        //      Should I actually login via Firebase to get a valid token?
+        //      Or should I use a workaround so I don't have to make a call to
+        //      Firebase?
+        //  - Also, how do I test login?
+        //    -- I can't really test certain things such as wrong credentials
+        //       and non-existent user, since Firebase Auth does that in the
+        //       frontend.
+        //       + However, I can still test:
+        //         * Valid token: I can just say this is tested for any test
+        //           where the request is able to go past the JWT Filter.
+        //         * Invalid token: Just make a request to fetch the jobs list,
+        //           but use an invalid format token (I don't want to accidentally
+        //           use a valid format Firebase token that actually ends up being
+        //           valid)
+        //         * Verified email: Same as valid token
+        //         * Unverified email: Just use a user with email_verified = false
+        //       + How to have a verified email if none of the emails here in
+        //         the dev environment are real emails? I can just manually edit
+        //         email_verified = true
+        //    -- Remember: Login via Firebase -> Put token into cookie ->
+        //       Redirect/Refresh -> Request to fetch jobs list ->
+        //       JWT Filter to perform the checks mentioned above
+        //  - How about testing signup?
+        //    -- Signup to Firebase happens in the frontend
+        //    -- When does a backend signup attempt happen? It's when a user who's
+        //       successfully signed up via Firebase and has verified their
+        //       email makes an authenticated request but they don't have
+        //       an entry in my database
+        //    -- For testing signing up a new user, I can use a user from
+        //       Firebase but they don't have an entry here in my DB.
+        //       + After they're signed up and their jobs list (empty) has
+        //         been fetched, just delete them from the test db. (I don't
+        //         really need to delete them in the db since the tests ending
+        //         resets the test db.)
         // Verify the jwt
 //        Claims claims = Jwts.parser().setSigningKey("secret").parseClaimsJws(token).getBody();
         // https://javadoc.io/static/io.jsonwebtoken/jjwt-api/0.12.6/io/jsonwebtoken/JwtParserBuilder.html#verifyWith(javax.crypto.SecretKey)
@@ -92,9 +147,11 @@ public class JWTFilter extends OncePerRequestFilter {
         filterChain.doFilter(req, res);
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest req) {
-        String path = req.getRequestURI();
-        return path.startsWith("/api/v0/user/login") || path.startsWith("/api/v0/user/signup");
-    }
+    // As of the addition of Firebase Authentication, there are no longer login
+    //   and signup endpoints. Keeping this for reference
+//    @Override
+//    protected boolean shouldNotFilter(HttpServletRequest req) {
+//        String path = req.getRequestURI();
+//        return path.startsWith("/api/v0/user/login") || path.startsWith("/api/v0/user/signup");
+//    }
 }

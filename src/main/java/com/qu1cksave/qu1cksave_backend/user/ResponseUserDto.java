@@ -14,7 +14,7 @@ public class ResponseUserDto {
     private final String name;
     private final String email;
     private final String[] roles;
-    private final String accessToken;
+    private final String firebaseUid;
 
     // TODO:
     //  When testing with .jsonPath, the order here matters. Not sure why since
@@ -26,7 +26,7 @@ public class ResponseUserDto {
         @JsonProperty("name") String name,
         @JsonProperty("email") String email,
         @JsonProperty("roles") Object roles,
-        @JsonProperty("access_token") String accessToken
+        @JsonProperty("firebase_uid") String firebaseUid
     ) {
         try {
             this.id = id;
@@ -43,7 +43,7 @@ public class ResponseUserDto {
                 this.roles = rolesArr;
             }
 
-            this.accessToken = accessToken;
+            this.firebaseUid = firebaseUid;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -53,7 +53,7 @@ public class ResponseUserDto {
     public String getName() { return name; }
     public String getEmail() { return email; }
     public String[] getRoles() { return roles; }
-    public String getAccessToken() { return accessToken; }
+    public String getFirebaseUid() { return firebaseUid; }
 
     @Override
     public boolean equals(Object comparedObject) {
@@ -73,6 +73,6 @@ public class ResponseUserDto {
             Objects.equals(this.getName(), comparedResponseUserDto.getName()) &&
             Objects.equals(this.getEmail(), comparedResponseUserDto.getEmail()) &&
             Arrays.equals(this.getRoles(), comparedResponseUserDto.getRoles()) &&
-            Objects.equals(this.getAccessToken(), comparedResponseUserDto.getAccessToken());
+            Objects.equals(this.getFirebaseUid(), comparedResponseUserDto.getFirebaseUid());
     }
 }

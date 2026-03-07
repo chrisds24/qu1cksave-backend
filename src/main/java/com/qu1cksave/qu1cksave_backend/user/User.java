@@ -16,11 +16,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "member")
 public class User {
-    // IMPORTANT:
-    // - email, password, name, and roles aren't marked as NOT NULL in the
-    //   schema. But I'm marking it as not nullable here since that is the
-    //   correct thing to do
-
     @Generated
     @Id
     @ColumnDefault("gen_random_uuid()")
@@ -30,21 +25,17 @@ public class User {
     private String email;
 
     @Column(nullable = false)
-    private String password;
+    private String firebase_uid;
 
     @Column(nullable = false)
     private String name;
 
-    // TODO:
-    //  https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#mapping-embeddables
-    //  - According to the link, JSON arrays aren't supported, so maybe this
-    //    might not work
-    //  - UPDATE: It does work
+    // https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#mapping-embeddables
+    // - According to the link, JSON arrays aren't supported, but this
+    //   actually does work
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false)
     private String[] roles;
-
-    // TODO: I need a User-type class that has an optional accessToken
 
     // Constructors
 
@@ -53,13 +44,13 @@ public class User {
     public User(
         UUID id,
         String email,
-        String password,
+        String firebase_uid,
         String name,
         String[] roles
     ) {
         this.id = id;
         this.email = email;
-        this.password = password;
+        this.firebase_uid = firebase_uid;
         this.name = name;
         this.roles = roles;
     }
@@ -67,14 +58,14 @@ public class User {
     // Getters
     public UUID getId() { return id; }
     public String getEmail() { return email; }
-    public String getPassword() { return password; }
+    public String getFirebaseUid() { return firebase_uid; }
     public String getName() { return name; }
     public String[] getRoles() { return roles; }
 
     // Setters
     public void setId(UUID id) { this.id = id; }
     public void setEmail(String email) { this.email = email; }
-    public void setPassword(String password) { this.password = password; }
+    public void setFirebaseUid(String firebase_uid) { this.firebase_uid = firebase_uid; }
     public void setName(String name) { this.name = name; }
     public void setRoles(String[] roles) { this.roles = roles; }
 }

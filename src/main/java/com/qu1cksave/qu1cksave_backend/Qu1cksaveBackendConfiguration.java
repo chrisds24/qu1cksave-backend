@@ -74,8 +74,8 @@ public class Qu1cksaveBackendConfiguration {
             = new FilterRegistrationBean<>();
 
         registrationBean.setFilter(new BearerAuthenticationFilter());
-        // TODO: Later, this should not apply to login and signup endpoints
-        //  This would also be order 3, with APIKeyFilter being order 2
+        // TODO: Later, This would also be order 3, with APIKeyFilter being
+        //   order 2
         registrationBean.addUrlPatterns("/*");
         registrationBean.setOrder(2);
 
@@ -102,9 +102,9 @@ public class Qu1cksaveBackendConfiguration {
             = new FilterRegistrationBean<>();
 
         registrationBean.setFilter(new JWTFilter());
-        // I excluded login and signup using shouldNotFilter in the filter itself
+        // If there were login and signup endpoints, I could use
+        //   shouldNotFilter in the filter itself to exclude them
         registrationBean.addUrlPatterns("/*");
-//        registrationBean.addUrlPatterns("/job/*", "/resume/*", "/coverLetter/*");
         registrationBean.setOrder(4);
 
         return registrationBean;
@@ -116,9 +116,9 @@ public class Qu1cksaveBackendConfiguration {
             = new FilterRegistrationBean<>();
 
         registrationBean.setFilter(new MemberAuthorizationFilter());
-        // I excluded login and signup using shouldNotFilter in the filter itself
+        // If there were login and signup endpoints, I could use
+        //   shouldNotFilter in the filter itself to exclude them
         registrationBean.addUrlPatterns("/*");
-//        registrationBean.addUrlPatterns("/job/*", "/resume/*", "/coverLetter/*");
         registrationBean.setOrder(5);
 
         return registrationBean;
