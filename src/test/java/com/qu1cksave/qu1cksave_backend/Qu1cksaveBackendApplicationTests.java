@@ -1,15 +1,12 @@
 package com.qu1cksave.qu1cksave_backend;
 
 import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
-import com.qu1cksave.qu1cksave_backend.exceptions.CustomFilterException;
 import com.qu1cksave.qu1cksave_backend.job.ResponseJobDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 import com.qu1cksave.qu1cksave_backend.user.ResponseUserDto;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,15 +38,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Testcontainers
 // Run tests in a specific order: https://www.baeldung.com/junit-5-test-order
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-// TODO: Commenting out @TestInstance due to:
+// NOTE: Commenting out @TestInstance due to:
 //  java.lang.IllegalStateException: Mapped port can only be obtained after the container is started
 //// https://www.baeldung.com/junit-testinstance-annotation
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Qu1cksaveBackendApplicationTests {
-	// Not needed
-//    @LocalServerPort
-//    private int port;
-
 	// Non-static field 'postgresUser' cannot be referenced from a static context
 	// - Need to make this static to fix
 	// - @Value doesn't work
@@ -83,7 +76,6 @@ class Qu1cksaveBackendApplicationTests {
 
 	@Autowired
 	private WebTestClient webTestClient;
-
 
 
 	// NOTE: (6/4/25) Tests I need
@@ -158,7 +150,6 @@ class Qu1cksaveBackendApplicationTests {
 	//  LATER: Not logged in tests for each endpoint
 
 
-
 	// ************************************************************************
 	// ************************************************************************
 	// ************************************************************************
@@ -168,25 +159,6 @@ class Qu1cksaveBackendApplicationTests {
 	// ************************************************************************
 	// ************************************************************************
 	// ************************************************************************
-
-	// Used by some create job tests
-//	private void badRequestBodyCreateTest(String json) {
-//		// Create the job
-//		this.webTestClient
-//			.post()
-//			.uri("/job")
-//			.contentType(MediaType.APPLICATION_JSON)
-//			// No resume and cover letter
-//			.bodyValue(json)
-//			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-//			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
-//			.exchange()
-//			.expectStatus()
-//			.isBadRequest()
-//			.expectBody()
-//			.isEmpty()
-//		;
-//	}
 
 	// Used by some edit job tests
 	private WebTestClient.BodySpec<ResponseJobDto, ?> getJobRequestReturningBodySpec(

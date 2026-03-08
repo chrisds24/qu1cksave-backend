@@ -36,6 +36,7 @@ dependencies {
 	//   using Gradle w/ Kotlin (can't even find the version for my Spring
 	//   Boot version)
 	implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+	implementation("com.google.firebase:firebase-admin:9.8.0")
 	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6") // Uses Jackson for JSON serialization
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
