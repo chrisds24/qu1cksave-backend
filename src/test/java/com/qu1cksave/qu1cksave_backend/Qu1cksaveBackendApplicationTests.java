@@ -31,7 +31,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-// TODO (3/8/2026)
+// TODO: (3/8/2026)
+//  - I need to find a way to login before all tests, since it would be a lot
+//    of requests to Firebase if I log in before each one
+//    + Once I figure that out, I need to remove all the loginAsMolly calls
+//  - Need to test login as Anna by making a get jobs call using a generated
+//    custom token for her
+//  - Need to test signup/login as a user with an unverified email
+//    (Just need one test for this)
+
+// TODO: (3/8/2026)
 //  *** IMPORTANT: Tricky part is how I'll do the tests since I now
 //      need to have an actual valid token for verifyToken to work.
 //      Should I actually login via Firebase to get a valid token?
@@ -115,78 +124,7 @@ class Qu1cksaveBackendApplicationTests {
 	@Autowired
 	private WebTestClient webTestClient;
 
-
-	// NOTE: (6/4/25) Tests I need
-	//  - Get one job, job exists
-	//  - Get one job, job doesn't exist
-	//    -- Covers case when user specifies an id of a job that doesn't belong
-	//       to them (since single jobs are found by id and userId)
-	//  - ??? Get one job, no id provided
-	//    -- Just goes to regular /jobs route but without a query
-	//  --------------------------
-	//  - Create job w/o files, then get that job
-	//  - Create job w/ files, then get that job
-	//  - Create invalid job, missing required fields
-	//  - Create invalid job, extra fields
-	//   * For the last 2, I could use some kind of API validation, filters,
-	//     or custom code. API validation would be ideal, but custom code could
-	//     be enough for now
-	//     -- Need to manually check not having required fields
-	//        + Having the wrong type just causes an error in Java
-	//     -- The extra fields one would actually just cause an error in Java
-	//  --------------------------
-	//  - Get multiple jobs, userId query param is the logged in user's id
-	//  - Get multiple jobs, userId query param is NOT the logged in user's id
-	//  - ??? Get multiple jobs, no userId query param provided
-	//    -- Spring/Java should throw out an error for this. Wonder what it
-	//       exactly is?
-	//  ---------------------------
-	//  - Delete job, job exists
-	//  - Delete job, job doesn't exist (due to stale list)
-	//    -- Here, stale refers to the list not having up to date jobs
-	//  - Delete job, but job is stale (see description in edit job tests)
-	//    -- The job and the up to date files get deleted since the delete uses
-	//       the file ids from the job obtained from the database
-	//  ---------------------------
-	//  - Edit job w/o files, then get that job
-	//  - Edit job w/ resume and cover letter added, then get that job
-	//  - Edit job w/ resume and cover letter edited, then get that job
-	//  - Edit job w/ resume and cover letter deleted, then get that job
-	//  - Stale job tests
-	//    +++ Note, a job where its resume id and cover letter id are the same
-	//        as the latest version is not considered stale
-	//    +++ How does a job become stale? Let's say there's tab A and tab B,
-	//        where tab A contains the stale job. The job is then edited in tab
-	//        B so that at least one of the files' id's are now different from
-	//        what tab A has
-	//        * Note that the following also applies to cover letter
-	//        * MAKE TESTS FOR THESE 3
-	//    1.) Job has no resume, then edited to have a resume. Edit job again,
-	//       but using the old job w/o the resume
-	//    2.) Job has a resume, then edited to have a different resume id (by
-	//       removing the resume, then adding one again). Edit job again,
-	//       but using the old job w/ the old resume id
-	//    3.) Job has a resume, then edited to have no resume. Edit job again,
-	//       but using the old job w/ the resume
-	//    +++ Other possible issues:
-	//    -- Same resume id. User then attempts to edit resume by editing the
-	//       stale job
-	//       + Resume gets updated to this new resume, which is appropriate
-	//         * Note that both the metadata and the file in S3 would get
-	//           updated accordingly. The job also gets updated using the
-	//           updates made to the stale job
-	//    -- Same resume id. User then attempts to remove resume by editing the
-	//       stale job.
-	//       + Resume gets removed from S3 and database, as expected
-	//    +++ IMPORTANT: I went with just leaving it to the user to not do
-	//        their work in stale tabs, then just having checks where errors
-	//        could occur.
-	//        - An alternative would have been to have a timestamp for the
-	//          most recent update timestamp, and not allow edits/deletes if
-	//          using a stale job (aka an outdated update timestamp)
- 	//  ---------------------------
-	//  LATER: Not logged in tests for each endpoint
-
+	// TODO: LOOK AT NOTES ABOUT TESTS I'LL NEED IN THE TestInputs file
 
 	// ************************************************************************
 	// ************************************************************************
@@ -314,25 +252,6 @@ class Qu1cksaveBackendApplicationTests {
 		;
 
 		return user != null ? user.getAccessToken() : null;
-	}
-
-	private void loginInvalidAuthHeader(
-		String authHeader
-	) {
-		this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testExistentCredentials)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-//			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.header(HttpHeaders.AUTHORIZATION, authHeader)
-			.exchange()
-			.expectStatus()
-			.isUnauthorized()
-			.expectBody()
-			.isEmpty()
-		;
 	}
 
 	private void getOneJobInvalidAuthHeader(
@@ -1517,171 +1436,26 @@ class Qu1cksaveBackendApplicationTests {
 	// ************************************************************************
 	// ************************************************************************
 	// ************************************************************************
-	// - TODO: Ideally, it's better to move these in a separate file
 
-	@Test
-	@Order(31)
-	void loginWithExistentUser() {
-		ResponseUserDto user = this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testExistentCredentials)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.exchange()
-			.expectStatus()
-			.isOk()
-			.expectHeader()
-			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody(ResponseUserDto.class)
-			.returnResult()
-			.getResponseBody()
-		;
+	// TODO:
+	//  - getJobs as Molly tests login as Molly via passing the filters
+	//  - getJobs as Anna tests login as Anna via passing the filters
+	//  ...
+	//  *** USEFUL: I can "login" via Firebase Admin SDK by generating a
+	//    custom token for the user with the given firebase uid
+	//  ...
+	//  *** I need a getOneUser endpoint exclusively for testing
 
-		assertNotNull(user);
-		assertEquals(
-			UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8"),
-			user.getId()
-		);
-		assertEquals("molly@books.com", user.getEmail());
-		assertEquals("Molly Member", user.getName());
-		assertEquals("member", user.getRoles()[0]);
-		assertNotNull(user.getAccessToken());
-	}
-
-	@Test
-	@Order(32)
-	void loginWithExistentUser2() {
-		this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testExistentCredentials2)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.exchange()
-			.expectStatus()
-			.isOk()
-			.expectHeader()
-			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody()
-			.jsonPath("$.id").isEqualTo("4604289c-b8fe-4560-8960-4da47fdfef94")
-			.jsonPath("$.email").isEqualTo("anna@books.com")
-		;
-	}
-
-	// Note: I'm returning a 404 when the wrong password is provided to not
-	//   give out info about the existence of a user
-	@Test
-	@Order(33)
-	void loginWithWrongPassword() {
-		this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testWrongCredentials)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.exchange()
-			.expectStatus()
-			.isNotFound()
-			.expectBody()
-			.isEmpty()
-		;
-	}
-
-	@Test
-	@Order(34)
-	void loginWithNonExistentUser() {
-		this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testNonExistentUser)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.exchange()
-			.expectStatus()
-			.isNotFound()
-			.expectBody()
-			.isEmpty()
-		;
-	}
-
+	// TODO: Do this
 	@Test
 	@Order(35)
-	void signupWithNewUserThenLogin() {
-		ResponseUserDto user = this.webTestClient
-			.post()
-			.uri("/user/signup")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testNewUser)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.exchange()
-			.expectStatus()
-			.isOk()
-			.expectHeader()
-			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody(ResponseUserDto.class)
-			.returnResult()
-			.getResponseBody()
-		;
-
-		assertNotNull(user);
-		assertNotNull(user.getId());
-		assertEquals("kevindurant@books.com", user.getEmail());
-		assertEquals("Kevin Durant", user.getName());
-		assertEquals("member", user.getRoles()[0]);
-		assertNull(user.getAccessToken()); // Should be no access token
-
-		// Login with newly created user
-		this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testNewlyCreatedUser)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.exchange()
-			.expectStatus()
-			.isOk()
-			.expectHeader()
-			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody(ResponseUserDto.class)
-			.consumeWith(result -> {
-				// Can't use since no access token for signup return
-//				assertEquals(user, result.getResponseBody());
-				ResponseUserDto res = result.getResponseBody();
-				assertNotNull(res);
-				assertEquals(user.getId(), res.getId());
-				assertEquals(user.getEmail(), res.getEmail());
-				assertEquals(user.getName(), res.getName());
-				assertThat(Arrays.equals(user.getRoles(), res.getRoles())).isTrue();
-				assertNotNull(res.getAccessToken());
-			})
-		;
+	void signupWithNewUser() {
+		// Steps:
+		// 1.) Generate token for Firebase user who doesn't have a DB entry
+		//     - Make sure their email is marked as verified
+		// 2.) Call get jobs endpoint. This should sign them up
+		// 3.) Get one user via firebase uid
 	}
-
-	@Test
-	@Order(36)
-	void signupWithExistingUser() {
-		this.webTestClient
-			.post()
-			.uri("/user/signup")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testNewUser)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.exchange()
-			.expectStatus()
-			.isEqualTo(HttpStatus.CONFLICT)
-			.expectBody()
-			.isEmpty()
-		;
-	}
-
 
 
 	// ************************************************************************
@@ -1693,16 +1467,19 @@ class Qu1cksaveBackendApplicationTests {
 	// ************************************************************************
 	// ************************************************************************
 	// ************************************************************************
+
+	// TODO: Remove the login tests
+	//  - However, replace this with a call to getJobs where the authHeader is
+	//    wrong just like the ones in these login tests
+	//  - I can use getOneJobInvalidAuthHeader
+
 	@Test
 	@Order(37)
-	void loginMissingAuthHeader() {
+	void getOneJobMissingAuthHeader() {
 		// Null auth header
 		this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testExistentCredentials)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.get()
+			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
 			.exchange()
 			.expectStatus()
 			.isUnauthorized()
@@ -1711,16 +1488,16 @@ class Qu1cksaveBackendApplicationTests {
 		;
 
 		// Empty string auth header
-		loginInvalidAuthHeader("");
+		getOneJobInvalidAuthHeader("");
 	}
 
 	@Test
 	@Order(38)
-	void loginMalformedAuthHeader() {
+	void getOneJobMalformedAuthHeader() {
 		// Too short
-		loginInvalidAuthHeader("Bearer");
+		getOneJobInvalidAuthHeader("Bearer");
 		// Too long
-		loginInvalidAuthHeader("Bearer apiKey jwt whatisthis");
+		getOneJobInvalidAuthHeader("Bearer apiKey jwt whatisthis");
 	}
 
 	// Causes:
@@ -1730,28 +1507,28 @@ class Qu1cksaveBackendApplicationTests {
 	// So removing this test since WebTestClient throws an exception
 //	@Test
 //	@Order(39)
-//	void loginMissingAuthScheme() {
+//	void getOneJobMissingAuthScheme() {
 //		// split returns arr with length 2, arr[0] = "" (empty string)
-//		loginInvalidAuthHeader(" apiKey");
+//		getOneJobInvalidAuthHeader(" apiKey");
 //	}
 
 	@Test
 	@Order(40)
-	void loginNotBearerAuth() {
-		loginInvalidAuthHeader("Basic apiKey");
+	void getOneJobNotBearerAuth() {
+		getOneJobInvalidAuthHeader("Basic apiKey");
 	}
 
 	@Test
 	@Order(41)
-	void loginMissingApiKey() {
+	void getOneJobMissingApiKey() {
 		// split returns arr with length 3, arr[1] = ""
-		loginInvalidAuthHeader("Bearer  jwt");
+		getOneJobInvalidAuthHeader("Bearer  jwt");
 	}
 
 	@Test
 	@Order(42)
-	void loginWrongApiKey() {
-		loginInvalidAuthHeader("Bearer wrongApiKey");
+	void getOneJobWrongApiKey() {
+		getOneJobInvalidAuthHeader("Bearer wrongApiKey");
 	}
 
 	@Test
@@ -1775,6 +1552,7 @@ class Qu1cksaveBackendApplicationTests {
 		getOneJobInvalidAuthHeader("Bearer " + apiKey + " " + wrongJwt);
 	}
 
+	// TODO: Fix this
 	// Insufficient permissions
 	@Test
 	@Order(46)
