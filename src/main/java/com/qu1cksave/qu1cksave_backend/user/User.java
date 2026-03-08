@@ -24,8 +24,8 @@ public class User {
     @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false)
-    private String firebase_uid;
+    @Column(name = "firebase_uid", nullable = false)
+    private String firebaseUid;
 
     @Column(nullable = false)
     private String name;
@@ -44,13 +44,13 @@ public class User {
     public User(
         UUID id,
         String email,
-        String firebase_uid,
+        String firebaseUid,
         String name,
         String[] roles
     ) {
         this.id = id;
         this.email = email;
-        this.firebase_uid = firebase_uid;
+        this.firebaseUid = firebaseUid;
         this.name = name;
         this.roles = roles;
     }
@@ -58,14 +58,14 @@ public class User {
     // Getters
     public UUID getId() { return id; }
     public String getEmail() { return email; }
-    public String getFirebaseUid() { return firebase_uid; }
+    public String getFirebaseUid() { return firebaseUid; }
     public String getName() { return name; }
     public String[] getRoles() { return roles; }
 
     // Setters
     public void setId(UUID id) { this.id = id; }
     public void setEmail(String email) { this.email = email; }
-    public void setFirebaseUid(String firebase_uid) { this.firebase_uid = firebase_uid; }
+    public void setFirebaseUid(String firebaseUid) { this.firebaseUid = firebaseUid; }
     public void setName(String name) { this.name = name; }
     public void setRoles(String[] roles) { this.roles = roles; }
 }

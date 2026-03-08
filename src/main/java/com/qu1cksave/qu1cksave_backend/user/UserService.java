@@ -1,6 +1,7 @@
 package com.qu1cksave.qu1cksave_backend.user;
 
 import com.qu1cksave.qu1cksave_backend.exceptions.SQLAddFailedException;
+import com.qu1cksave.qu1cksave_backend.exceptions.SQLGetFailedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,43 +10,34 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
     private final UserRepository userRepository;
 
-    private final String secret = System.getenv("ACCESS_TOKEN");
-
     public UserService(
         @Autowired UserRepository userRepository
     ) {
         this.userRepository = userRepository;
     }
 
+    @Transactional(readOnly = true)
+    public ResponseUserDto getUserByFirebaseUid(String firebaseUid) {
+        try {
+            return userRepository.findByFirebaseUid(firebaseUid)
+                .map(UserMapper::toResponseDto).orElse(null);
+        } catch (RuntimeException err) {
+            throw new SQLGetFailedException(
+                "Select one user by firebaseUid failed", err
+            );
+        }
+    }
+
     // Users are signed up through auto-provisioning. When they make an
     //   authenticated request, they are signed up if their email is
     //   already verified and they don't have an entry in the database
     //
-    // ResponseUserDto here should contain firebase_uid, email, name
+    // RequestUserDto here should contain name, email, firebaseUid
     @Transactional
     public ResponseUserDto signup(RequestUserDto newUser) {
         // Before signing up a user through auto-provisioning, existence is
         //   already checked before calling this signup function. No need to
         //   check existence again here.
-
-        // TODO: Use this code to lookup a user's existence. I could have a
-        //   getUserByEmail function.
-//        User user;
-//        try {
-//            user = userRepository.findByEmail(
-//                newUser.getEmail()
-//            ).orElse(null);
-//        } catch(RuntimeException err) {
-//            throw new SQLGetFailedException(
-//                "Select user failed when signing up"
-//            );
-//        }
-//
-//        if (user != null) {
-//            throw new UserAlreadyExistsException(
-//                "User with given email already exists"
-//            );
-//        }
 
         // Insert new user to database and return
         String[] roles = {"member"};

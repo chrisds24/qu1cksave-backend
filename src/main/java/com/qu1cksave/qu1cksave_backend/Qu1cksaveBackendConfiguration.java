@@ -10,6 +10,7 @@ import com.qu1cksave.qu1cksave_backend.filters.ExceptionHandlerFilter;
 import com.qu1cksave.qu1cksave_backend.filters.JWTFilter;
 import com.qu1cksave.qu1cksave_backend.filters.MemberAuthorizationFilter;
 import com.qu1cksave.qu1cksave_backend.filters.ReqBodySizeFilter;
+import com.qu1cksave.qu1cksave_backend.user.UserService;
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -20,7 +21,6 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -58,16 +58,51 @@ public class Qu1cksaveBackendConfiguration {
         return txManager;
     }
 
+    @Bean
+    public ExceptionHandlerFilter exceptionHandlerFilter() {
+        return new ExceptionHandlerFilter();
+    }
+
+    @Bean
+    public BearerAuthenticationFilter bearerAuthenticationFilter() {
+        return new BearerAuthenticationFilter();
+    }
+
+    @Bean
+    public APIKeyFilter apiKeyFilter() {
+        return new APIKeyFilter();
+    }
+
+    @Bean
+    public JWTFilter jwtFilter(
+        FirebaseAuth firebaseAuth,
+        UserService userService
+    ) {
+        return new JWTFilter(firebaseAuth, userService);
+    }
+
+    @Bean
+    public MemberAuthorizationFilter memberAuthorizationFilter() {
+        return new MemberAuthorizationFilter();
+    }
+
+    @Bean
+    public ReqBodySizeFilter reqBodySizeFilter() {
+        return new ReqBodySizeFilter();
+    }
+
     // Register filters
     // - https://www.baeldung.com/spring-boot-add-filter (Used this one)
     // - https://stackoverflow.com/questions/75117913/how-do-i-manually-register-filters-in-springboot
     // - https://springframework.guru/jwt-authentication-in-spring-microservices-jwt-token/
     @Bean
-    public FilterRegistrationBean<ExceptionHandlerFilter> exceptionHandlerFilter(){
+    public FilterRegistrationBean<ExceptionHandlerFilter> exceptionHandlerFilterRegistration(
+        ExceptionHandlerFilter exceptionHandlerFilter
+    ){
         FilterRegistrationBean<ExceptionHandlerFilter> registrationBean
             = new FilterRegistrationBean<>();
 
-        registrationBean.setFilter(new ExceptionHandlerFilter());
+        registrationBean.setFilter(exceptionHandlerFilter);
         registrationBean.addUrlPatterns("/*");
         registrationBean.setOrder(1);
 
@@ -75,11 +110,13 @@ public class Qu1cksaveBackendConfiguration {
     }
 
     @Bean
-    public FilterRegistrationBean<BearerAuthenticationFilter> bearerAuthenticationFilter(){
+    public FilterRegistrationBean<BearerAuthenticationFilter> bearerAuthenticationFilterRegistration(
+        BearerAuthenticationFilter bearerAuthenticationFilter
+    ){
         FilterRegistrationBean<BearerAuthenticationFilter> registrationBean
             = new FilterRegistrationBean<>();
 
-        registrationBean.setFilter(new BearerAuthenticationFilter());
+        registrationBean.setFilter(bearerAuthenticationFilter);
         // TODO: Later, This would also be order 3, with APIKeyFilter being
         //   order 2
         registrationBean.addUrlPatterns("/*");
@@ -89,11 +126,13 @@ public class Qu1cksaveBackendConfiguration {
     }
 
     @Bean
-    public FilterRegistrationBean<APIKeyFilter> apiKeyFilter(){
+    public FilterRegistrationBean<APIKeyFilter> apiKeyFilterRegistration(
+        APIKeyFilter apiKeyFilter
+    ){
         FilterRegistrationBean<APIKeyFilter> registrationBean
             = new FilterRegistrationBean<>();
 
-        registrationBean.setFilter(new APIKeyFilter());
+        registrationBean.setFilter(apiKeyFilter);
         registrationBean.addUrlPatterns("/*");
         registrationBean.setOrder(3);
 
@@ -103,11 +142,13 @@ public class Qu1cksaveBackendConfiguration {
     // Exclude an endpoint:
     // - https://www.baeldung.com/spring-exclude-filter
     @Bean
-    public FilterRegistrationBean<JWTFilter> jwtFilter(){
+    public FilterRegistrationBean<JWTFilter> jwtFilterRegistration(
+        JWTFilter jwtFilter
+    ){
         FilterRegistrationBean<JWTFilter> registrationBean
             = new FilterRegistrationBean<>();
 
-        registrationBean.setFilter(new JWTFilter());
+        registrationBean.setFilter(jwtFilter);
         // If there were login and signup endpoints, I could use
         //   shouldNotFilter in the filter itself to exclude them
         registrationBean.addUrlPatterns("/*");
@@ -117,11 +158,13 @@ public class Qu1cksaveBackendConfiguration {
     }
 
     @Bean
-    public FilterRegistrationBean<MemberAuthorizationFilter> memberAuthorizationFilter(){
+    public FilterRegistrationBean<MemberAuthorizationFilter> memberAuthorizationFilterRegistration(
+        MemberAuthorizationFilter memberAuthorizationFilter
+    ){
         FilterRegistrationBean<MemberAuthorizationFilter> registrationBean
             = new FilterRegistrationBean<>();
 
-        registrationBean.setFilter(new MemberAuthorizationFilter());
+        registrationBean.setFilter(memberAuthorizationFilter);
         // If there were login and signup endpoints, I could use
         //   shouldNotFilter in the filter itself to exclude them
         registrationBean.addUrlPatterns("/*");
@@ -131,11 +174,13 @@ public class Qu1cksaveBackendConfiguration {
     }
 
     @Bean
-    public FilterRegistrationBean<ReqBodySizeFilter> reqBodySizeFilter(){
+    public FilterRegistrationBean<ReqBodySizeFilter> reqBodySizeFilterRegistration(
+        ReqBodySizeFilter reqBodySizeFilter
+    ){
         FilterRegistrationBean<ReqBodySizeFilter> registrationBean
             = new FilterRegistrationBean<>();
 
-        registrationBean.setFilter(new ReqBodySizeFilter());
+        registrationBean.setFilter(reqBodySizeFilter);
         // I excluded any requests not using PUT, POST, or PATCH using
         //   shouldNotFilter in the filter itself
         registrationBean.addUrlPatterns("/*");
@@ -160,10 +205,10 @@ public class Qu1cksaveBackendConfiguration {
     }
 
     @Bean
-    public FirebaseAuth firebaseApp() throws IOException {
-
+    public FirebaseAuth firebaseAuth() throws IOException {
         FirebaseOptions options = FirebaseOptions.builder()
             .setCredentials(GoogleCredentials.getApplicationDefault())
+            // I don't think this is needed?
 //            .setDatabaseUrl("https://<DATABASE_NAME>.firebaseio.com/")
             .build();
 

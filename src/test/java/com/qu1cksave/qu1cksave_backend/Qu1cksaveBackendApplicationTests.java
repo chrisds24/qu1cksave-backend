@@ -31,6 +31,44 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
+// TODO (3/8/2026)
+//  *** IMPORTANT: Tricky part is how I'll do the tests since I now
+//      need to have an actual valid token for verifyToken to work.
+//      Should I actually login via Firebase to get a valid token?
+//      Or should I use a workaround so I don't have to make a call to
+//      Firebase?
+//  - Also, how do I test login?
+//    -- I can't really test certain things such as wrong credentials
+//       and non-existent user, since Firebase Auth does that in the
+//       frontend.
+//       + However, I can still test:
+//         * Valid token: I can just say this is tested for any test
+//           where the request is able to go past the JWT Filter.
+//         * Invalid token: Just make a request to fetch the jobs list,
+//           but use an invalid format token (I don't want to accidentally
+//           use a valid format Firebase token that actually ends up being
+//           valid)
+//         * Verified email: Same as valid token
+//         * Unverified email: Just use a user with email_verified = false
+//       + How to have a verified email if none of the emails here in
+//         the dev environment are real emails? I can just manually edit
+//         email_verified = true
+//    -- Remember: Login via Firebase -> Put token into cookie ->
+//       Redirect/Refresh -> Request to fetch jobs list ->
+//       JWT Filter to perform the checks mentioned above
+//  - How about testing signup?
+//    -- Signup to Firebase happens in the frontend
+//    -- When does a backend signup attempt happen? It's when a user who's
+//       successfully signed up via Firebase and has verified their
+//       email makes an authenticated request but they don't have
+//       an entry in my database
+//    -- For testing signing up a new user, I can use a user from
+//       Firebase but they don't have an entry here in my DB.
+//       + After they're signed up and their jobs list (empty) has
+//         been fetched, just delete them from the test db. (I don't
+//         really need to delete them in the db since the tests ending
+//         resets the test db.)
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(
 	locations = "classpath:application-product-integrationtest.properties"
