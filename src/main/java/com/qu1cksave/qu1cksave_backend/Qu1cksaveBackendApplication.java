@@ -64,6 +64,9 @@ public class Qu1cksaveBackendApplication {
 //		 export BUCKET_SECRET_ACCESS_KEY=???
 //       export ENV_TYPE=DEV
 //       - Set to PROD if in production. Otherwise, can simply not set it.
+//       export GOOGLE_APPLICATION_CREDENTIALS="<put path to file>"
+//       *** NOTE: I ended up putting the path to the pem file in code, which
+//           was a mistake
 // 3.) Run postgres docker container
 //      docker compose -f docker-compose-db.yml up -d
 //      	- To run the DB image

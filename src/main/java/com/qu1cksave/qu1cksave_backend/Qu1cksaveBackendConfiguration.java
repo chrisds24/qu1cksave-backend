@@ -1,5 +1,9 @@
 package com.qu1cksave.qu1cksave_backend;
 
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
+import com.google.firebase.auth.FirebaseAuth;
 import com.qu1cksave.qu1cksave_backend.filters.APIKeyFilter;
 import com.qu1cksave.qu1cksave_backend.filters.BearerAuthenticationFilter;
 import com.qu1cksave.qu1cksave_backend.filters.ExceptionHandlerFilter;
@@ -20,6 +24,8 @@ import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+
+import java.io.IOException;
 
 import static org.springframework.transaction.annotation.RollbackOn.ALL_EXCEPTIONS;
 
@@ -151,6 +157,19 @@ public class Qu1cksaveBackendConfiguration {
             .credentialsProvider(staticCredentialsProvider)
             .build()
         ;
+    }
+
+    @Bean
+    public FirebaseAuth firebaseApp() throws IOException {
+
+        FirebaseOptions options = FirebaseOptions.builder()
+            .setCredentials(GoogleCredentials.getApplicationDefault())
+//            .setDatabaseUrl("https://<DATABASE_NAME>.firebaseio.com/")
+            .build();
+
+        FirebaseApp firebaseApp = FirebaseApp.initializeApp(options);
+
+        return FirebaseAuth.getInstance(firebaseApp);
     }
 }
 
