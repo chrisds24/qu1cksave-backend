@@ -42,10 +42,6 @@ public class JobController {
     //  So it would become http://localhost:8080/api/v1/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
     //  Instead of http://localhost:8080/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8 (CURRENT)
 
-    // TODO: For everything below, need to get id of user from the JWT in the
-    //   Auth header. I remember it's passed as a parameter in Spring Security
-    //   Also need OpenAPI schema validation (or something similar)
-
     @GetMapping()
     // https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RequestParam.html
     // - RequestParams are required by default

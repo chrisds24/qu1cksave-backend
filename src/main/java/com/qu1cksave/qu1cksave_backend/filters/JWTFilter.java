@@ -66,6 +66,32 @@ public class JWTFilter extends OncePerRequestFilter {
             );
         }
 
+        // TODO: For the users I'm testing and also the existing ones in the DB
+        //   such as my own email. I need to:
+        //  - Set name here
+        //    + *** IMPORTANT ***
+        //      * I might consider just getting the name from the backend.
+        //        For example, if someone decides to change their name, it
+        //        won't immediately reflect changes unless they logout if I'm
+        //        getting the name from the token (which would be outdated)
+        //    + Though, I should still just ask for their name upon signup.
+        //  - Set emailVerified here
+        //  Users to set:
+        //  + molly@books.com       Molly Member
+        //  + anna@books.com        Anna Admin
+        //  + nobby@books.com       Nobby Nobody
+        //  + goatuser@books.com    Goat User
+        //    * The only user w/o a DB entry, which will be used to test signup
+        //  + My own email
+        //  Refer to https://console.firebase.google.com/project/qu1cksave/authentication/users
+        //    for the uids
+        //  I can use Admin SDK to set the displayName and email_verified for
+        //    Firebase here.
+        //  *** NOTE: The users above won't be signed up to my dev/test DB
+        //    since they already have entries
+        //  - But when testing, I need to have an existing Firebase user that
+        //    doesn't have an entry in my DB here. (which would be Goat User)
+
         // No need for null check since result of verifyIdToken can't be null
         if (!decodedToken.isEmailVerified()) {
             throw new CustomFilterException("User's email not yet verified.");
