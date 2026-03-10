@@ -75,7 +75,9 @@ public class JWTFilter extends OncePerRequestFilter {
             //   + Set up Firebase Security Rules that check for revocation
             //     rather than using the Admin SDK to make the check
             //   + Too complicated for my use case
-            // - SOLUTION:
+            // - SOLUTION: If email isn't verified after the first token check,
+            //   then do another token check that also checks if the token has
+            //   been revoked (See the reasoning below in doFilterInternal)
 
             firebaseAuth.revokeRefreshTokens(firebaseUid);
 
@@ -125,37 +127,20 @@ public class JWTFilter extends OncePerRequestFilter {
         String name = decodedToken.getName();
         String email = decodedToken.getEmail();
 
-        // TODO: For the users I'm testing and also the existing ones in the DB
-        //   such as my own email. I need to:
-        //  - Set name here
-        //    + *** IMPORTANT ***
-        //      * I might consider just getting the name from the backend.
-        //        For example, if someone decides to change their name, it
-        //        won't immediately reflect changes unless they logout if I'm
-        //        getting the name from the token (which would be outdated)
-        //    + Though, I should still just ask for their name upon signup.
-        //  - Set emailVerified here
-        //  Users to set:
-        //  + molly@books.com       Molly Member
-        //  + anna@books.com        Anna Admin
-        //  + nobby@books.com       Nobby Nobody
-        //  + goatuser@books.com    Goat User
-        //    * The only user w/o a DB entry, which will be used to test signup
-        //  + My own email
-        //  Refer to https://console.firebase.google.com/project/qu1cksave/authentication/users
-        //    for the uids
-        //  I can use Admin SDK to set the displayName and email_verified for
-        //    Firebase here.
-        //  *** NOTE: The users above won't be signed up to my dev/test DB
-        //    since they already have entries
-        //  - But when testing, I need to have an existing Firebase user that
-        //    doesn't have an entry in my DB here. (which would be Goat User)
-
         // ****************************************************************
         // ***************** COMMENT THIS OUT LATER ***********************
         // ****************************************************************
         // NOTE: This section was used to set Firebase info for the users
         //   below since there's no option to manually set them in Firebase
+        // - Need to set name and email_verified for the users listed below
+        // - Christian and Goat don't have entries in my dev/test DB, so they
+        //   will be signed up
+        // TODO:
+        //  - I might consider just getting the name from the backend.
+        //    For example, if someone decides to change their name, it
+        //    won't immediately reflect changes unless they logout if I'm
+        //    getting the name from the token (which would be outdated)
+        //    + Though, I should still just ask for their name upon signup.
 
         // 1st time:
         // - email not verified in both Firebase and the token, so the code
@@ -178,10 +163,24 @@ public class JWTFilter extends OncePerRequestFilter {
         // the valid info from the first verifyToken call above
         //
         // OVERALL
-        // - I'll end up making 2 network requests from verifyToken for each user
-        //   listed below
-        // TODO:
-        //  - Remove this before adding unverified email test
+        // - I'll end up making at most 2 network requests from verifyToken
+        //   for each user listed below
+        // - ********** Based on the actual tests **********
+        // - Molly 1st test passes -> Molly 2nd test fails -> Do another test
+        //     run -> All of Molly's tests pass from this point on
+        //   *** TOTAL: 2 network requests from verifyToken for Molly
+        // - Continuing on till we get to Anna's only test (passes) ->
+        //   -> Continuing on till we get to Goat's only test (passes signup,
+        //   but fails the get request to check existence in DB -> Do
+        //   another test run -> Won't fail at Anna due to new JWT from new
+        //   test run -> ...continue
+        //   *** TOTAL: 2 from Goat, 1 for Anna
+        // - Continue on to Christian's only test (passes signup, but fails
+        //   existence check like Goat) -> Do another test run -> Continuing on
+        //   to Nobby's only test (passes) -> DONE
+        //   *** TOTAL: 2 from Christian, 1 from Nobby
+        //
+        //  NOTE: Comment this out before adding unverified email test
         if (!emailVerified) {
             try {
                 // https://firebase.google.com/docs/auth/admin/manage-sessions#detect_id_token_revocation_in_the_sdk

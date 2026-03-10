@@ -105,11 +105,11 @@ class Qu1cksaveBackendApplicationTests {
 	@Autowired
 	TestAuthHelpers authHelpers;
 
-
 	private static String mollyFirebaseUid = "Qc5s1NgoczgltJYpA1MoY8Zpxc82";
 	private static String annaFirebaseUid = "cM3Is9tk1KWiDJXUfy43kFhmOKH2";
 	private static String goatFirebaseUid = "VYMAKQ2AA8PgsutJsSWpB0f4aZA2";
 	private static String nobbyFirebaseUid = "jVJi6nY1etMjwzlk0WqQ5m7Xhs63";
+	private static String christianFirebaseUid = "edaoT5YmdTTwVZlX8d90Qzh5aQ32";
 
 	// Set by loginWithMolly
 	// - Since you're using the default PER_METHOD lifecycle in JUnit 5
@@ -122,6 +122,7 @@ class Qu1cksaveBackendApplicationTests {
 	private static String annaJwt;
 	private static String goatJwt;
 	private static String nobbyJwt;
+	private static String christianJwt;
 
 	// This will use a random port
 	@Container
@@ -184,6 +185,13 @@ class Qu1cksaveBackendApplicationTests {
 	}
 
 	@BeforeEach
+	void loginAsChristian() throws Exception {
+		if (christianJwt == null) {
+			christianJwt = authHelpers.firebaseLogin(christianFirebaseUid);
+		}
+	}
+
+	@BeforeEach
 	void loginAsNobby() throws Exception {
 		if (nobbyJwt == null) {
 			nobbyJwt = authHelpers.firebaseLogin(nobbyFirebaseUid);
@@ -211,7 +219,7 @@ class Qu1cksaveBackendApplicationTests {
 	private ResponseJobDto editJobRequestReturningJob(
 		String jobId,
 		String jobJson,
-		String jwt // TODO: Remove once BeforeAll and @TestInstance(...) works properly
+		String jwt
 	) {
 		return this.webTestClient
 			.put()
@@ -577,8 +585,7 @@ class Qu1cksaveBackendApplicationTests {
 	void getMultipleJobsNonEmptyList() {
 		this.webTestClient
 			.get()
-			// Molly Member's id
-			.uri("/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
+			.uri("/job")
 			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
 			.exchange()
 			.expectStatus()
@@ -639,7 +646,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			// Anna Admin's id
-			.uri("/job?id=4604289c-b8fe-4560-8960-4da47fdfef94")
+			.uri("/job")
 			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + annaJwt)
 			.exchange()
 			.expectStatus()
@@ -652,56 +659,6 @@ class Qu1cksaveBackendApplicationTests {
 				assertNotNull(jobs);
 				assertEquals(0, jobs.size());
 			});
-	}
-
-	@Test
-	@Order(13)
-	void getMultipleJobsWrongUser() {
-		this.webTestClient
-			.get()
-			.uri("/job?id=4604289c-b8fe-4560-8960-4da47fdfef94")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
-			.exchange()
-			.expectStatus()
-			// Wrong user returns not found for security reasons
-			.isNotFound()
-			.expectBody()
-			.isEmpty()
-		;
-	}
-
-	@Test
-	@Order(14)
-	void getMultipleJobsNonExistentUser() {
-		this.webTestClient
-			.get()
-			.uri("/job?id=1234abcd-dead-beef-daed-11112323aaaa")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
-			.exchange()
-			.expectStatus()
-			// Although the query returns a non-empty list if given a non-
-			//   existent user id, this endpoint would return 404 since the
-			//   check for if the provided user id and logged in id matches
-			//   fails, which returns a 404
-			.isNotFound()
-			.expectBody()
-			.isEmpty()
-		;
-	}
-
-	@Test
-	@Order(15)
-	void getMultipleJobsNoUserIdProvided() {
-		this.webTestClient
-			.get()
-			.uri("/job")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
-			.exchange()
-			.expectStatus()
-			.isBadRequest()
-			.expectBody()
-			.isEmpty()
-		;
 	}
 
 	// -------------------------- DELETE JOB TESTS ----------------------------
@@ -1355,8 +1312,6 @@ class Qu1cksaveBackendApplicationTests {
 		;
 	}
 
-
-
 	// ************************************************************************
 	// ************************************************************************
 	// ************************************************************************
@@ -1416,7 +1371,7 @@ class Qu1cksaveBackendApplicationTests {
 				ResponseUserDto res = result.getResponseBody();
 				assertNotNull(res);
 				assertNotNull(res.getId());
-				assertEquals("blahblahblah", res.getFirebaseUid());
+				assertEquals("VYMAKQ2AA8PgsutJsSWpB0f4aZA2", res.getFirebaseUid());
 				assertEquals("goatuser@books.com", res.getEmail());
 				assertEquals("Goat User", res.getName());
 				assertEquals("member", res.getRoles()[0]);
@@ -1425,10 +1380,54 @@ class Qu1cksaveBackendApplicationTests {
 
 	// TODO: I need to add a signup test here for Christian Delos Santos, just
 	//   so I can update my Firebase info in the backend
+	@Test
+	@Order(36)
+	void signupWithNewUser2() {
+		// Call get jobs endpoint. This new user should have no jobs
+		this.webTestClient
+			.get()
+			// This is the updated version that only relies on the JWT to get
+			//   a user's jobs
+			.uri("/job")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + christianJwt)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBodyList(ResponseJobDto.class)
+			.consumeWith(result -> {
+				List<ResponseJobDto> jobs = result.getResponseBody();
+				assertNotNull(jobs);
+				assertEquals(0, jobs.size());
+			});
+
+		// Get the signed up user. They should now exist in the database
+		this.webTestClient
+			.get()
+			.uri("/user?firebaseuid=" + christianFirebaseUid)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + christianJwt)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody(ResponseUserDto.class)
+			.consumeWith(result -> {
+				ResponseUserDto res = result.getResponseBody();
+				assertNotNull(res);
+				assertNotNull(res.getId());
+				assertEquals("edaoT5YmdTTwVZlX8d90Qzh5aQ32", res.getFirebaseUid());
+				assertEquals("chdeloss24@gmail.com", res.getEmail());
+				assertEquals("Christian Delos Santos", res.getName());
+				assertEquals("member", res.getRoles()[0]);
+			});
+	}
 
 	// TODO: Signup/login with unverified email. One test should cover both
 	//   DON'T ADD THIS until Firebase info for the existing users in Firebase
 	//     has been updated
+	//   Also, make sure to remove the 2nd verifyToken in JWT Filter before adding this
 
 	// ************************************************************************
 	// ************************************************************************
