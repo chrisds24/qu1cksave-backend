@@ -65,6 +65,7 @@ public class Qu1cksaveBackendApplication {
 //       export ENV_TYPE=DEV
 //       - Set to PROD if in production. Otherwise, can simply not set it.
 //       export GOOGLE_APPLICATION_CREDENTIALS="<put path to file>"
+//       export FIREBASE_WEB_API_KEY="<put path to file>"
 //       *** NOTE: I ended up putting the path to the pem file in code, which
 //           was a mistake
 // 3.) Run postgres docker container

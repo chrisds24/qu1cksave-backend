@@ -141,7 +141,7 @@ public class GlobalExceptionHandler {
     public void printErr(Exception ex) {
 //        System.out.println("****** STACK TRACE: " + Arrays.toString(ex.getStackTrace()));
 //        System.out.println("****** MESSAGE: " + ex.getMessage());
-//        System.out.println("****** CAUSE:" + ex.getCause().toString());
+//        System.out.println("****** CAUSE:" + ex.getCause());
     }
 
     // TODO: Add a handler for Exception and RuntimeException

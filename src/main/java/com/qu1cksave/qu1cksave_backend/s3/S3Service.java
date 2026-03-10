@@ -135,8 +135,8 @@ public class S3Service {
     }
 }
 
-// TODO: After the mocked S3 calls (using Mockito) are done for the tests, I
-//   should leave the check for PROD to make sure that I don't use the
+// IMPORTANT:
+//   I should leave the check for PROD to make sure that I don't use the
 //   production S3 bucket accidentally.
 //  - On the other hand, accidentally modifying the production database in RDS
 //    isn't an issue since it can only be affected if I set my database env

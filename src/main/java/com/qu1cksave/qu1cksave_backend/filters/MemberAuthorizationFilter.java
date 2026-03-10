@@ -25,9 +25,7 @@ public class MemberAuthorizationFilter extends OncePerRequestFilter {
             throw new CustomFilterException("Missing roles in claims");
         }
 
-        ArrayList arrLstRoles = (ArrayList) reqRoles;
-        String[] roles = new String[arrLstRoles.size()];
-        arrLstRoles.toArray(roles);
+        String[] roles = (String[]) reqRoles;
 
         if (roles.length == 0) {
             throw new ForbiddenResourceException("User has no roles");
