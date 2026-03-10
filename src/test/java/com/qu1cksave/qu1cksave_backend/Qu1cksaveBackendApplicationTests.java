@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -1424,6 +1423,12 @@ class Qu1cksaveBackendApplicationTests {
 			});
 	}
 
+	// TODO: I need to add a signup test here for Christian Delos Santos, just
+	//   so I can update my Firebase info in the backend
+
+	// TODO: Signup/login with unverified email. One test should cover both
+	//   DON'T ADD THIS until Firebase info for the existing users in Firebase
+	//     has been updated
 
 	// ************************************************************************
 	// ************************************************************************
@@ -1514,7 +1519,6 @@ class Qu1cksaveBackendApplicationTests {
 		getOneJobInvalidAuthHeader("Bearer " + apiKey + " " + wrongJwt);
 	}
 
-	// TODO: Fix this
 	// Insufficient permissions
 	@Test
 	@Order(46)
