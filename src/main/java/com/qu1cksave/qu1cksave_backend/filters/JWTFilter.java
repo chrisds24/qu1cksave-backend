@@ -245,6 +245,20 @@ public class JWTFilter extends OncePerRequestFilter {
             throw new CustomFilterException("User's email not yet verified.");
         }
 
+        // Name could be empty due to Firebase signup error in the frontend,
+        //   where updateProfile fails to update the user's displayName in
+        //   Firebase. Need to default to "No Name" here since the DB has
+        //   name as NOT NULL.
+        // The Firebase displayName (used by sidebar in frontend) and the
+        //   DB name will currently be out of sync here, but the user can
+        //   just update it in profile settings (TO DO LATER) in which they
+        //   can update their name in the DB here and in Firebase (Do this in
+        //   a transaction to rollback if Firebase update fails)
+        // Probably don't even need name.isEmpty(), but just being safe
+        if (name == null || name.isEmpty()) {
+            name = "No Name";
+        }
+
         ResponseUserDto user = userService.getUserByFirebaseUid(firebaseUid);
         // User with given firebaseUid not found in DB. Need to signup the user
         if (user == null) {

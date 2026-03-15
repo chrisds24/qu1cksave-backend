@@ -1428,6 +1428,9 @@ class Qu1cksaveBackendApplicationTests {
 	//   DON'T ADD THIS until Firebase info for the existing users in Firebase
 	//     has been updated
 	//   Also, make sure to remove the 2nd verifyToken in JWT Filter before adding this
+	//   In JWT Filter, need to set name just like the other users, but
+	//     DON’T SET email_verified to true
+	//   noname@books.com	No Name
 
 	// ************************************************************************
 	// ************************************************************************
