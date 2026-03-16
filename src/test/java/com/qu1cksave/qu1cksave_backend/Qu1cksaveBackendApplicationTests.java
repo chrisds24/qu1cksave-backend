@@ -32,53 +32,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-// TODO: (3/8/2026)
-//  - I need to find a way to login before all tests, since it would be a lot
-//    of requests to Firebase if I log in before each one
-//    + Once I figure that out, I need to remove all the loginAsMolly calls
-//  - Need to test login as Anna by making a get jobs call using a generated
-//    custom token for her
-//  - Need to test signup/login as a user with an unverified email
-//    (Just need one test for this)
-
-// TODO: (3/8/2026)
-//  *** IMPORTANT: Tricky part is how I'll do the tests since I now
-//      need to have an actual valid token for verifyToken to work.
-//      Should I actually login via Firebase to get a valid token?
-//      Or should I use a workaround so I don't have to make a call to
-//      Firebase?
-//  - Also, how do I test login?
-//    -- I can't really test certain things such as wrong credentials
-//       and non-existent user, since Firebase Auth does that in the
-//       frontend.
-//       + However, I can still test:
-//         * Valid token: I can just say this is tested for any test
-//           where the request is able to go past the JWT Filter.
-//         * Invalid token: Just make a request to fetch the jobs list,
-//           but use an invalid format token (I don't want to accidentally
-//           use a valid format Firebase token that actually ends up being
-//           valid)
-//         * Verified email: Same as valid token
-//         * Unverified email: Just use a user with email_verified = false
-//       + How to have a verified email if none of the emails here in
-//         the dev environment are real emails? I can just manually edit
-//         email_verified = true
-//    -- Remember: Login via Firebase -> Put token into cookie ->
-//       Redirect/Refresh -> Request to fetch jobs list ->
-//       JWT Filter to perform the checks mentioned above
-//  - How about testing signup?
-//    -- Signup to Firebase happens in the frontend
-//    -- When does a backend signup attempt happen? It's when a user who's
-//       successfully signed up via Firebase and has verified their
-//       email makes an authenticated request but they don't have
-//       an entry in my database
-//    -- For testing signing up a new user, I can use a user from
-//       Firebase but they don't have an entry here in my DB.
-//       + After they're signed up and their jobs list (empty) has
-//         been fetched, just delete them from the test db. (I don't
-//         really need to delete them in the db since the tests ending
-//         resets the test db.)
-
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(
 	locations = "classpath:application-product-integrationtest.properties"
@@ -100,7 +53,6 @@ class Qu1cksaveBackendApplicationTests {
 	private static final String postgresDb = System.getenv("POSTGRES_DB");
 	private static String postgresUser = System.getenv("POSTGRES_USER");
 	private static String postgresPassword = System.getenv("POSTGRES_PASSWORD");
-	private static final String apiKey = System.getenv("API_KEY");
 
 	@Autowired
 	TestAuthHelpers authHelpers;
@@ -150,7 +102,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Autowired
 	private WebTestClient webTestClient;
 
-	// TODO: LOOK AT NOTES ABOUT TESTS I'LL NEED IN THE TestInputs file
+	// TODO: (Not really a TODO) LOOK AT NOTES ABOUT TESTS I'LL NEED IN THE
+	//  TestInputs file
 
 	// ************************************************************************
 	// ************************************************************************
@@ -222,7 +175,7 @@ class Qu1cksaveBackendApplicationTests {
 		return this.webTestClient
 			.get()
 			.uri("/job/" + id)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -243,7 +196,7 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(jobJson)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -267,7 +220,7 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(jobJson)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
 			.exchange()
 			.expectStatus()
 			.isEqualTo(409)
@@ -282,7 +235,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-//			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+//			.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
 			.header(HttpHeaders.AUTHORIZATION, authHeader)
 			.exchange()
 			.expectStatus()
@@ -325,7 +278,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -353,7 +306,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/018eae28-8323-7918-b93a-6cdb9d189686")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -374,7 +327,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/deadbeef-abab-6161-7c7c-fefe58135858")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -394,7 +347,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/a14ead6c-d173-1111-a001-2717322ebd12")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -431,7 +384,7 @@ class Qu1cksaveBackendApplicationTests {
 			// No resume and cover letter
 			.bodyValue(TestInputs.testNewOrEditJobNoFiles)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isCreated()
@@ -467,7 +420,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/" + responseJobDto.getId())
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -496,7 +449,7 @@ class Qu1cksaveBackendApplicationTests {
 			// No resume and cover letter
 			.bodyValue(TestInputs.testNewOrEditJobWithFiles)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isCreated()
@@ -526,7 +479,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/" + responseJobDto.getId())
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -602,7 +555,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -663,7 +616,7 @@ class Qu1cksaveBackendApplicationTests {
 			.get()
 			// Anna Admin's id
 			.uri("/job")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + annaJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + annaJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -692,7 +645,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.delete()
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -707,7 +660,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -730,7 +683,7 @@ class Qu1cksaveBackendApplicationTests {
 		ResponseJobDto job = this.webTestClient
 			.delete()
 			.uri("/job/323e9876-8018-b93a-8197-beefbeefbeef")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -752,7 +705,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/23e9876-8018-b93a-8197-beefbeefbeef")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -764,7 +717,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/resume/" + job.getResumeId())
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -775,7 +728,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/coverLetter/" + job.getCoverLetterId())
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -795,7 +748,7 @@ class Qu1cksaveBackendApplicationTests {
 			.delete()
 			// This job has already been deleted in the previous test
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -843,7 +796,7 @@ class Qu1cksaveBackendApplicationTests {
 			// No resume and cover letter
 			.bodyValue(TestInputs.testNewOrEditJobNoFiles)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -861,7 +814,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/018ead6b-d160-772d-a001-2606322ebd1c")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1252,7 +1205,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/resume/323efefe-beef-e2a4-46c8-dadae1fedead")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			// No resume and cover letter
 			.exchange()
 			.expectStatus()
@@ -1277,7 +1230,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/resume/d160dead-a001-a001-a001-fefe322ec1db")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -1295,7 +1248,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/coverLetter/fefeefef-dada-e2a4-2bbb-3cccbeef32e3")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1319,7 +1272,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/coverLetter/beefdead-d160-fefe-061d-dead1bf0beef")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -1359,7 +1312,7 @@ class Qu1cksaveBackendApplicationTests {
 			// This is the updated version that only relies on the JWT to get
 			//   a user's jobs
 			.uri("/job")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + goatJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + goatJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1376,7 +1329,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/user?firebaseuid=" + goatFirebaseUid)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + goatJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + goatJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1402,7 +1355,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + unverifiedJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + unverifiedJwt)
 			.exchange()
 			.expectStatus()
 			.isUnauthorized()
@@ -1414,7 +1367,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/user?firebaseuid=" + unverifiedFirebaseUid)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -1430,7 +1383,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + nonameJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + nonameJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1447,7 +1400,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/user?firebaseuid=" + nonameFirebaseUid)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + nonameJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + nonameJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1464,8 +1417,6 @@ class Qu1cksaveBackendApplicationTests {
 				assertEquals("member", res.getRoles()[0]);
 			});
 	}
-
-	// TODO: Need to redo Authorization header tests since there's no more API KEY
 
 	// ************************************************************************
 	// ************************************************************************
@@ -1501,59 +1452,38 @@ class Qu1cksaveBackendApplicationTests {
 		// Too short
 		getOneJobInvalidAuthHeader("Bearer");
 		// Too long
-		getOneJobInvalidAuthHeader("Bearer apiKey jwt whatisthis");
+		getOneJobInvalidAuthHeader("Bearer jwt whatisthis");
 	}
-
-	// Causes:
-	//   org.springframework.web.reactive.function.client.WebClientRequestException: Validation failed for header 'Authorization'
-	//   Caused by:
-	//     java.lang.IllegalArgumentException: a header value contains prohibited character 0x20 at index 0.
-	// So removing this test since WebTestClient throws an exception
-//	@Test
-//	@Order(39)
-//	void getOneJobMissingAuthScheme() {
-//		// split returns arr with length 2, arr[0] = "" (empty string)
-//		getOneJobInvalidAuthHeader(" apiKey");
-//	}
 
 	@Test
 	@Order(42)
 	void getOneJobNotBearerAuth() {
-		getOneJobInvalidAuthHeader("Basic apiKey");
+		getOneJobInvalidAuthHeader("Basic jwt");
 	}
 
-	@Test
-	@Order(43)
-	void getOneJobMissingApiKey() {
-		// split returns arr with length 3, arr[1] = ""
-		getOneJobInvalidAuthHeader("Bearer  jwt");
-	}
-
-	@Test
-	@Order(44)
-	void getOneJobWrongApiKey() {
-		getOneJobInvalidAuthHeader("Bearer wrongApiKey");
-	}
+	// Removing this test since WebTestClient throws an exception:
+	//   org.springframework.web.reactive.function.client.WebClientRequestException: Validation failed for header 'Authorization'
+	//   Caused by:
+	//     java.lang.IllegalArgumentException: a header value contains prohibited character 0x20 at index 0.
+//	@Test
+//	@Order(43)
+//	void getOneJobMissingAuthScheme() {
+//		// BearerAuthenticationFilter splits this string and gets ["", "jwt"]
+//		getOneJobInvalidAuthHeader(" jwt");
+//	}
 
 	@Test
 	@Order(45)
-	void getOneJobMissingJwt() {
-		// Null JWT
-		getOneJobInvalidAuthHeader("Bearer " + apiKey);
-		// Can't really simulate empty string jwt
+	void getOneJobEmptyStringJwt() {
+		// Notice the extra space. splitHeader ends up being
+		//   ["Bearer", ""]
+		getOneJobInvalidAuthHeader("Bearer  ");
 	}
 
 	@Test
 	@Order(46)
 	void getOneJobNotAValidJwt() {
-		getOneJobInvalidAuthHeader("Bearer " + apiKey + " invalidJwt");
-	}
-
-	@Test
-	@Order(47)
-	void getOneJobJwtInvalidSignature() {
-		String wrongJwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFubmFAYm9va3MuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNjA2Mjc3MDAxLCJleHAiOjE2MDYyNzcwNjF9.1nwY0lDMGrb7AUFFgSaYd4Q7Tzr-BjABclmoKZOqmr4";
-		getOneJobInvalidAuthHeader("Bearer " + apiKey + " " + wrongJwt);
+		getOneJobInvalidAuthHeader("Bearer invalidJwt");
 	}
 
 	// Insufficient permissions
@@ -1565,7 +1495,7 @@ class Qu1cksaveBackendApplicationTests {
 			// Nobby has no jobs, but it shouldn't even get to the point where
 			//   it checks that he doesn't own this job
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + nobbyJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + nobbyJwt)
 			.exchange()
 			.expectStatus()
 			.isForbidden()

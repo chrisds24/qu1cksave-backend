@@ -4,7 +4,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.auth.FirebaseAuth;
-import com.qu1cksave.qu1cksave_backend.filters.APIKeyFilter;
 import com.qu1cksave.qu1cksave_backend.filters.BearerAuthenticationFilter;
 import com.qu1cksave.qu1cksave_backend.filters.ExceptionHandlerFilter;
 import com.qu1cksave.qu1cksave_backend.filters.JWTFilter;
@@ -69,11 +68,6 @@ public class Qu1cksaveBackendConfiguration {
     }
 
     @Bean
-    public APIKeyFilter apiKeyFilter() {
-        return new APIKeyFilter();
-    }
-
-    @Bean
     public JWTFilter jwtFilter(
         FirebaseAuth firebaseAuth,
         UserService userService
@@ -117,24 +111,8 @@ public class Qu1cksaveBackendConfiguration {
             = new FilterRegistrationBean<>();
 
         registrationBean.setFilter(bearerAuthenticationFilter);
-        // TODO: Later, This would also be order 3, with APIKeyFilter being
-        //   order 2
         registrationBean.addUrlPatterns("/*");
         registrationBean.setOrder(2);
-
-        return registrationBean;
-    }
-
-    @Bean
-    public FilterRegistrationBean<APIKeyFilter> apiKeyFilterRegistration(
-        APIKeyFilter apiKeyFilter
-    ){
-        FilterRegistrationBean<APIKeyFilter> registrationBean
-            = new FilterRegistrationBean<>();
-
-        registrationBean.setFilter(apiKeyFilter);
-        registrationBean.addUrlPatterns("/*");
-        registrationBean.setOrder(3);
 
         return registrationBean;
     }
@@ -152,7 +130,7 @@ public class Qu1cksaveBackendConfiguration {
         // If there were login and signup endpoints, I could use
         //   shouldNotFilter in the filter itself to exclude them
         registrationBean.addUrlPatterns("/*");
-        registrationBean.setOrder(4);
+        registrationBean.setOrder(3);
 
         return registrationBean;
     }
@@ -168,7 +146,7 @@ public class Qu1cksaveBackendConfiguration {
         // If there were login and signup endpoints, I could use
         //   shouldNotFilter in the filter itself to exclude them
         registrationBean.addUrlPatterns("/*");
-        registrationBean.setOrder(5);
+        registrationBean.setOrder(4);
 
         return registrationBean;
     }
@@ -184,7 +162,7 @@ public class Qu1cksaveBackendConfiguration {
         // I excluded any requests not using PUT, POST, or PATCH using
         //   shouldNotFilter in the filter itself
         registrationBean.addUrlPatterns("/*");
-        registrationBean.setOrder(6);
+        registrationBean.setOrder(5);
 
         return registrationBean;
     }
