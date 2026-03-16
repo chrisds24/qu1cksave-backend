@@ -74,6 +74,9 @@ public class TestAuthHelpers {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode json = mapper.readTree(response.body());
 
+        // To see that each user is only being logged in once for a whole test run
+        System.out.println("********** LOGGED IN AS " + firebase_uid);
+
         return json.get("idToken").asText();
     }
 }

@@ -33,58 +33,87 @@ public class JWTFilter extends OncePerRequestFilter {
     }
 
     // NOTE: Helper function used to update Firebase info for initial testing
-    private UserRecord updateFirebaseInfo(
-        boolean emailVerified,
-        String nameFromToken,
-        String firebaseUid,
-        String name
+//    private UserRecord updateFirebaseInfo(
+//        boolean emailVerified,
+//        String nameFromToken,
+//        String firebaseUid,
+//        String name
+//    ) throws FirebaseAuthException {
+//        boolean emailNotVerified = !emailVerified;
+//        boolean userNameNotSet = nameFromToken == null;
+//
+//        // Only make a network request to update user if email is not verified
+//        //   or name is not set
+//        if (emailNotVerified || userNameNotSet) {
+//            UserRecord.UpdateRequest request = new UserRecord.UpdateRequest(firebaseUid);
+//            // Set email_verified to true if false
+//            if (emailNotVerified) {
+//                request.setEmailVerified(true);
+//            }
+//            // Set name if not yet set
+//            if (userNameNotSet) {
+//                request.setDisplayName(name);
+//            }
+//            // Make the update request
+//            UserRecord userRecord = firebaseAuth.updateUser(request);
+//
+//            // IMPORTANT:
+//            // - In the tests, each user logs in once.
+//            // - Notice that an update to the Firebase user is made here, but
+//            //   the token wouldn't have that updated info.
+//            // - As a result, the same user would end up making this request to
+//            //   updated their info even though it's already updated in Firebase
+//            // - SOLUTION: Revoke the token here
+//            //   + NOTE: This will cause a valid test to fail the first time
+//            //     for a user due to their token getting invalidated.
+//            //   + But for another test run attempt, tests should work as
+//            //     normal for the user since they'll always have the updated
+//            //     token.
+//            //   + HOWEVER: verifyToken needs to detect revocation. So I'll end
+//            //     up having to make a network request anyway...UNLESS (SEE BELOW)
+//            // - https://firebase.google.com/docs/auth/admin/manage-sessions#detect_id_token_revocation
+//            //   + Set up Firebase Security Rules that check for revocation
+//            //     rather than using the Admin SDK to make the check
+//            //   + Too complicated for my use case
+//            // - SOLUTION: If email isn't verified after the first token check,
+//            //   then do another token check that also checks if the token has
+//            //   been revoked (See the reasoning below in doFilterInternal)
+//
+//            firebaseAuth.revokeRefreshTokens(firebaseUid);
+//
+//            return userRecord;
+//        } else {
+//            return null;
+//        }
+//    }
+
+    // NOTE: Helper function used to update Firebase password to match Firebase
+    //   password policy for existing Firebase users
+    // - Reusing this to update name for user Unverified Email
+//    private UserRecord updatePassword(
+    private UserRecord updateEmailVerified(
+        String firebaseUid
+//        String newPw
+//        String newName
     ) throws FirebaseAuthException {
-        boolean emailNotVerified = !emailVerified;
-        boolean userNameNotSet = nameFromToken == null;
-
-        // Only make a network request to update user if email is not verified
-        //   or name is not set
-        if (emailNotVerified || userNameNotSet) {
-            UserRecord.UpdateRequest request = new UserRecord.UpdateRequest(firebaseUid);
-            // Set email_verified to true if false
-            if (emailNotVerified) {
-                request.setEmailVerified(true);
-            }
-            // Set name if not yet set
-            if (userNameNotSet) {
-                request.setDisplayName(name);
-            }
-            // Make the update request
-            UserRecord userRecord = firebaseAuth.updateUser(request);
-
-            // IMPORTANT:
-            // - In the tests, each user logs in once.
-            // - Notice that an update to the Firebase user is made here, but
-            //   the token wouldn't have that updated info.
-            // - As a result, the same user would end up making this request to
-            //   updated their info even though it's already updated in Firebase
-            // - SOLUTION: Revoke the token here
-            //   + NOTE: This will cause a valid test to fail the first time
-            //     for a user due to their token getting invalidated.
-            //   + But for another test run attempt, tests should work as
-            //     normal for the user since they'll always have the updated
-            //     token.
-            //   + HOWEVER: verifyToken needs to detect revocation. So I'll end
-            //     up having to make a network request anyway...UNLESS (SEE BELOW)
-            // - https://firebase.google.com/docs/auth/admin/manage-sessions#detect_id_token_revocation
-            //   + Set up Firebase Security Rules that check for revocation
-            //     rather than using the Admin SDK to make the check
-            //   + Too complicated for my use case
-            // - SOLUTION: If email isn't verified after the first token check,
-            //   then do another token check that also checks if the token has
-            //   been revoked (See the reasoning below in doFilterInternal)
-
-            firebaseAuth.revokeRefreshTokens(firebaseUid);
-
-            return userRecord;
-        } else {
-            return null;
+        UserRecord.UpdateRequest request = new UserRecord.UpdateRequest(firebaseUid);
+//        request.setPassword(newPw);
+//        request.setDisplayName(newName);
+        request.setEmailVerified(true);
+        UserRecord userRecord = null;
+        try {
+            // https://firebase.google.com/docs/reference/admin/java/reference/com/google/firebase/auth/AbstractFirebaseAuth#public-userrecord-updateuser-userrecord.updaterequest-request
+            userRecord = firebaseAuth.updateUser(request);
+//            System.out.println("********** UPDATED PASSWORD TO " + newPw);
+//            System.out.println("********** UPDATED NAME TO " + newName);
+            System.out.println("********** UPDATED EMAIL_VERIFIED FOR " + firebaseUid + " TO true");
+        } catch (FirebaseAuthException err) {
+//            System.out.println("********** ERROR UPDATING PASSWORD TO " + newPw);
+//            System.out.println("********** ERROR UPDATING NAME TO " + newName);
+            System.out.println("********** ERROR UPDATING EMAIL_VERIFIED FOR " + firebaseUid + " TO true");
         }
+
+        return userRecord;
     }
 
     @Override
@@ -135,12 +164,6 @@ public class JWTFilter extends OncePerRequestFilter {
         // - Need to set name and email_verified for the users listed below
         // - Christian and Goat don't have entries in my dev/test DB, so they
         //   will be signed up
-        // TODO:
-        //  - I might consider just getting the name from the backend.
-        //    For example, if someone decides to change their name, it
-        //    won't immediately reflect changes unless they logout if I'm
-        //    getting the name from the token (which would be outdated)
-        //    + Though, I should still just ask for their name upon signup.
 
         // 1st time:
         // - email not verified in both Firebase and the token, so the code
@@ -181,26 +204,28 @@ public class JWTFilter extends OncePerRequestFilter {
         //   *** TOTAL: 2 from Christian, 1 from Nobby
         //
         //  NOTE: Comment this out before adding unverified email test
-        if (!emailVerified) {
-            try {
-                // https://firebase.google.com/docs/auth/admin/manage-sessions#detect_id_token_revocation_in_the_sdk
-                // - I don't need the result here. I just need the filter to
-                //   check if the token has been revoked, causing the filter to
-                //   throw an exception
-                firebaseAuth.verifyIdToken(jwt, true);
-            } catch (FirebaseAuthException err) {
-                throw new CustomFilterException(
-                    "Revoked token",
-                    err
-                );
-            }
-        }
+//        if (!emailVerified) {
+//            try {
+//                // https://firebase.google.com/docs/auth/admin/manage-sessions#detect_id_token_revocation_in_the_sdk
+//                // - I don't need the result here. I just need the filter to
+//                //   check if the token has been revoked, causing the filter to
+//                //   throw an exception
+//                firebaseAuth.verifyIdToken(jwt, true);
+//            } catch (FirebaseAuthException err) {
+//                throw new CustomFilterException(
+//                    "Revoked token",
+//                    err
+//                );
+//            }
+//        }
 
         final String mollyFirebaseUid = "Qc5s1NgoczgltJYpA1MoY8Zpxc82";
         final String annaFirebaseUid = "cM3Is9tk1KWiDJXUfy43kFhmOKH2";
         final String goatFirebaseUid = "VYMAKQ2AA8PgsutJsSWpB0f4aZA2";
         final String nobbyFirebaseUid = "jVJi6nY1etMjwzlk0WqQ5m7Xhs63";
         final String chrisFirebaseUid = "edaoT5YmdTTwVZlX8d90Qzh5aQ32";
+        final String unverifiedFirebaseUid = "86JIDrPzNyZhDvUdMMotCnO9G9I2";
+        final String nonameFirebaseUid = "hbxydGfDrWgckDQw4mKj656DJS43";
 
         UserRecord userRecord = null;
 
@@ -208,20 +233,30 @@ public class JWTFilter extends OncePerRequestFilter {
         try {
             switch (firebaseUid) {
                 case mollyFirebaseUid:
-                    userRecord = updateFirebaseInfo(emailVerified, name, firebaseUid, "Molly Member");
+//                    userRecord = updateFirebaseInfo(emailVerified, name, firebaseUid, "Molly Member");
+                    // <REMOVED UPDATE PASSWORD CODE>
                     break;
                 case annaFirebaseUid:
-                    userRecord = updateFirebaseInfo(emailVerified, name, firebaseUid, "Anna Admin");
+//                    userRecord = updateFirebaseInfo(emailVerified, name, firebaseUid, "Anna Admin");
+                    // <REMOVED UPDATE PASSWORD CODE>
                     break;
                 case goatFirebaseUid:
-                    userRecord = updateFirebaseInfo(emailVerified, name, firebaseUid, "Goat User");
+//                    userRecord = updateFirebaseInfo(emailVerified, name, firebaseUid, "Goat User");
+                    // <REMOVED UPDATE PASSWORD CODE>
                     break;
                 case nobbyFirebaseUid:
-                    userRecord = updateFirebaseInfo(emailVerified, name, firebaseUid, "Nobby Nobody");
+//                    userRecord = updateFirebaseInfo(emailVerified, name, firebaseUid, "Nobby Nobody");
+                    // <REMOVED UPDATE PASSWORD CODE>
                     break;
                 case chrisFirebaseUid:
-                    userRecord = updateFirebaseInfo(emailVerified, name, firebaseUid, "Christian Delos Santos");
+//                    userRecord = updateFirebaseInfo(emailVerified, name, firebaseUid, "Christian Delos Santos");
+                    // <REMOVED UPDATE PASSWORD CODE>
                     break;
+                case unverifiedFirebaseUid:
+//                    userRecord = updateName(firebaseUid, "Unverified Email");
+                    break;
+                case nonameFirebaseUid:
+                    userRecord = updateEmailVerified(firebaseUid);
                 default:
                     break;
             }
@@ -233,7 +268,7 @@ public class JWTFilter extends OncePerRequestFilter {
         // If an update was made, use the updated info
         if (userRecord != null) {
             emailVerified = userRecord.isEmailVerified();
-            name = userRecord.getDisplayName();
+//            name = userRecord.getDisplayName();
         }
 
         // ****************************************************************
@@ -242,6 +277,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
         // No need for null check since result of verifyIdToken can't be null
         if (!emailVerified) {
+            System.out.println("********** EMAIL NOT VERIFIED FOR " + firebaseUid);
             throw new CustomFilterException("User's email not yet verified.");
         }
 
@@ -256,7 +292,13 @@ public class JWTFilter extends OncePerRequestFilter {
         //   a transaction to rollback if Firebase update fails)
         // Probably don't even need name.isEmpty(), but just being safe
         if (name == null || name.isEmpty()) {
+            System.out.println("********** OLD NAME IS null");
+            System.out.println("********** SETTING NAME TO No Name");
             name = "No Name";
+        } else {
+            if (firebaseUid == nonameFirebaseUid) {
+                System.out.println("********** NAME IS " + name);
+            }
         }
 
         ResponseUserDto user = userService.getUserByFirebaseUid(firebaseUid);

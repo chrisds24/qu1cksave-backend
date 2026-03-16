@@ -110,6 +110,8 @@ class Qu1cksaveBackendApplicationTests {
 	private static String goatFirebaseUid = "VYMAKQ2AA8PgsutJsSWpB0f4aZA2";
 	private static String nobbyFirebaseUid = "jVJi6nY1etMjwzlk0WqQ5m7Xhs63";
 	private static String christianFirebaseUid = "edaoT5YmdTTwVZlX8d90Qzh5aQ32";
+	private static String unverifiedFirebaseUid = "86JIDrPzNyZhDvUdMMotCnO9G9I2";
+	private static String nonameFirebaseUid = "hbxydGfDrWgckDQw4mKj656DJS43";
 
 	// Set by loginWithMolly
 	// - Since you're using the default PER_METHOD lifecycle in JUnit 5
@@ -123,6 +125,8 @@ class Qu1cksaveBackendApplicationTests {
 	private static String goatJwt;
 	private static String nobbyJwt;
 	private static String christianJwt;
+	private static String unverifiedJwt;
+	private static String nonameJwt;
 
 	// This will use a random port
 	@Container
@@ -164,8 +168,6 @@ class Qu1cksaveBackendApplicationTests {
 	@BeforeEach
 	void loginAsMolly() throws Exception {
 		if (mollyJwt == null) {
-			// TODO: Insert Molly's actual firebase uid once the account has
-			//   been created in Firebase
 			mollyJwt = authHelpers.firebaseLogin(mollyFirebaseUid);
 		}
 	}
@@ -195,6 +197,20 @@ class Qu1cksaveBackendApplicationTests {
 	void loginAsNobby() throws Exception {
 		if (nobbyJwt == null) {
 			nobbyJwt = authHelpers.firebaseLogin(nobbyFirebaseUid);
+		}
+	}
+
+	@BeforeEach
+	void loginAsUnverified() throws Exception {
+		if (unverifiedJwt == null) {
+			unverifiedJwt = authHelpers.firebaseLogin(unverifiedFirebaseUid);
+		}
+	}
+
+	@BeforeEach
+	void loginAsNoname() throws Exception {
+		if (nonameJwt == null) {
+			nonameJwt = authHelpers.firebaseLogin(nonameFirebaseUid);
 		}
 	}
 
@@ -1378,18 +1394,43 @@ class Qu1cksaveBackendApplicationTests {
 			});
 	}
 
-	// TODO: I need to add a signup test here for Christian Delos Santos, just
-	//   so I can update my Firebase info in the backend
+	// Unverified email test
 	@Test
 	@Order(36)
-	void signupWithNewUser2() {
-		// Call get jobs endpoint. This new user should have no jobs
+	void signupWithUnverifiedEmail() {
+		// Call get jobs endpoint. This new user should not pass the filters
 		this.webTestClient
 			.get()
-			// This is the updated version that only relies on the JWT to get
-			//   a user's jobs
 			.uri("/job")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + christianJwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + unverifiedJwt)
+			.exchange()
+			.expectStatus()
+			.isUnauthorized()
+		;
+
+		// Get the user above. They should NOT exist in the database.
+		//   Note that a different user must get them since the user above
+		//   won't even pass the filters
+		this.webTestClient
+			.get()
+			.uri("/user?firebaseuid=" + unverifiedFirebaseUid)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + mollyJwt)
+			.exchange()
+			.expectStatus()
+			.isNotFound()
+		;
+	}
+
+	// Signup/login for user with no name in token, but with verified email.
+	@Test
+	@Order(37)
+	void signupWithoutAName() {
+		// Call get jobs endpoint. This new user should have no jobs
+		// - This should still pass even though name is not set
+		this.webTestClient
+			.get()
+			.uri("/job")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + nonameJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1405,8 +1446,8 @@ class Qu1cksaveBackendApplicationTests {
 		// Get the signed up user. They should now exist in the database
 		this.webTestClient
 			.get()
-			.uri("/user?firebaseuid=" + christianFirebaseUid)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + christianJwt)
+			.uri("/user?firebaseuid=" + nonameFirebaseUid)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + nonameJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1417,20 +1458,12 @@ class Qu1cksaveBackendApplicationTests {
 				ResponseUserDto res = result.getResponseBody();
 				assertNotNull(res);
 				assertNotNull(res.getId());
-				assertEquals("edaoT5YmdTTwVZlX8d90Qzh5aQ32", res.getFirebaseUid());
-				assertEquals("chdeloss24@gmail.com", res.getEmail());
-				assertEquals("Christian Delos Santos", res.getName());
+				assertEquals(nonameFirebaseUid, res.getFirebaseUid());
+				assertEquals("noname@books.com", res.getEmail());
+				assertEquals("No Name", res.getName());
 				assertEquals("member", res.getRoles()[0]);
 			});
 	}
-
-	// TODO: Signup/login with unverified email. One test should cover both
-	//   DON'T ADD THIS until Firebase info for the existing users in Firebase
-	//     has been updated
-	//   Also, make sure to remove the 2nd verifyToken in JWT Filter before adding this
-	//   In JWT Filter, need to set name just like the other users, but
-	//     DON’T SET email_verified to true
-	//   noname@books.com	No Name
 
 	// TODO: Need to redo Authorization header tests since there's no more API KEY
 
@@ -1445,7 +1478,7 @@ class Qu1cksaveBackendApplicationTests {
 	// ************************************************************************
 
 	@Test
-	@Order(37)
+	@Order(40)
 	void getOneJobMissingAuthHeader() {
 		// Null auth header
 		this.webTestClient
@@ -1463,7 +1496,7 @@ class Qu1cksaveBackendApplicationTests {
 	}
 
 	@Test
-	@Order(38)
+	@Order(41)
 	void getOneJobMalformedAuthHeader() {
 		// Too short
 		getOneJobInvalidAuthHeader("Bearer");
@@ -1484,26 +1517,26 @@ class Qu1cksaveBackendApplicationTests {
 //	}
 
 	@Test
-	@Order(40)
+	@Order(42)
 	void getOneJobNotBearerAuth() {
 		getOneJobInvalidAuthHeader("Basic apiKey");
 	}
 
 	@Test
-	@Order(41)
+	@Order(43)
 	void getOneJobMissingApiKey() {
 		// split returns arr with length 3, arr[1] = ""
 		getOneJobInvalidAuthHeader("Bearer  jwt");
 	}
 
 	@Test
-	@Order(42)
+	@Order(44)
 	void getOneJobWrongApiKey() {
 		getOneJobInvalidAuthHeader("Bearer wrongApiKey");
 	}
 
 	@Test
-	@Order(43)
+	@Order(45)
 	void getOneJobMissingJwt() {
 		// Null JWT
 		getOneJobInvalidAuthHeader("Bearer " + apiKey);
@@ -1511,13 +1544,13 @@ class Qu1cksaveBackendApplicationTests {
 	}
 
 	@Test
-	@Order(44)
+	@Order(46)
 	void getOneJobNotAValidJwt() {
 		getOneJobInvalidAuthHeader("Bearer " + apiKey + " invalidJwt");
 	}
 
 	@Test
-	@Order(45)
+	@Order(47)
 	void getOneJobJwtInvalidSignature() {
 		String wrongJwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFubmFAYm9va3MuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNjA2Mjc3MDAxLCJleHAiOjE2MDYyNzcwNjF9.1nwY0lDMGrb7AUFFgSaYd4Q7Tzr-BjABclmoKZOqmr4";
 		getOneJobInvalidAuthHeader("Bearer " + apiKey + " " + wrongJwt);
@@ -1525,7 +1558,7 @@ class Qu1cksaveBackendApplicationTests {
 
 	// Insufficient permissions
 	@Test
-	@Order(46)
+	@Order(48)
 	void getOneJobNoMemberRole() {
 		this.webTestClient
 			.get()

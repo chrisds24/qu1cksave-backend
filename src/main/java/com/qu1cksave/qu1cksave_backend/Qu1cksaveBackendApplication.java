@@ -68,7 +68,7 @@ public class Qu1cksaveBackendApplication {
 //       export FIREBASE_WEB_API_KEY="<put path to file>"
 //       *** NOTE: I ended up putting the path to the pem file in code, which
 //           was a mistake
-// 3.) Run postgres docker container
+// 3.) Run postgres docker container (No need for tests, just set the env vars above)
 //      docker compose -f docker-compose-db.yml up -d
 //      	- To run the DB image
 //      docker compose -f docker-compose-db.yml down
