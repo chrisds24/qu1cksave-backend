@@ -65,6 +65,11 @@ public class BearerAuthenticationFilter extends OncePerRequestFilter {
         req.setAttribute("jwt", splitHeader[1]);
         filterChain.doFilter(req, res);
     }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return "OPTIONS".equalsIgnoreCase(request.getMethod());
+    }
 }
 
 // BearerAuthenticationFilter -> APIKeyFilter -> JWTFilter -> MemberAuthorizationFilter

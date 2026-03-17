@@ -113,6 +113,11 @@ public class JWTFilter extends OncePerRequestFilter {
         filterChain.doFilter(req, res);
     }
 
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return "OPTIONS".equalsIgnoreCase(request.getMethod());
+    }
+
     // As of the addition of Firebase Authentication, there are no longer login
     //   and signup endpoints. Keeping this for reference
 //    @Override

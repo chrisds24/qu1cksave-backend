@@ -19,12 +19,16 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import static org.springframework.transaction.annotation.RollbackOn.ALL_EXCEPTIONS;
 
@@ -83,6 +87,35 @@ public class Qu1cksaveBackendConfiguration {
     @Bean
     public ReqBodySizeFilter reqBodySizeFilter() {
         return new ReqBodySizeFilter();
+    }
+
+    // Needed to remove CORS error:
+    // - Access to fetch at 'http://localhost:8080/api/v0/job' from origin
+    //   'http://localhost:3000' has been blocked by CORS policy: Response to
+    //    preflight request doesn't pass access control check: No
+    //    'Access-Control-Allow-Origin' header is present on the requested
+    //    resource.
+    // - Also need to add shouldNotFilter for each filter so they don't apply
+    //   to OPTIONS http method
+    @Bean
+    public FilterRegistrationBean<CorsFilter> corsFilter() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",
+            "https://qu1cksave.com"
+        ));
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+
+        // Map rules to all paths
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        FilterRegistrationBean<CorsFilter> filterRegistrationBean =
+            new FilterRegistrationBean<>(new CorsFilter(source));
+        filterRegistrationBean.setOrder(0);
+        return filterRegistrationBean;
     }
 
     // Register filters

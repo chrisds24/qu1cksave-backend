@@ -43,4 +43,9 @@ public class MemberAuthorizationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(req, res);
     }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return "OPTIONS".equalsIgnoreCase(request.getMethod());
+    }
 }
