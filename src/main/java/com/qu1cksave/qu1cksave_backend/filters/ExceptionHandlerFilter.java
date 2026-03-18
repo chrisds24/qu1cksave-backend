@@ -53,4 +53,9 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
         res.setContentType("application/json");
 //        res.getWriter().print((String) null); // No need to write since empty
     }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return "OPTIONS".equalsIgnoreCase(request.getMethod());
+    }
 }

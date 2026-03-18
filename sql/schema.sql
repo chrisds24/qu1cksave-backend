@@ -2,9 +2,10 @@ DROP TABLE IF EXISTS job;
 DROP TABLE IF EXISTS member;
 DROP TABLE IF EXISTS resume;
 
--- Columns are: id, email, password, roles, name
-CREATE TABLE member(id UUID UNIQUE PRIMARY KEY DEFAULT gen_random_uuid(), email VARCHAR(254) UNIQUE, password TEXT, roles jsonb, name VARCHAR(255));
--- Add cover letter later
+-- New member columns are: id, firebase_uid, email, roles, name
+-- The Firebase documentation states the UID (string) can be up to 128 characters. But automatically generated ones are usually 28 characters
+CREATE TABLE member(id UUID UNIQUE PRIMARY KEY DEFAULT gen_random_uuid(), email VARCHAR(254) UNIQUE NOT NULL, firebase_uid VARCHAR(128) UNIQUE NOT NULL, roles jsonb NOT NULL, name VARCHAR(255) NOT NULL);
+
 -- Columns are: id, member_id, resume_id, cover_letter_id, title, company_name, job_description, notes, is_remote, salary_min, salary_max, country, us_state, city, date_saved, date_applied, date_posted, job_status, links, found_from
 -- description and notes used to be VARCHAR(12000). Then it was changed to TEXT. Then they were changed to VARCHAR(16384)
 -- is_remote is VARCHAR(10) just because it seems like a good max limit to remote options. Same idea for job_status

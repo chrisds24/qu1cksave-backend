@@ -1,20 +1,18 @@
 package com.qu1cksave.qu1cksave_backend;
 
 import com.qu1cksave.qu1cksave_backend.coverletter.ResponseCoverLetterDto;
-import com.qu1cksave.qu1cksave_backend.exceptions.CustomFilterException;
 import com.qu1cksave.qu1cksave_backend.job.ResponseJobDto;
 import com.qu1cksave.qu1cksave_backend.resume.ResponseResumeDto;
 import com.qu1cksave.qu1cksave_backend.user.ResponseUserDto;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -41,26 +39,46 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Testcontainers
 // Run tests in a specific order: https://www.baeldung.com/junit-5-test-order
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-// TODO: Commenting out @TestInstance due to:
+// NOTE: Commenting out @TestInstance due to:
 //  java.lang.IllegalStateException: Mapped port can only be obtained after the container is started
-//// https://www.baeldung.com/junit-testinstance-annotation
+//	- Such as when using @BeforeAll to login before tests run
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+// https://www.baeldung.com/junit-testinstance-annotation
+@Import(TestAuthHelpers.class)
 class Qu1cksaveBackendApplicationTests {
-	// Not needed
-//    @LocalServerPort
-//    private int port;
-
 	// Non-static field 'postgresUser' cannot be referenced from a static context
 	// - Need to make this static to fix
 	// - @Value doesn't work
 //	@Value("${POSTGRES_DB}")
 	private static final String postgresDb = System.getenv("POSTGRES_DB");
-
 	private static String postgresUser = System.getenv("POSTGRES_USER");
-
 	private static String postgresPassword = System.getenv("POSTGRES_PASSWORD");
 
-	private static final String apiKey = System.getenv("API_KEY");
+	@Autowired
+	TestAuthHelpers authHelpers;
+
+	private static String mollyFirebaseUid = "Qc5s1NgoczgltJYpA1MoY8Zpxc82";
+	private static String annaFirebaseUid = "cM3Is9tk1KWiDJXUfy43kFhmOKH2";
+	private static String goatFirebaseUid = "VYMAKQ2AA8PgsutJsSWpB0f4aZA2";
+	private static String nobbyFirebaseUid = "jVJi6nY1etMjwzlk0WqQ5m7Xhs63";
+	private static String christianFirebaseUid = "edaoT5YmdTTwVZlX8d90Qzh5aQ32";
+	private static String unverifiedFirebaseUid = "86JIDrPzNyZhDvUdMMotCnO9G9I2";
+	private static String nonameFirebaseUid = "hbxydGfDrWgckDQw4mKj656DJS43";
+
+	// Set by loginWithMolly
+	// - Since you're using the default PER_METHOD lifecycle in JUnit 5
+	//   (i.e., no @TestInstance), each test gets a new instance of the
+	//   test class. That means any instance field like jwt starts as null
+	//   every test.
+	//   + To avoid logging in repeatedly, the trick is to make the cached
+	//     token static and only log in if it hasn't been set yet
+	private static String mollyJwt;
+	private static String annaJwt;
+	private static String goatJwt;
+	private static String nobbyJwt;
+	private static String christianJwt;
+	private static String unverifiedJwt;
+	private static String nonameJwt;
 
 	// This will use a random port
 	@Container
@@ -84,80 +102,8 @@ class Qu1cksaveBackendApplicationTests {
 	@Autowired
 	private WebTestClient webTestClient;
 
-
-
-	// NOTE: (6/4/25) Tests I need
-	//  - Get one job, job exists
-	//  - Get one job, job doesn't exist
-	//    -- Covers case when user specifies an id of a job that doesn't belong
-	//       to them (since single jobs are found by id and userId)
-	//  - ??? Get one job, no id provided
-	//    -- Just goes to regular /jobs route but without a query
-	//  --------------------------
-	//  - Create job w/o files, then get that job
-	//  - Create job w/ files, then get that job
-	//  - Create invalid job, missing required fields
-	//  - Create invalid job, extra fields
-	//   * For the last 2, I could use some kind of API validation, filters,
-	//     or custom code. API validation would be ideal, but custom code could
-	//     be enough for now
-	//     -- Need to manually check not having required fields
-	//        + Having the wrong type just causes an error in Java
-	//     -- The extra fields one would actually just cause an error in Java
-	//  --------------------------
-	//  - Get multiple jobs, userId query param is the logged in user's id
-	//  - Get multiple jobs, userId query param is NOT the logged in user's id
-	//  - ??? Get multiple jobs, no userId query param provided
-	//    -- Spring/Java should throw out an error for this. Wonder what it
-	//       exactly is?
-	//  ---------------------------
-	//  - Delete job, job exists
-	//  - Delete job, job doesn't exist (due to stale list)
-	//    -- Here, stale refers to the list not having up to date jobs
-	//  - Delete job, but job is stale (see description in edit job tests)
-	//    -- The job and the up to date files get deleted since the delete uses
-	//       the file ids from the job obtained from the database
-	//  ---------------------------
-	//  - Edit job w/o files, then get that job
-	//  - Edit job w/ resume and cover letter added, then get that job
-	//  - Edit job w/ resume and cover letter edited, then get that job
-	//  - Edit job w/ resume and cover letter deleted, then get that job
-	//  - Stale job tests
-	//    +++ Note, a job where its resume id and cover letter id are the same
-	//        as the latest version is not considered stale
-	//    +++ How does a job become stale? Let's say there's tab A and tab B,
-	//        where tab A contains the stale job. The job is then edited in tab
-	//        B so that at least one of the files' id's are now different from
-	//        what tab A has
-	//        * Note that the following also applies to cover letter
-	//        * MAKE TESTS FOR THESE 3
-	//    1.) Job has no resume, then edited to have a resume. Edit job again,
-	//       but using the old job w/o the resume
-	//    2.) Job has a resume, then edited to have a different resume id (by
-	//       removing the resume, then adding one again). Edit job again,
-	//       but using the old job w/ the old resume id
-	//    3.) Job has a resume, then edited to have no resume. Edit job again,
-	//       but using the old job w/ the resume
-	//    +++ Other possible issues:
-	//    -- Same resume id. User then attempts to edit resume by editing the
-	//       stale job
-	//       + Resume gets updated to this new resume, which is appropriate
-	//         * Note that both the metadata and the file in S3 would get
-	//           updated accordingly. The job also gets updated using the
-	//           updates made to the stale job
-	//    -- Same resume id. User then attempts to remove resume by editing the
-	//       stale job.
-	//       + Resume gets removed from S3 and database, as expected
-	//    +++ IMPORTANT: I went with just leaving it to the user to not do
-	//        their work in stale tabs, then just having checks where errors
-	//        could occur.
-	//        - An alternative would have been to have a timestamp for the
-	//          most recent update timestamp, and not allow edits/deletes if
-	//          using a stale job (aka an outdated update timestamp)
- 	//  ---------------------------
-	//  LATER: Not logged in tests for each endpoint
-
-
+	// TODO: (Not really a TODO) LOOK AT NOTES ABOUT TESTS I'LL NEED IN THE
+	//  TestInputs file
 
 	// ************************************************************************
 	// ************************************************************************
@@ -169,24 +115,57 @@ class Qu1cksaveBackendApplicationTests {
 	// ************************************************************************
 	// ************************************************************************
 
-	// Used by some create job tests
-//	private void badRequestBodyCreateTest(String json) {
-//		// Create the job
-//		this.webTestClient
-//			.post()
-//			.uri("/job")
-//			.contentType(MediaType.APPLICATION_JSON)
-//			// No resume and cover letter
-//			.bodyValue(json)
-//			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-//			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
-//			.exchange()
-//			.expectStatus()
-//			.isBadRequest()
-//			.expectBody()
-//			.isEmpty()
-//		;
-//	}
+    // https://docs.junit.org/5.0.0/api/org/junit/jupiter/api/BeforeEach.html
+	// - @BeforeEach methods must have a void return type, must not be private,
+	//   and must not be static
+	@BeforeEach
+	void loginAsMolly() throws Exception {
+		if (mollyJwt == null) {
+			mollyJwt = authHelpers.firebaseLogin(mollyFirebaseUid);
+		}
+	}
+
+	@BeforeEach
+	void loginAsAnna() throws Exception {
+		if (annaJwt == null) {
+			annaJwt = authHelpers.firebaseLogin(annaFirebaseUid);
+		}
+	}
+
+	@BeforeEach
+	void loginAsGoat() throws Exception {
+		if (goatJwt == null) {
+			goatJwt = authHelpers.firebaseLogin(goatFirebaseUid);
+		}
+	}
+
+	@BeforeEach
+	void loginAsChristian() throws Exception {
+		if (christianJwt == null) {
+			christianJwt = authHelpers.firebaseLogin(christianFirebaseUid);
+		}
+	}
+
+	@BeforeEach
+	void loginAsNobby() throws Exception {
+		if (nobbyJwt == null) {
+			nobbyJwt = authHelpers.firebaseLogin(nobbyFirebaseUid);
+		}
+	}
+
+	@BeforeEach
+	void loginAsUnverified() throws Exception {
+		if (unverifiedJwt == null) {
+			unverifiedJwt = authHelpers.firebaseLogin(unverifiedFirebaseUid);
+		}
+	}
+
+	@BeforeEach
+	void loginAsNoname() throws Exception {
+		if (nonameJwt == null) {
+			nonameJwt = authHelpers.firebaseLogin(nonameFirebaseUid);
+		}
+	}
 
 	// Used by some edit job tests
 	private WebTestClient.BodySpec<ResponseJobDto, ?> getJobRequestReturningBodySpec(
@@ -196,7 +175,7 @@ class Qu1cksaveBackendApplicationTests {
 		return this.webTestClient
 			.get()
 			.uri("/job/" + id)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -209,7 +188,7 @@ class Qu1cksaveBackendApplicationTests {
 	private ResponseJobDto editJobRequestReturningJob(
 		String jobId,
 		String jobJson,
-		String jwt // TODO: Remove once BeforeAll and @TestInstance(...) works properly
+		String jwt
 	) {
 		return this.webTestClient
 			.put()
@@ -217,7 +196,7 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(jobJson)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -241,85 +220,10 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.bodyValue(jobJson)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
 			.exchange()
 			.expectStatus()
 			.isEqualTo(409)
-			.expectBody()
-			.isEmpty()
-		;
-	}
-
-	// TODO: Commenting out due to:
-	//   java.lang.IllegalStateException: Mapped port can only be obtained after the container is started
-	// The login/signup tests will not use this jwt
-	// Some helper functions might use the jwt returned from the previous
-	//   request in that function
-//	private String jwt;
-
-	// TODO: Commenting out due to
-	//   java.lang.IllegalStateException: Mapped port can only be obtained after the container is started
-	// Login as Molly and set the accessToken
-	// https://docs.junit.org/5.0.0/api/org/junit/jupiter/api/BeforeAll.html
-	// - must be static w/ void return type and not private
-	// Not required to be static due to @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-//	@BeforeAll
-//	void loginAsMolly() {
-//		ResponseUserDto user = this.webTestClient
-//			.post()
-//			.uri("/user/login")
-//			.contentType(MediaType.APPLICATION_JSON)
-//			.bodyValue(TestAuthInputs.testExistentCredentials)
-//			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-//			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-//			.exchange()
-//			.expectStatus()
-//			.isOk()
-//			.expectHeader()
-//			.contentType(MediaType.APPLICATION_JSON)
-//			.expectBody(ResponseUserDto.class)
-//			.returnResult()
-//			.getResponseBody()
-//		;
-//
-//		jwt = user != null ? user.getAccessToken() : null;
-//	}
-
-	private String loginAsMolly() {
-		ResponseUserDto user = this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testExistentCredentials)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.exchange()
-			.expectStatus()
-			.isOk()
-			.expectHeader()
-			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody(ResponseUserDto.class)
-			.returnResult()
-			.getResponseBody()
-		;
-
-		return user != null ? user.getAccessToken() : null;
-	}
-
-	private void loginInvalidAuthHeader(
-		String authHeader
-	) {
-		this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testExistentCredentials)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-//			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.header(HttpHeaders.AUTHORIZATION, authHeader)
-			.exchange()
-			.expectStatus()
-			.isUnauthorized()
 			.expectBody()
 			.isEmpty()
 		;
@@ -331,7 +235,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-//			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+//			.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
 			.header(HttpHeaders.AUTHORIZATION, authHeader)
 			.exchange()
 			.expectStatus()
@@ -369,14 +273,12 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(2)
 	void getOneJobNoFiles() { // Get one job, job exists
-		String jwt = loginAsMolly();
-
 		// '018eae1f-d0e7-7fa8-a561-6aa358134f7e'
 		// Expected: 'Software Engineer', 'Microsoft', very long description
 		this.webTestClient
 			.get()
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -401,12 +303,10 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(3)
 	void getOneJobWithFiles() { // Get one job, job exists
-		String jwt = loginAsMolly();
-
 		this.webTestClient
 			.get()
 			.uri("/job/018eae28-8323-7918-b93a-6cdb9d189686")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -424,12 +324,10 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(4)
 	void getNonExistentJob() {
-		String jwt = loginAsMolly();
-
 		this.webTestClient
 			.get()
 			.uri("/job/deadbeef-abab-6161-7c7c-fefe58135858")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -446,12 +344,10 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(5)
 	void getForbiddenJob() {
-		String jwt = loginAsMolly();
-
 		this.webTestClient
 			.get()
 			.uri("/job/a14ead6c-d173-1111-a001-2717322ebd12")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -480,8 +376,6 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(6)
 	void createJobNoFilesThenGetThatJob() {
-		String jwt = loginAsMolly();
-
 		// Create the job
 		ResponseJobDto responseJobDto = this.webTestClient
 			.post()
@@ -490,7 +384,7 @@ class Qu1cksaveBackendApplicationTests {
 			// No resume and cover letter
 			.bodyValue(TestInputs.testNewOrEditJobNoFiles)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isCreated()
@@ -526,7 +420,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/" + responseJobDto.getId())
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -547,8 +441,6 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(7)
 	void createJobWithFilesThenGetThatJob() {
-		String jwt = loginAsMolly();
-
 		// Create the job
 		ResponseJobDto responseJobDto = this.webTestClient
 			.post()
@@ -557,7 +449,7 @@ class Qu1cksaveBackendApplicationTests {
 			// No resume and cover letter
 			.bodyValue(TestInputs.testNewOrEditJobWithFiles)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isCreated()
@@ -587,7 +479,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/" + responseJobDto.getId())
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -660,13 +552,10 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(11)
 	void getMultipleJobsNonEmptyList() {
-		String jwt = loginAsMolly();
-
 		this.webTestClient
 			.get()
-			// Molly Member's id
-			.uri("/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.uri("/job")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -718,34 +607,16 @@ class Qu1cksaveBackendApplicationTests {
 			});
 	}
 
-	// TODO: Uncomment this once Spring Security authentication added
-	//  - Anna actually has a job in data.sql, which I commented out
+	// Anna actually has a job in data.sql, which I commented out for the
+	//   purposes of this test
 	@Test
 	@Order(12)
 	void getMultipleJobsEmptyList() {
-		String jwt = this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testExistentCredentials2)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.exchange()
-			.expectStatus()
-			.isOk()
-			.expectHeader()
-			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody(ResponseUserDto.class)
-			.returnResult()
-			.getResponseBody()
-			.getAccessToken()
-		;
-
 		this.webTestClient
 			.get()
 			// Anna Admin's id
-			.uri("/job?id=4604289c-b8fe-4560-8960-4da47fdfef94")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.uri("/job")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + annaJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -759,62 +630,6 @@ class Qu1cksaveBackendApplicationTests {
 			});
 	}
 
-	@Test
-	@Order(13)
-	void getMultipleJobsWrongUser() {
-		String jwt = loginAsMolly();
-
-		this.webTestClient
-			.get()
-			.uri("/job?id=4604289c-b8fe-4560-8960-4da47fdfef94")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
-			.exchange()
-			.expectStatus()
-			// Wrong user returns not found for security reasons
-			.isNotFound()
-			.expectBody()
-			.isEmpty()
-		;
-	}
-
-	@Test
-	@Order(14)
-	void getMultipleJobsNonExistentUser() {
-		String jwt = loginAsMolly();
-
-		this.webTestClient
-			.get()
-			.uri("/job?id=1234abcd-dead-beef-daed-11112323aaaa")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
-			.exchange()
-			.expectStatus()
-			// Although the query returns a non-empty list if given a non-
-			//   existent user id, this endpoint would return 404 since the
-			//   check for if the provided user id and logged in id matches
-			//   fails, which returns a 404
-			.isNotFound()
-			.expectBody()
-			.isEmpty()
-		;
-	}
-
-	@Test
-	@Order(15)
-	void getMultipleJobsNoUserIdProvided() {
-		String jwt = loginAsMolly();
-
-		this.webTestClient
-			.get()
-			.uri("/job")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
-			.exchange()
-			.expectStatus()
-			.isBadRequest()
-			.expectBody()
-			.isEmpty()
-		;
-	}
-
 	// -------------------------- DELETE JOB TESTS ----------------------------
 	//  - Delete job, job exists
 	//  - Delete job, job doesn't exist (due to stale list)
@@ -826,13 +641,11 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(16)
 	void deleteJobWithoutFilesThenGetThatJob() {
-		String jwt = loginAsMolly();
-
 		// Delete job
 		this.webTestClient
 			.delete()
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -847,7 +660,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -859,8 +672,6 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(17)
 	void deleteJobWithFilesThenGetThatJob() {
-		String jwt = loginAsMolly();
-
 		// INSERT INTO job(id, member_id, resume_id, cover_letter_id, title, company_name, is_remote, job_status) VALUES
 		//   ('323e9876-8018-b93a-8197-beefbeefbeef', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', '3cccfefe-46c8-e2a4-46c8-dadae1fedada'
 		//   , '2bbbefef-46c8-e2a4-2bbb-beefdadafefe','To Delete Job Title', 'To Delete Job Company', 'Hybrid', 'Not Applied');
@@ -872,7 +683,7 @@ class Qu1cksaveBackendApplicationTests {
 		ResponseJobDto job = this.webTestClient
 			.delete()
 			.uri("/job/323e9876-8018-b93a-8197-beefbeefbeef")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -894,7 +705,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/23e9876-8018-b93a-8197-beefbeefbeef")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -906,7 +717,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/resume/" + job.getResumeId())
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -917,7 +728,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/coverLetter/" + job.getCoverLetterId())
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -932,14 +743,12 @@ class Qu1cksaveBackendApplicationTests {
 	// In real life, this happens if a user's job list is stale and
 	//   they click delete on a job that no longer exists
 	void deleteNonExistentJob() {
-		String jwt = loginAsMolly();
-
 		// Delete job
 		this.webTestClient
 			.delete()
 			// This job has already been deleted in the previous test
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -971,8 +780,6 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(19)
 	void editJobWithNoFilesThenGetThatJob() {
-		String jwt = loginAsMolly();
-
 		// Original before edit
 		// id: '018ead6b-d160-772d-a001-2606322ebd1c'
 		// member_id: '269a3d55-4eee-4a2e-8c64-e1fe386b76f8'
@@ -989,7 +796,7 @@ class Qu1cksaveBackendApplicationTests {
 			// No resume and cover letter
 			.bodyValue(TestInputs.testNewOrEditJobNoFiles)
 			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1007,7 +814,7 @@ class Qu1cksaveBackendApplicationTests {
 		this.webTestClient
 			.get()
 			.uri("/job/018ead6b-d160-772d-a001-2606322ebd1c")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1028,8 +835,6 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(20)
 	void editJobWithFilesAddedThenGetThatJob() {
-		String jwt = loginAsMolly();
-
 		// Original before edit
 		// id: "018ead6b-d160-772d-a001-2606322ebd1c"
 		// member_id: "269a3d55-4eee-4a2e-8c64-e1fe386b76f8"
@@ -1041,7 +846,7 @@ class Qu1cksaveBackendApplicationTests {
 		ResponseJobDto job = editJobRequestReturningJob(
 			"018ead6b-d160-772d-a001-2606322ebd1c",
 			TestInputs.testNewOrEditJobWithFiles,
-			jwt
+			mollyJwt
 		);
 
 		// Ensure that changed data have changed and unchanged data haven't
@@ -1067,7 +872,7 @@ class Qu1cksaveBackendApplicationTests {
 		);
 
 		// Get the job
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt)
 			.consumeWith(result -> {
 				assertEquals(job, result.getResponseBody());
 			});
@@ -1082,11 +887,9 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(21)
 	void editJobWithFilesUsingStaleJobWithoutFiles() {
-		String jwt = loginAsMolly();
-
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
-			"018ead6b-d160-772d-a001-2606322ebd1c", jwt)
+			"018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt)
 			.returnResult()
 			.getResponseBody();
 		assertNotNull(origJob);
@@ -1096,10 +899,10 @@ class Qu1cksaveBackendApplicationTests {
 			// Note: The previous test used TestInputs.testNewOrEditJobWithFiles
 			//   which added files to this job
 			TestInputs.testNewOrEditJobNoFiles,
-			jwt
+			mollyJwt
 		);
 		// Ensure that the job hasn't been changed
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt)
 			.consumeWith(result -> {
 				ResponseJobDto job = result.getResponseBody();
 				assertNotNull(job);
@@ -1111,10 +914,10 @@ class Qu1cksaveBackendApplicationTests {
 		editJobRequestUsingStaleJob(
 			"018ead6b-d160-772d-a001-2606322ebd1c",
 			TestInputs.testNewOrEditJobWithFiles,
-			jwt
+			mollyJwt
 		);
 		// Ensure that the job hasn't been changed (check the resumeId)
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt)
 			.consumeWith(result -> {
 				ResponseJobDto job = result.getResponseBody();
 				assertNotNull(job);
@@ -1128,11 +931,9 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(22)
 	void editJobWithFilesEditedThenGetThatJob() {
-		String jwt = loginAsMolly();
-
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
-			"018ead6b-d160-772d-a001-2606322ebd1c", jwt)
+			"018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt)
 			.returnResult()
 			.getResponseBody();
 
@@ -1145,7 +946,7 @@ class Qu1cksaveBackendApplicationTests {
 				origJob.getResumeId().toString(),
 				origJob.getCoverLetterId().toString()
 			),
-			jwt
+			mollyJwt
 		);
 
 		assertNotNull(job);
@@ -1165,7 +966,7 @@ class Qu1cksaveBackendApplicationTests {
 		);
 
 		// Get the job
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt)
 			.consumeWith(result -> {
 				assertEquals(job, result.getResponseBody());
 			});
@@ -1182,11 +983,9 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(23)
 	void editJobWithFilesUsingStaleJobWithOutdatedCoverLetterId() {
-		String jwt = loginAsMolly();
-
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
-			"018ead6b-d160-772d-a001-2606322ebd1c", jwt)
+			"018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt)
 			.returnResult()
 			.getResponseBody();
 
@@ -1206,11 +1005,11 @@ class Qu1cksaveBackendApplicationTests {
 				origJob.getResumeId().toString(),
 				"ccccdead-d160-beef-a001-2606322e1234"
 			),
-			jwt
+			mollyJwt
 		);
 
 		// Ensure that the job hasn't been changed (check the resumeName)
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt)
 			.consumeWith(result -> {
 				ResponseJobDto job = result.getResponseBody();
 				assertNotNull(job);
@@ -1230,11 +1029,9 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(24)
 	void editJobWithFilesNotEditedThenGetThatJob() {
-		String jwt = loginAsMolly();
-
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
-			"018ead6b-d160-772d-a001-2606322ebd1c", jwt)
+			"018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt)
 			.returnResult()
 			.getResponseBody();
 
@@ -1247,7 +1044,7 @@ class Qu1cksaveBackendApplicationTests {
 				origJob.getResumeId().toString(),
 				origJob.getCoverLetterId().toString()
 			),
-			jwt
+			mollyJwt
 		);
 
 		assertNotNull(job);
@@ -1267,7 +1064,7 @@ class Qu1cksaveBackendApplicationTests {
 		);
 
 		// Get the job
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt)
 			.consumeWith(result -> {
 				assertEquals(job, result.getResponseBody());
 			});
@@ -1280,11 +1077,9 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(25)
 	void editJobWithFilesNotEditedThenGetThatJobSanityCheck() {
-		String jwt = loginAsMolly();
-
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
-			"018ead6b-d160-772d-a001-2606322ebd1c", jwt)
+			"018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt)
 			.returnResult()
 			.getResponseBody();
 
@@ -1297,7 +1092,7 @@ class Qu1cksaveBackendApplicationTests {
 				origJob.getResumeId().toString(),
 				origJob.getCoverLetterId().toString()
 			),
-			jwt
+			mollyJwt
 		);
 
 		assertNotNull(job);
@@ -1317,7 +1112,7 @@ class Qu1cksaveBackendApplicationTests {
 		);
 
 		// Get the job
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt)
 			.consumeWith(result -> {
 				assertEquals(job, result.getResponseBody());
 			});
@@ -1329,11 +1124,9 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(26)
 	void editJobWithFilesDeletedThenGetThatJob() {
-		String jwt = loginAsMolly();
-
 		// First, get the job to be edited to obtain its file ids
 		ResponseJobDto origJob = getJobRequestReturningBodySpec(
-			"018ead6b-d160-772d-a001-2606322ebd1c", jwt)
+			"018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt)
 			.returnResult()
 			.getResponseBody();
 
@@ -1346,7 +1139,7 @@ class Qu1cksaveBackendApplicationTests {
 				origJob.getResumeId().toString(),
 				origJob.getCoverLetterId().toString()
 			),
-			jwt
+			mollyJwt
 		);
 
 		assertNotNull(job);
@@ -1359,7 +1152,7 @@ class Qu1cksaveBackendApplicationTests {
 
 		// Get the job
 		ResponseJobDto res = getJobRequestReturningBodySpec(
-			"018ead6b-d160-772d-a001-2606322ebd1c", jwt
+			"018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt
 		)
 			.returnResult()
 			.getResponseBody();
@@ -1385,12 +1178,12 @@ class Qu1cksaveBackendApplicationTests {
 				origJob.getResumeId().toString(),
 				origJob.getCoverLetterId().toString()
 			),
-			jwt
+			mollyJwt
 		);
 
 		// Ensure that the job hasn't been changed (check the file ids
 		//   and make sure they're not there)
-		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", jwt)
+		getJobRequestReturningBodySpec("018ead6b-d160-772d-a001-2606322ebd1c", mollyJwt)
 			.consumeWith(result -> {
 				ResponseJobDto res2 = result.getResponseBody();
 				assertNotNull(res2);
@@ -1406,15 +1199,13 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(27)
 	void getOneResume() {
-		String jwt = loginAsMolly();
-
 		// INSERT INTO resume(id, member_id, file_name, mime_type) VALUES
 		//   ('323efefe-beef-e2a4-46c8-dadae1fedead', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8', 'Example_Resume.pdf',
 		//   'application/pdf');
 		this.webTestClient
 			.get()
 			.uri("/resume/323efefe-beef-e2a4-46c8-dadae1fedead")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			// No resume and cover letter
 			.exchange()
 			.expectStatus()
@@ -1436,12 +1227,10 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(28)
 	void getNonExistentResume() {
-		String jwt = loginAsMolly();
-
 		this.webTestClient
 			.get()
 			.uri("/resume/d160dead-a001-a001-a001-fefe322ec1db")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -1453,15 +1242,13 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(29)
 	void getOneCoverLetter() {
-		String jwt = loginAsMolly();
-
 		// INSERT INTO cover_letter(id, member_id, file_name, mime_type) VALUES
 		//   ('fefeefef-dada-e2a4-2bbb-3cccbeef32e3', '269a3d55-4eee-4a2e-8c64-e1fe386b76f8',
 		//   'Example_CoverLetter.pdf', 'application/pdf');
 		this.webTestClient
 			.get()
 			.uri("/coverLetter/fefeefef-dada-e2a4-2bbb-3cccbeef32e3")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1482,12 +1269,10 @@ class Qu1cksaveBackendApplicationTests {
 	@Test
 	@Order(30)
 	void getNonExistentCoverLetter() {
-		String jwt = loginAsMolly();
-
 		this.webTestClient
 			.get()
 			.uri("/coverLetter/beefdead-d160-fefe-061d-dead1bf0beef")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
 			.exchange()
 			.expectStatus()
 			.isNotFound()
@@ -1495,8 +1280,6 @@ class Qu1cksaveBackendApplicationTests {
 			.isEmpty()
 		;
 	}
-
-
 
 	// ************************************************************************
 	// ************************************************************************
@@ -1507,133 +1290,46 @@ class Qu1cksaveBackendApplicationTests {
 	// ************************************************************************
 	// ************************************************************************
 	// ************************************************************************
-	// - TODO: Ideally, it's better to move these in a separate file
 
-	@Test
-	@Order(31)
-	void loginWithExistentUser() {
-		ResponseUserDto user = this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testExistentCredentials)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.exchange()
-			.expectStatus()
-			.isOk()
-			.expectHeader()
-			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody(ResponseUserDto.class)
-			.returnResult()
-			.getResponseBody()
-		;
-
-		assertNotNull(user);
-		assertEquals(
-			UUID.fromString("269a3d55-4eee-4a2e-8c64-e1fe386b76f8"),
-			user.getId()
-		);
-		assertEquals("molly@books.com", user.getEmail());
-		assertEquals("Molly Member", user.getName());
-		assertEquals("member", user.getRoles()[0]);
-		assertNotNull(user.getAccessToken());
-	}
-
-	@Test
-	@Order(32)
-	void loginWithExistentUser2() {
-		this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testExistentCredentials2)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.exchange()
-			.expectStatus()
-			.isOk()
-			.expectHeader()
-			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody()
-			.jsonPath("$.id").isEqualTo("4604289c-b8fe-4560-8960-4da47fdfef94")
-			.jsonPath("$.email").isEqualTo("anna@books.com")
-		;
-	}
-
-	// Note: I'm returning a 404 when the wrong password is provided to not
-	//   give out info about the existence of a user
-	@Test
-	@Order(33)
-	void loginWithWrongPassword() {
-		this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testWrongCredentials)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.exchange()
-			.expectStatus()
-			.isNotFound()
-			.expectBody()
-			.isEmpty()
-		;
-	}
-
-	@Test
-	@Order(34)
-	void loginWithNonExistentUser() {
-		this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testNonExistentUser)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.exchange()
-			.expectStatus()
-			.isNotFound()
-			.expectBody()
-			.isEmpty()
-		;
-	}
+	// NOTE:
+	//  - getJobs as Molly tests login as Molly via passing the filters
+	//  - getJobs as Anna tests login as Anna via passing the filters
 
 	@Test
 	@Order(35)
-	void signupWithNewUserThenLogin() {
-		ResponseUserDto user = this.webTestClient
-			.post()
-			.uri("/user/signup")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testNewUser)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+	void signupWithNewUser() {
+		// Steps:
+		// 1.) Login via REST API with Firebase user who doesn't have a DB entry
+		//     - Make sure their email is marked as verified (done in loginAsGoat)
+		// 2.) Call get jobs endpoint. This should sign them up
+		// 3.) Get one user via firebase uid
+		//     - Remember that signup isn't an endpoint, so I can't call it
+		//       and have it return a user for me here.
+
+		// Call get jobs endpoint. This new user should have no jobs
+		this.webTestClient
+			.get()
+			// This is the updated version that only relies on the JWT to get
+			//   a user's jobs
+			.uri("/job")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + goatJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
 			.expectHeader()
 			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody(ResponseUserDto.class)
-			.returnResult()
-			.getResponseBody()
-		;
+			.expectBodyList(ResponseJobDto.class)
+			.consumeWith(result -> {
+				List<ResponseJobDto> jobs = result.getResponseBody();
+				assertNotNull(jobs);
+				assertEquals(0, jobs.size());
+			});
 
-		assertNotNull(user);
-		assertNotNull(user.getId());
-		assertEquals("kevindurant@books.com", user.getEmail());
-		assertEquals("Kevin Durant", user.getName());
-		assertEquals("member", user.getRoles()[0]);
-		assertNull(user.getAccessToken()); // Should be no access token
-
-		// Login with newly created user
+		// Get the signed up user. They should now exist in the database
 		this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testNewlyCreatedUser)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+			.get()
+			.uri("/user?firebaseuid=" + goatFirebaseUid)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + goatJwt)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -1641,38 +1337,86 @@ class Qu1cksaveBackendApplicationTests {
 			.contentType(MediaType.APPLICATION_JSON)
 			.expectBody(ResponseUserDto.class)
 			.consumeWith(result -> {
-				// Can't use since no access token for signup return
-//				assertEquals(user, result.getResponseBody());
 				ResponseUserDto res = result.getResponseBody();
 				assertNotNull(res);
-				assertEquals(user.getId(), res.getId());
-				assertEquals(user.getEmail(), res.getEmail());
-				assertEquals(user.getName(), res.getName());
-				assertThat(Arrays.equals(user.getRoles(), res.getRoles())).isTrue();
-				assertNotNull(res.getAccessToken());
-			})
-		;
+				assertNotNull(res.getId());
+				assertEquals("VYMAKQ2AA8PgsutJsSWpB0f4aZA2", res.getFirebaseUid());
+				assertEquals("goatuser@books.com", res.getEmail());
+				assertEquals("Goat User", res.getName());
+				assertEquals("member", res.getRoles()[0]);
+			});
 	}
 
+	// Unverified email test
 	@Test
 	@Order(36)
-	void signupWithExistingUser() {
+	void signupWithUnverifiedEmail() {
+		// Call get jobs endpoint. This new user should not pass the filters
 		this.webTestClient
-			.post()
-			.uri("/user/signup")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testNewUser)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+			.get()
+			.uri("/job")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + unverifiedJwt)
 			.exchange()
 			.expectStatus()
-			.isEqualTo(HttpStatus.CONFLICT)
-			.expectBody()
-			.isEmpty()
+			.isUnauthorized()
+		;
+
+		// Get the user above. They should NOT exist in the database.
+		//   Note that a different user must get them since the user above
+		//   won't even pass the filters
+		this.webTestClient
+			.get()
+			.uri("/user?firebaseuid=" + unverifiedFirebaseUid)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + mollyJwt)
+			.exchange()
+			.expectStatus()
+			.isNotFound()
 		;
 	}
 
+	// Signup/login for user with no name in token, but with verified email.
+	@Test
+	@Order(37)
+	void signupWithoutAName() {
+		// Call get jobs endpoint. This new user should have no jobs
+		// - This should still pass even though name is not set
+		this.webTestClient
+			.get()
+			.uri("/job")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + nonameJwt)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBodyList(ResponseJobDto.class)
+			.consumeWith(result -> {
+				List<ResponseJobDto> jobs = result.getResponseBody();
+				assertNotNull(jobs);
+				assertEquals(0, jobs.size());
+			});
 
+		// Get the signed up user. They should now exist in the database
+		this.webTestClient
+			.get()
+			.uri("/user?firebaseuid=" + nonameFirebaseUid)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + nonameJwt)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(MediaType.APPLICATION_JSON)
+			.expectBody(ResponseUserDto.class)
+			.consumeWith(result -> {
+				ResponseUserDto res = result.getResponseBody();
+				assertNotNull(res);
+				assertNotNull(res.getId());
+				assertEquals(nonameFirebaseUid, res.getFirebaseUid());
+				assertEquals("noname@books.com", res.getEmail());
+				assertEquals("No Name", res.getName());
+				assertEquals("member", res.getRoles()[0]);
+			});
+	}
 
 	// ************************************************************************
 	// ************************************************************************
@@ -1683,16 +1427,14 @@ class Qu1cksaveBackendApplicationTests {
 	// ************************************************************************
 	// ************************************************************************
 	// ************************************************************************
+
 	@Test
-	@Order(37)
-	void loginMissingAuthHeader() {
+	@Order(40)
+	void getOneJobMissingAuthHeader() {
 		// Null auth header
 		this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testExistentCredentials)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
+			.get()
+			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
 			.exchange()
 			.expectStatus()
 			.isUnauthorized()
@@ -1701,98 +1443,59 @@ class Qu1cksaveBackendApplicationTests {
 		;
 
 		// Empty string auth header
-		loginInvalidAuthHeader("");
-	}
-
-	@Test
-	@Order(38)
-	void loginMalformedAuthHeader() {
-		// Too short
-		loginInvalidAuthHeader("Bearer");
-		// Too long
-		loginInvalidAuthHeader("Bearer apiKey jwt whatisthis");
-	}
-
-	// Causes:
-	//   org.springframework.web.reactive.function.client.WebClientRequestException: Validation failed for header 'Authorization'
-	//   Caused by:
-	//     java.lang.IllegalArgumentException: a header value contains prohibited character 0x20 at index 0.
-	// So removing this test since WebTestClient throws an exception
-//	@Test
-//	@Order(39)
-//	void loginMissingAuthScheme() {
-//		// split returns arr with length 2, arr[0] = "" (empty string)
-//		loginInvalidAuthHeader(" apiKey");
-//	}
-
-	@Test
-	@Order(40)
-	void loginNotBearerAuth() {
-		loginInvalidAuthHeader("Basic apiKey");
+		getOneJobInvalidAuthHeader("");
 	}
 
 	@Test
 	@Order(41)
-	void loginMissingApiKey() {
-		// split returns arr with length 3, arr[1] = ""
-		loginInvalidAuthHeader("Bearer  jwt");
+	void getOneJobMalformedAuthHeader() {
+		// Too short
+		getOneJobInvalidAuthHeader("Bearer");
+		// Too long
+		getOneJobInvalidAuthHeader("Bearer jwt whatisthis");
 	}
 
 	@Test
 	@Order(42)
-	void loginWrongApiKey() {
-		loginInvalidAuthHeader("Bearer wrongApiKey");
+	void getOneJobNotBearerAuth() {
+		getOneJobInvalidAuthHeader("Basic jwt");
 	}
 
-	@Test
-	@Order(43)
-	void getOneJobMissingJwt() {
-		// Null JWT
-		getOneJobInvalidAuthHeader("Bearer " + apiKey);
-		// Can't really simulate empty string jwt
-	}
-
-	@Test
-	@Order(44)
-	void getOneJobNotAValidJwt() {
-		getOneJobInvalidAuthHeader("Bearer " + apiKey + " invalidJwt");
-	}
+	// Removing this test since WebTestClient throws an exception:
+	//   org.springframework.web.reactive.function.client.WebClientRequestException: Validation failed for header 'Authorization'
+	//   Caused by:
+	//     java.lang.IllegalArgumentException: a header value contains prohibited character 0x20 at index 0.
+//	@Test
+//	@Order(43)
+//	void getOneJobMissingAuthScheme() {
+//		// BearerAuthenticationFilter splits this string and gets ["", "jwt"]
+//		getOneJobInvalidAuthHeader(" jwt");
+//	}
 
 	@Test
 	@Order(45)
-	void getOneJobJwtInvalidSignature() {
-		String wrongJwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFubmFAYm9va3MuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNjA2Mjc3MDAxLCJleHAiOjE2MDYyNzcwNjF9.1nwY0lDMGrb7AUFFgSaYd4Q7Tzr-BjABclmoKZOqmr4";
-		getOneJobInvalidAuthHeader("Bearer " + apiKey + " " + wrongJwt);
+	void getOneJobEmptyStringJwt() {
+		// Notice the extra space. splitHeader ends up being
+		//   ["Bearer", ""]
+		getOneJobInvalidAuthHeader("Bearer  ");
+	}
+
+	@Test
+	@Order(46)
+	void getOneJobNotAValidJwt() {
+		getOneJobInvalidAuthHeader("Bearer invalidJwt");
 	}
 
 	// Insufficient permissions
 	@Test
-	@Order(46)
+	@Order(48)
 	void getOneJobNoMemberRole() {
-		String jwt = this.webTestClient
-			.post()
-			.uri("/user/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(TestAuthInputs.testNobbyNobody)
-			.header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE)
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-			.exchange()
-			.expectStatus()
-			.isOk()
-			.expectHeader()
-			.contentType(MediaType.APPLICATION_JSON)
-			.expectBody(ResponseUserDto.class)
-			.returnResult()
-			.getResponseBody()
-			.getAccessToken()
-		;
-
 		this.webTestClient
 			.get()
 			// Nobby has no jobs, but it shouldn't even get to the point where
 			//   it checks that he doesn't own this job
 			.uri("/job/018eae1f-d0e7-7fa8-a561-6aa358134f7e")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey + " " + jwt)
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + nobbyJwt)
 			.exchange()
 			.expectStatus()
 			.isForbidden()

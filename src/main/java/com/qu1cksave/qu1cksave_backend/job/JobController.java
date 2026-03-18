@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-//@RequestMapping("/jobs")
 @RequestMapping("/job")
 // https://medium.com/@tericcabrel/validate-request-body-and-parameter-in-spring-boot-53ca77f97fe9
 // - @Validated on controller
@@ -28,23 +27,10 @@ public class JobController {
         this.jobService = jobService;
     }
 
-    // TODO: Is having /jobs and a separate /jobs/me (getUserJobs) better?
-    // - For example, what if I have an admin role that can access all jobs?
-    //   (Though, that is ethically wrong due to privacy reasons)
-    //   Then that admin can use getJobs to get all jobs, using query params
-    //     to filter those jobs (which is why I'm not using it here to filter
-    //     the current user's jobs).
-//    @GetMapping("/me")
-//    public Job[] getUserJobs(...) { ... }
-
     // TODO: (5/7/25): I need to set the URI for my whole backend
     //  Ex. /api/v1     instead of just /
     //  So it would become http://localhost:8080/api/v1/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8
     //  Instead of http://localhost:8080/job?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8 (CURRENT)
-
-    // TODO: For everything below, need to get id of user from the JWT in the
-    //   Auth header. I remember it's passed as a parameter in Spring Security
-    //   Also need OpenAPI schema validation (or something similar)
 
     @GetMapping()
     // https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RequestParam.html
@@ -53,21 +39,9 @@ public class JobController {
     // - To get request attributes, just use @RequestAttribute instead of
     //   using HttpServletRequest
     public List<ResponseJobDto> getJobs(
-        @RequestParam("id") UUID queryUserId,
         @RequestAttribute String userId
     ) {
-        // UPDATE: When no queryUserId is provided, a
-        //   MissingServletRequestParameterException is thrown
-
         UUID authUserId = UUID.fromString(userId);
-
-        // User wants jobs that don't belong to them, so return an error
-        if (!authUserId.equals(queryUserId)) {
-            throw new ForbiddenResourceException(
-                "Mismatch between auth header and query param user id"
-            );
-        }
-
         return jobService.getJobs(authUserId);
 
         // For testing: http://localhost:8080/jobs?id=269a3d55-4eee-4a2e-8c64-e1fe386b76f8

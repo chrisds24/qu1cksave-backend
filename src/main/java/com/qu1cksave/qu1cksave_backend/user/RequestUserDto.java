@@ -10,19 +10,19 @@ public class RequestUserDto {
     @NotNull
     private final String email;
     @NotNull
-    private final String password;
+    private final String firebaseUid;
 
     public RequestUserDto(
         @JsonProperty("name") String name,
         @JsonProperty("email") String email,
-        @JsonProperty("password") String password
+        @JsonProperty("firebase_uid") String firebaseUid
     ) {
         this.name = name;
         this.email = email;
-        this.password = password;
+        this.firebaseUid = firebaseUid;
     }
 
     public String getName() { return name; }
     public String getEmail() { return email; }
-    public String getPassword() { return password; }
+    public String getFirebaseUid() { return firebaseUid; }
 }

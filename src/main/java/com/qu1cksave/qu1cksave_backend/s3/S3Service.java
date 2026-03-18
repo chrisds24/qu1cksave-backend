@@ -33,6 +33,10 @@ public class S3Service {
     ) {
         // If in a production environment, use this code. Otherwise, we don't
         //   want to mess around with the production S3 bucket.
+        // TODO:
+        //  - If I ever decide to run my test suites in a CI/CD pipeline or
+        //    any other way while in production, I'll need to edit this code
+        //    or otherwise I'll end up querying S3 unintentionally
         if (Objects.equals(envType, "PROD")) {
 //            System.out.println("******** WARNING !!!!!!!!!!!: Using PROD mode for putObject");
 //            System.out.println("PUTTING object with id: " + key);
@@ -131,8 +135,8 @@ public class S3Service {
     }
 }
 
-// TODO: After the mocked S3 calls (using Mockito) are done for the tests, I
-//   should leave the check for PROD to make sure that I don't use the
+// IMPORTANT:
+//   I should leave the check for PROD to make sure that I don't use the
 //   production S3 bucket accidentally.
 //  - On the other hand, accidentally modifying the production database in RDS
 //    isn't an issue since it can only be affected if I set my database env

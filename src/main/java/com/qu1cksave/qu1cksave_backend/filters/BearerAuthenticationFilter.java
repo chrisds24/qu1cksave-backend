@@ -22,14 +22,6 @@ public class BearerAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         final String authHeader = req.getHeader("Authorization");
 
-        // TODO:
-        //  - For now, this goes first before APIKeyFilter since I mistakenly
-        //    thought that putting the api key in the auth header along with
-        //    the jwt would be fine.
-        //  - APIKeyFilter should also not be applied to login and signup
-        //    endpoints later
-        //    -- For now, it does since the API key is in the Authorization header
-
         // https://swagger.io/docs/specification/v3_0/authentication/api-keys/
         // - X-API-Key for header for API keys
         //   -- Though, I read somewhere that this might be unsafe
@@ -38,21 +30,25 @@ public class BearerAuthenticationFilter extends OncePerRequestFilter {
         // - https://stackoverflow.com/questions/59151878/can-multiple-bearer-token-supported-in-authorization-header
         // - https://stackoverflow.com/questions/74312810/is-it-possible-to-send-two-authorization-header-bearer-and-basic
         // - https://stackoverflow.com/questions/3761845/multiple-authentication-schemes-for-http-authorization-header
+        // UPDATE (3/16/2026): I won't be using an API key anymore
+
         if (authHeader == null || authHeader.isEmpty()) {
             throw new CustomFilterException("Missing auth header");
         }
 
-        // TODO: Later, auth header should be:
-        //  Authorization: Bearer JWTTokenHere
-        //  - Where the auth header would be in a different header
-        //  (TEMPORARY) Auth header would look like:
-        //    Authorization: Bearer APIKey JWTTokenHere
+        // Auth header looks like:
+        //  Authorization: Bearer jwtHere
         //  - So splitHeader[0] = Bearer
         String[] splitHeader = authHeader.split(" ");
-        // TODO: Change to < 2 || > 3 once api key issue is solved
-        if (splitHeader.length < 2 || splitHeader.length > 3) {
+        // Helps take care of the case such as "Bearer  jwtHere"
+        // - Notice the extra space. splitHeader ends up being
+        //   ["Bearer", "", "jwtHere"]
+        if (splitHeader.length != 2) {
             throw new CustomFilterException("Invalid/malformed auth header");
         }
+        // Also takes care of case such as " jwtHere"
+        // - Notice the space at the beginning. splitHeader ends up being
+        //   ["", "jwtHere"]
         if (splitHeader[0] == null || splitHeader[0].isEmpty()) {
             throw new CustomFilterException("Missing authentication scheme");
         }
@@ -60,15 +56,19 @@ public class BearerAuthenticationFilter extends OncePerRequestFilter {
             throw new CustomFilterException("Not using bearer authentication");
         }
 
-        req.setAttribute("apiKey", splitHeader[1]);
-        // TODO: Change to splitHeader[1] once api key issue is solved
-        // Only set the jwt if one was provided
-        if (splitHeader.length == 3) {
-            req.setAttribute("jwt", splitHeader[2]);
-        } else {
-            req.setAttribute("jwt", null);
+        // Ex. "Bearer "
+        // - Notice the extra space. splitHeader ends up being
+        //   ["Bearer", ""]
+        if (splitHeader[1].isEmpty()) {
+            throw new CustomFilterException("No JWT provided");
         }
+        req.setAttribute("jwt", splitHeader[1]);
         filterChain.doFilter(req, res);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return "OPTIONS".equalsIgnoreCase(request.getMethod());
     }
 }
 

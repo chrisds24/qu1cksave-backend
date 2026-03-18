@@ -1,26 +1,14 @@
 package com.qu1cksave.qu1cksave_backend.user;
 
-import com.qu1cksave.qu1cksave_backend.exceptions.InvalidCredentialsException;
 import com.qu1cksave.qu1cksave_backend.exceptions.SQLAddFailedException;
 import com.qu1cksave.qu1cksave_backend.exceptions.SQLGetFailedException;
-import com.qu1cksave.qu1cksave_backend.exceptions.UserAlreadyExistsException;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import io.jsonwebtoken.Jwts;
-
-import java.util.Date;
 
 @Component
 public class UserService {
     private final UserRepository userRepository;
-
-    // Why was this called ACCESS_TOKEN again? For some reason, I used this
-    //   name for the env var even though SECRET would be more appropriate
-    private final String secret = System.getenv("ACCESS_TOKEN");
 
     public UserService(
         @Autowired UserRepository userRepository
@@ -29,95 +17,32 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public ResponseUserDto login(CredentialsDto credentials) {
-//        return userRepository.findByEmail(
-//            credentials.getEmail()
-//        ).map(UserMapper::toResponseDto).orElse(null);
-        User user;
+    public ResponseUserDto getUserByFirebaseUid(String firebaseUid) {
         try {
-            user = userRepository.findByEmail(
-                credentials.getEmail()
-            ).orElse(null);
-        } catch(RuntimeException err) {
+            return userRepository.findByFirebaseUid(firebaseUid)
+                .map(UserMapper::toResponseDto).orElse(null);
+        } catch (RuntimeException err) {
             throw new SQLGetFailedException(
-                "Select user failed when logging in"
-            );
-        }
-
-        // User with given email does not exist
-        if (user == null) {
-            return null;
-        }
-
-        // If passwords match, get the jwt and return it as accessToken
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        if (encoder.matches(credentials.getPassword(), user.getPassword())) {
-            // Create the signed JWT
-            String accessToken = Jwts.builder()
-                .claim("id", user.getId())
-                .claim("email", user.getEmail())
-                .claim("name", user.getName())
-                .claim("roles", user.getRoles())
-                // https://forums.oracle.com/ords/apexds/post/system-currenttimemillis-returns-time-in-utc-or-not-4286
-                // - long values of Date are always in UTC
-                // - However, Date.toString() uses the local timezone
-                // https://docs.oracle.com/javase/8/docs/api/java/util/Date.html#Date-long-
-                // - Date constructor taking in a long isn't deprecated
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 2))
-//                .expiration(Date.from(Instant.ofEpochSecond(4622470422L)))  // From tutorial (keep as reference)
-                // https://javadoc.io/static/io.jsonwebtoken/jjwt-api/0.12.6/io/jsonwebtoken/JwtBuilder.html#signWith(K,%20io.jsonwebtoken.security.SecureDigestAlgorithm)
-                .signWith(
-                    // https://stackoverflow.com/questions/55102937/how-to-create-a-spring-security-key-for-signing-a-jwt-token
-//                    Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret)), // If base 64 encoded
-                    Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret)), // If base 64 encoded
-                    // https://javadoc.io/static/io.jsonwebtoken/jjwt-api/0.12.6/io/jsonwebtoken/Jwts.SIG.html
-                    Jwts.SIG.HS256
-                )
-                .compact();
-
-            return UserMapper.toResponseDtoWithAccessToken(
-                user,
-                accessToken
-            );
-        } else {
-            throw new InvalidCredentialsException(
-                "Wrong password provided"
+                "Select one user by firebaseUid failed", err
             );
         }
     }
 
+    // Users are signed up through auto-provisioning. When they make an
+    //   authenticated request, they are signed up if their email is
+    //   already verified and they don't have an entry in the database
+    //
+    // RequestUserDto here should contain name, email, firebaseUid
     @Transactional
     public ResponseUserDto signup(RequestUserDto newUser) {
-        User user;
-        try {
-            user = userRepository.findByEmail(
-                newUser.getEmail()
-            ).orElse(null);
-        } catch(RuntimeException err) {
-            throw new SQLGetFailedException(
-                "Select user failed when signing up"
-            );
-        }
-
-        if (user != null) {
-            throw new UserAlreadyExistsException(
-                "User with given email already exists"
-            );
-        }
-
-        // Hash the password
-        // Node.js version:
-        //   const hashedPassword = bcrypt.hashSync(newUser.password, 10);
-        // - Note that 10 is the salt for the Node.js version, while the 10
-        //   here isn't a salt
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(10);
-        String hashedPw = encoder.encode(newUser.getPassword());
+        // Before signing up a user through auto-provisioning, existence is
+        //   already checked before calling this signup function. No need to
+        //   check existence again here.
 
         // Insert new user to database and return
         String[] roles = {"member"};
         User newUserEntity = UserMapper.createEntity(
             newUser,
-            hashedPw,
             roles
         );
         try {

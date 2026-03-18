@@ -25,9 +25,7 @@ public class MemberAuthorizationFilter extends OncePerRequestFilter {
             throw new CustomFilterException("Missing roles in claims");
         }
 
-        ArrayList arrLstRoles = (ArrayList) reqRoles;
-        String[] roles = new String[arrLstRoles.size()];
-        arrLstRoles.toArray(roles);
+        String[] roles = (String[]) reqRoles;
 
         if (roles.length == 0) {
             throw new ForbiddenResourceException("User has no roles");
@@ -44,22 +42,10 @@ public class MemberAuthorizationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(req, res);
-
-        // TODO: (7/1/25)
-        //  1.) Register the filters
-        //  2.) Add order
-        //  3.) Create exceptions for filters (Ex. JWTFilterException,
-        //        APIKeyFilterException, etc.)
-        //  4.) Retrieve userId from each endpoint that needs it
-        //  5.) Tests
-        //      - Would now need to add API key to header before running tests
-        //      - Would now need to login before each authenticated endpoint
-        //  6.) Check if roles are deserialized properly
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest req) {
-        String path = req.getRequestURI();
-        return path.startsWith("/api/v0/user/login") || path.startsWith("/api/v0/user/signup");
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return "OPTIONS".equalsIgnoreCase(request.getMethod());
     }
 }
